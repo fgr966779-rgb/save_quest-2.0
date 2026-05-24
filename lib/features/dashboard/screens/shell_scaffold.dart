@@ -157,49 +157,101 @@ class ShellScaffold extends ConsumerWidget {
         onTap: () => _onItemTapped(context, index),
         child: AnimatedScale(
           scale: isActive ? 1.12 : 0.95,
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutBack,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              Icon(
-                icon,
-                color: isActive
-                    ? activeColor
-                    : (isDark ? AppColors.textMuted : AppColors.textLightMuted),
-                size: isActive ? 24.0 : 20.0,
-              ),
-              const SizedBox(height: 4.0),
-              Text(
-                label,
-                maxLines: 1,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: isActive ? 9.5 : 8.5,
-                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                  color: isActive
-                      ? activeColor
-                      : (isDark ? AppColors.textMuted : AppColors.textLightMuted),
-                  letterSpacing: 0.2,
+              // Animated halo behind the active item
+              if (isActive)
+                IgnorePointer(
+                  child: Container(
+                    width: 56.0,
+                    height: 56.0,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          activeColor.withOpacity(0.32),
+                          activeColor.withOpacity(0.0),
+                        ],
+                      ),
+                    ),
+                  )
+                      .animate(onPlay: (c) => c.repeat(reverse: true))
+                      .scale(
+                        begin: const Offset(0.85, 0.85),
+                        end: const Offset(1.05, 1.05),
+                        duration: 1600.ms,
+                        curve: Curves.easeInOut,
+                      )
+                      .fadeIn(duration: 200.ms),
                 ),
-              ),
-              const SizedBox(height: 4.0),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: isActive ? 16.0 : 0.0,
-                height: 3.0,
-                decoration: BoxDecoration(
-                  color: activeColor,
-                  borderRadius: BorderRadius.circular(2.0),
-                  boxShadow: isActive
-                      ? [
-                          BoxShadow(
-                            color: activeColor.withOpacity(0.6),
-                            blurRadius: 8.0,
-                            spreadRadius: 1.0,
-                          ),
-                        ]
-                      : [],
-                ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    transitionBuilder: (child, anim) => ScaleTransition(
+                      scale: anim,
+                      child: FadeTransition(opacity: anim, child: child),
+                    ),
+                    child: Icon(
+                      icon,
+                      key: ValueKey<bool>(isActive),
+                      color: isActive
+                          ? activeColor
+                          : (isDark ? AppColors.textMuted : AppColors.textLightMuted),
+                      size: isActive ? 24.0 : 20.0,
+                      shadows: isActive
+                          ? [
+                              Shadow(
+                                color: activeColor.withOpacity(0.6),
+                                blurRadius: 10.0,
+                              ),
+                            ]
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 4.0),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 220),
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: isActive ? 9.5 : 8.5,
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                      color: isActive
+                          ? activeColor
+                          : (isDark ? AppColors.textMuted : AppColors.textLightMuted),
+                      letterSpacing: 0.2,
+                    ),
+                    child: Text(label, maxLines: 1),
+                  ),
+                  const SizedBox(height: 4.0),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOutCubic,
+                    width: isActive ? 18.0 : 0.0,
+                    height: 3.0,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          activeColor,
+                          activeColor.withOpacity(0.6),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(2.0),
+                      boxShadow: isActive
+                          ? [
+                              BoxShadow(
+                                color: activeColor.withOpacity(0.6),
+                                blurRadius: 8.0,
+                                spreadRadius: 1.0,
+                              ),
+                            ]
+                          : [],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

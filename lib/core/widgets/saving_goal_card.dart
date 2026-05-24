@@ -33,8 +33,31 @@ class SavingGoalCard extends StatefulWidget {
   State<SavingGoalCard> createState() => _SavingGoalCardState();
 }
 
-class _SavingGoalCardState extends State<SavingGoalCard> {
+class _SavingGoalCardState extends State<SavingGoalCard>
+    with TickerProviderStateMixin {
   double _scale = 1.0;
+  late final AnimationController _breath;
+  late final AnimationController _shimmer;
+
+  @override
+  void initState() {
+    super.initState();
+    _breath = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat(reverse: true);
+    _shimmer = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _breath.dispose();
+    _shimmer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,19 +83,26 @@ class _SavingGoalCardState extends State<SavingGoalCard> {
         scale: _scale,
         duration: const Duration(milliseconds: 120),
         curve: Curves.easeOutCubic,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24.0),
-            // Soft glow/drop shadow
-            boxShadow: [
-              BoxShadow(
-                color: widget.accentColor.withOpacity(isDark ? 0.08 : 0.04),
-                blurRadius: 32.0,
-                spreadRadius: 2.0,
-                offset: const Offset(0, 12),
+        child: AnimatedBuilder(
+          animation: _breath,
+          builder: (context, child) {
+            final pulse = _breath.value;
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.accentColor
+                        .withOpacity((isDark ? 0.10 : 0.06) + 0.10 * pulse),
+                    blurRadius: 28.0 + 14.0 * pulse,
+                    spreadRadius: 1.5,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
               ),
-            ],
-          ),
+              child: child,
+            );
+          },
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24.0),
             child: BackdropFilter(
@@ -123,17 +153,35 @@ class _SavingGoalCardState extends State<SavingGoalCard> {
                                 children: [
                                   Hero(
                                     tag: widget.heroTag,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(8.0),
-                                      decoration: BoxDecoration(
-                                        color: widget.accentColor.withOpacity(0.12),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        widget.icon,
-                                        color: widget.accentColor,
-                                        size: 20.0,
-                                      ),
+                                    child: AnimatedBuilder(
+                                      animation: _breath,
+                                      builder: (context, _) {
+                                        final pulse = _breath.value;
+                                        return Container(
+                                          padding: const EdgeInsets.all(8.0),
+                                          decoration: BoxDecoration(
+                                            color: widget.accentColor
+                                                .withOpacity(0.12 + 0.08 * pulse),
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: widget.accentColor
+                                                    .withOpacity(0.25 * pulse),
+                                                blurRadius: 10.0 + 6.0 * pulse,
+                                                spreadRadius: 0.5,
+                                              ),
+                                            ],
+                                          ),
+                                          child: Transform.scale(
+                                            scale: 1.0 + 0.06 * pulse,
+                                            child: Icon(
+                                              widget.icon,
+                                              color: widget.accentColor,
+                                              size: 20.0,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ),
                                   const SizedBox(width: 10.0),
@@ -255,22 +303,65 @@ class _SavingGoalCardState extends State<SavingGoalCard> {
                                       ],
                                     ),
                                   ),
+                                  // Shimmer sweep along the filled portion
+                                  if (progressWidth > 8)
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(4.0),
+                                      child: SizedBox(
+                                        width: progressWidth,
+                                        height: 7.0,
+                                        child: AnimatedBuilder(
+                                          animation: _shimmer,
+                                          builder: (context, _) {
+                                            return Transform.translate(
+                                              offset: Offset(
+                                                (_shimmer.value * 2.0 - 0.6) *
+                                                    progressWidth,
+                                                0,
+                                              ),
+                                              child: FractionallySizedBox(
+                                                widthFactor: 0.4,
+                                                heightFactor: 1.0,
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    gradient: LinearGradient(
+                                                      colors: [
+                                                        Colors.transparent,
+                                                        Colors.white.withOpacity(0.55),
+                                                        Colors.transparent,
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
                                   Positioned(
                                     left: (progressWidth - 5).clamp(0.0, maxWidth - 10.0),
-                                    child: Container(
-                                      width: 10.0,
-                                      height: 10.0,
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: widget.accentColor,
-                                            blurRadius: 6.0,
-                                            spreadRadius: 1.5,
+                                    child: AnimatedBuilder(
+                                      animation: _breath,
+                                      builder: (context, _) {
+                                        final pulse = _breath.value;
+                                        return Container(
+                                          width: 10.0,
+                                          height: 10.0,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: widget.accentColor
+                                                    .withOpacity(0.6 + 0.4 * pulse),
+                                                blurRadius: 6.0 + 6.0 * pulse,
+                                                spreadRadius: 1.5 + 1.0 * pulse,
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
+                                        );
+                                      },
                                     ),
                                   ),
                                 ],
