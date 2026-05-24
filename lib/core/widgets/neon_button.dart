@@ -36,6 +36,8 @@ class _NeonButtonState extends State<NeonButton> with TickerProviderStateMixin {
   late AnimationController _shimmerController;
   late Animation<double> _shimmerAnimation;
 
+  late AnimationController _glowController;
+
   @override
   void initState() {
     super.initState();
@@ -54,12 +56,19 @@ class _NeonButtonState extends State<NeonButton> with TickerProviderStateMixin {
     _shimmerAnimation = Tween<double>(begin: -1.0, end: 2.0).animate(
       CurvedAnimation(parent: _shimmerController, curve: Curves.easeInOut),
     );
+
+    // Slow ambient glow pulse
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2600),
+    )..repeat(reverse: true);
   }
 
   @override
   void dispose() {
     _scaleController.dispose();
     _shimmerController.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
@@ -97,43 +106,50 @@ class _NeonButtonState extends State<NeonButton> with TickerProviderStateMixin {
       },
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: widget.width,
-          height: widget.height,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14.0),
-            gradient: isDisabled
-                ? const LinearGradient(
-                    colors: [AppColors.cardBgLight, AppColors.cardBgLight],
-                  )
-                : LinearGradient(
-                    colors: [
-                      Colors.white.withOpacity(0.15),
-                      widget.baseColor,
-                      widget.baseColor.withOpacity(0.7),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    stops: const [0.0, 0.3, 1.0],
-                  ),
-            boxShadow: isDisabled
-                ? []
-                : [
-                    BoxShadow(
-                      color: widget.glowColor.withOpacity(0.4),
-                      blurRadius: 14.0,
-                      spreadRadius: 1.0,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-            border: Border.all(
-              color: isDisabled
-                  ? AppColors.borderNeon.withOpacity(0.3)
-                  : widget.glowColor.withOpacity(0.6),
-              width: 1.5,
-            ),
-          ),
+        child: AnimatedBuilder(
+          animation: _glowController,
+          builder: (context, child) {
+            final pulse = _glowController.value; // 0..1
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: widget.width,
+              height: widget.height,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14.0),
+                gradient: isDisabled
+                    ? const LinearGradient(
+                        colors: [AppColors.cardBgLight, AppColors.cardBgLight],
+                      )
+                    : LinearGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.15 + 0.10 * pulse),
+                          widget.baseColor,
+                          widget.baseColor.withOpacity(0.7),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        stops: const [0.0, 0.3, 1.0],
+                      ),
+                boxShadow: isDisabled
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: widget.glowColor.withOpacity(0.25 + 0.35 * pulse),
+                          blurRadius: 14.0 + 10.0 * pulse,
+                          spreadRadius: 1.0,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                border: Border.all(
+                  color: isDisabled
+                      ? AppColors.borderNeon.withOpacity(0.3)
+                      : widget.glowColor.withOpacity(0.45 + 0.35 * pulse),
+                  width: 1.5,
+                ),
+              ),
+              child: child,
+            );
+          },
           child: ClipRRect(
             borderRadius: BorderRadius.circular(14.0),
             child: Stack(
