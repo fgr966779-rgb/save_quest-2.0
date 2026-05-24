@@ -29,6 +29,7 @@ import '../../features/gamification/screens/skill_tree_screen.dart';
 import '../../features/gamification/screens/blacklist_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/dashboard/screens/terminal_screen.dart';
+import '../../features/dashboard/screens/price_analysis_screen.dart';
 import '../../features/remote_control/screens/remote_control_screen.dart';
 import '../../features/dashboard/screens/shell_scaffold.dart';
 
@@ -188,6 +189,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/remote-control',
         builder: (context, state) => const RemoteControlScreen(),
+      ),
+      GoRoute(
+        path: '/price-analysis',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          return PriceAnalysisScreen(
+            initialQuery: extra['query'] as String?,
+            targetAmountKopecks: extra['targetAmount'] as int?,
+            currency: extra['currency'] as String?,
+          );
+        },
       ),
       GoRoute(
         path: '/goal-detail/:goalId',
