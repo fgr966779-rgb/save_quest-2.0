@@ -82,6 +82,10 @@ class GoalDetailScreen extends ConsumerWidget {
 
                         // Future Projections Panel
                         _buildProjections(goal, depositsAsync, accentColor),
+                        const SizedBox(height: 16.0),
+
+                        // Price Analysis entry point
+                        _buildPriceAnalysisLink(context, goal, accentColor),
                         const SizedBox(height: 24.0),
 
                         // Section header
@@ -368,6 +372,59 @@ class GoalDetailScreen extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+
+  Widget _buildPriceAnalysisLink(
+      BuildContext context, Goal goal, Color accentColor) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16.0),
+      onTap: () => context.push(
+        '/price-analysis',
+        extra: {
+          'query': goal.name,
+          'targetAmount': goal.targetAmount,
+          'currency': goal.currency,
+        },
+      ),
+      child: GlassCard(
+        padding:
+            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        borderColor: accentColor.withOpacity(0.3),
+        child: Row(
+          children: [
+            Icon(Icons.radar_rounded, color: accentColor, size: 24.0),
+            const SizedBox(width: 12.0),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'СКАНЕР РИНКОВИХ ЦІН',
+                    style: TextStyle(
+                      fontSize: 9.0,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 3.0),
+                  Text(
+                    'Перевірити актуальні ціни на «${goal.name}» в магазинах',
+                    style: const TextStyle(
+                      fontSize: 12.0,
+                      height: 1.4,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded,
+                color: accentColor, size: 22.0),
+          ],
+        ),
+      ),
     );
   }
 
