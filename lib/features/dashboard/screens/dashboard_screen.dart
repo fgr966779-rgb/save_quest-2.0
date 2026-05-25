@@ -618,6 +618,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             icon: const Icon(Icons.shield, color: AppColors.magentaAccent),
             onPressed: () => context.push('/class-selection'),
           ),
+          IconButton(
+            icon: const Icon(Icons.auto_delete_outlined, color: AppColors.cyanAccent),
+            onPressed: () => context.push('/regret-archive'),
+          ),
         ],
       );
   }

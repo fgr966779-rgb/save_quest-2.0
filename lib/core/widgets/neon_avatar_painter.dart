@@ -215,17 +215,44 @@ class NeonAvatarPainter extends CustomPainter {
       canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTRB(w * 0.25, h * 0.4, w * 0.75, h * 0.5), const Radius.circular(6)), eyeGlow);
     }
 
-    // Draw static/noise lines if damaged
+    // Draw static/noise lines if damaged (Visual Rot / Glitch)
     if (dmg > 0.1) {
+      final rng = math.Random(config.xp); // Deterministic noise based on XP
       final noisePaint = Paint()
-        ..color = Colors.redAccent.withOpacity(dmg * 0.5)
+        ..color = Colors.redAccent.withOpacity(dmg * 0.6)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0;
+        ..strokeWidth = 1.5;
       
-      // Pseudo-random static lines based on damage
-      for (int i = 0; i < (dmg * 10).toInt(); i++) {
-        final dy = h * 0.2 + (i * 0.1 * h);
-        canvas.drawLine(Offset(w * 0.1, dy), Offset(w * 0.9, dy), noisePaint);
+      // Horizontal scanning glitches
+      for (int i = 0; i < (dmg * 15).toInt(); i++) {
+        final dy = h * rng.nextDouble();
+        final startX = w * rng.nextDouble() * 0.3;
+        final endX = w * (0.7 + rng.nextDouble() * 0.3);
+
+        // Shift bits of the path
+        canvas.drawLine(Offset(startX, dy), Offset(endX, dy), noisePaint);
+
+        // Occasionally draw a solid block
+        if (rng.nextDouble() < 0.3 * dmg) {
+          canvas.drawRect(
+            Rect.fromLTWH(startX, dy, w * 0.1, 2),
+            Paint()..color = Colors.redAccent.withOpacity(dmg * 0.8)
+          );
+        }
+      }
+
+      // Digital "Rust" / Corrosion points
+      if (dmg > 0.5) {
+        final rustPaint = Paint()
+          ..color = const Color(0xFF4A2C2C).withOpacity(dmg * 0.7)
+          ..style = PaintingStyle.fill;
+        for (int i = 0; i < (dmg * 20).toInt(); i++) {
+          canvas.drawCircle(
+            Offset(w * rng.nextDouble(), h * rng.nextDouble()),
+            1.5 + rng.nextDouble() * 2,
+            rustPaint
+          );
+        }
       }
     }
 

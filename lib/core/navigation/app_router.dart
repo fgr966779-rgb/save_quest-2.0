@@ -27,6 +27,7 @@ import '../../features/gamification/screens/joint_goal_detail_screen.dart';
 import '../../features/gamification/screens/leaderboard_screen.dart';
 import '../../features/gamification/screens/skill_tree_screen.dart';
 import '../../features/gamification/screens/blacklist_screen.dart';
+import '../../features/gamification/screens/regret_archive_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/dashboard/screens/terminal_screen.dart';
 import '../../features/dashboard/screens/price_analysis_screen.dart';
@@ -181,6 +182,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/blacklist',
         builder: (context, state) => const BlacklistScreen(),
+      ),
+      GoRoute(
+        path: '/regret-archive',
+        builder: (context, state) => const RegretArchiveScreen(),
       ),
       GoRoute(
         path: '/terminal',
