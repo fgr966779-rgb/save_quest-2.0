@@ -75,7 +75,18 @@ class ShellScaffold extends ConsumerWidget {
                     data: (profile) {
                       final hasVirus = profile != null && profile.penaltyBalance > 0;
                       if (hasVirus) {
-                        return childWidget!.animate(onPlay: (c) => c.repeat())
+                        // Dopamine Detox Mode: Grayscale filter when penalties are active
+                        final grayscaleChild = ColorFiltered(
+                          colorFilter: const ColorFilter.matrix([
+                            0.2126, 0.7152, 0.0722, 0, 0,
+                            0.2126, 0.7152, 0.0722, 0, 0,
+                            0.2126, 0.7152, 0.0722, 0, 0,
+                            0,      0,      0,      1, 0,
+                          ]),
+                          child: childWidget!,
+                        );
+
+                        return grayscaleChild.animate(onPlay: (c) => c.repeat())
                           .shake(hz: 3, duration: 1500.ms, curve: Curves.easeInOutCubic)
                           .tint(color: Colors.redAccent.withOpacity(0.1), duration: 2000.ms)
                           .then()

@@ -170,6 +170,16 @@ class JointGoalMembers extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class AvoidedPurchases extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+  IntColumn get amount => integer()(); // minor units
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   Goals, 
   Deposits, 
@@ -184,7 +194,8 @@ class JointGoalMembers extends Table {
   VoiceLogs,
   PenaltyHabits,
   JointGoals,
-  JointGoalMembers
+  JointGoalMembers,
+  AvoidedPurchases
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
@@ -192,7 +203,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.connect(QueryExecutor connection) : super(connection);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -280,6 +291,9 @@ class AppDatabase extends _$AppDatabase {
           if (from < 7) {
             await m.createTable(jointGoals);
             await m.createTable(jointGoalMembers);
+          }
+          if (from < 8) {
+            await m.createTable(avoidedPurchases);
           }
         },
       );

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../constants/app_colors.dart';
+import '../providers/providers.dart';
+import '../../features/gamification/models/core_skill.dart';
 
-class NeonProgressBar extends StatelessWidget {
+class NeonProgressBar extends ConsumerWidget {
   final double progress; // Between 0.0 and 1.0
   final Color activeColor;
   final Color glowColor;
@@ -20,8 +23,16 @@ class NeonProgressBar extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final clampedProgress = progress.clamp(0.0, 1.0);
+
+    // Power Grid Logic: Glow intensity depends on Hacker level
+    final profileAsync = ref.watch(userProfileProvider);
+    final hackerXp = profileAsync.value?.hackerXp ?? 0;
+    final hackerLvl = CoreSkillSystem.getLevelFromXp(hackerXp);
+
+    // Base opacity 0.3, increases by 0.05 per level, capped at 0.9
+    final glowIntensity = (0.3 + (hackerLvl * 0.05)).clamp(0.3, 0.9);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,8 +92,8 @@ class NeonProgressBar extends StatelessWidget {
                           color: activeColor,
                           boxShadow: [
                             BoxShadow(
-                              color: glowColor.withOpacity(0.5),
-                              blurRadius: 8.0,
+                              color: glowColor.withOpacity(glowIntensity),
+                              blurRadius: 8.0 + (hackerLvl * 0.5), // Glow radius also grows
                               spreadRadius: 1.0,
                             ),
                           ],
