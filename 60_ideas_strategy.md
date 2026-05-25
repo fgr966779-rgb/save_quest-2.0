@@ -1,87 +1,77 @@
-# PiggyVault: 60 Ideas Strategy (Serious Game Expansion)
+# PiggyVault: 60 Hardcore Cyberpunk Ideas (The "Ghost in the Shell" Edition)
 
-This document outlines 60 innovative features for PiggyVault, categorized by their impact on user retention and financial discipline.
+Цей список — це не просто функції, це механіки **психологічного та ігрового утримання**, розроблені спеціально для PiggyVault. Вони перетворюють заощадження на боротьбу за виживання в неоновому місті.
 
-## 1. Friction & Discipline (Resilience Path)
-*Focus: Reducing impulsive spending through gamified resistance.*
+---
 
-1.  **Bio-Lock Budget**: Requires a 5-second long-press to confirm deposits if the daily budget was exceeded.
-2.  **Protocol "Cold Heart"**: Purchases over a threshold are locked from being categorized as "essential" for 1 hour.
-3.  **Ghost Transactions**: AI-generated fake expenses to test user mindfulness.
-4.  **Wall of Shame**: Sarcastic AI broadcast to the Alliance/Mentor if a Blacklist category is hit.
-5.  **Visual Rot**: Unpaid penalties cause digital "rust" and glitches on the user's avatar.
-6.  **Sacrifice Mode**: Unlock exclusive themes by maintaining a $0 budget in "Fun" categories for 48 hours.
-7.  **Smart-Home Red Alert**: Webhook integration to turn home smart lights red upon budget violation.
-8.  **Biometric Urge Control**: Wearable integration triggers a "Breathe" alert if heart rate spikes near shopping malls.
-9.  **The "Empty Fridge" Challenge**: A contract for $0 food spending outside the home for 7 days.
-10. **Deposit Force-Field**: Conceptual "locking" of bank funds through behavioral nudges and visual feedback.
+## 🧠 Блок 1: Нейро-Фінансова Корекція (Психологія)
+1.  **Dopamine Detox Mode**: Додаток стає чорно-білим і блокує всі "веселі" функції (маркет, ігри) на 24 години, якщо бюджет було порушено. Допомагає "обнулити" потяг до імпульсивних покупок.
+2.  **Cortisol Spike Alerts**: Якщо банківські дані фіксують 3+ покупки за годину, AI вмикає режим "Червона тривога", вважаючи це стресовим шопінгом, і вимагає біометричного підтвердження спокою.
+3.  **Bio-Feedback Vibration**: Коли користувач дивиться на великий баланс, телефон вібрує в ритмі серцебиття (Haptic Sync), створюючи фізичне відчуття "живих грошей".
+4.  **The "Inner Demon" Mirror**: При високих штрафах аватар користувача виглядає як викривлена, потворна версія самого себе і говорить голосом "поганих звичок".
+5.  **Sleep-Save Protocol**: Бонусний XP, якщо користувач робить внесок між 22:00 та 06:00 (критичний час для нічних покупок від нудьги).
+6.  **Meditation-to-Save**: Міні-гра на концентрацію: потрібно утримувати палець у центрі неонового кола 1 хвилину, щоб розблокувати 1% бонус до депозиту.
+7.  **The "Regret" Archive**: Віртуальний цвинтар речей, які користувач *не купив* завдяки додатку. Показує загальну суму врятованого "сміття".
+8.  **Neural Predictor**: AI прогнозує емоційний стан після покупки: "Ти відчуєш 85% жалю через 2 години. Дійсно купуємо?".
+9.  **Sensory Deprivation**: При пропуску стріку звук у додатку стає "плаваючим" і неприємним (digital static), поки не буде зроблено внесок.
+10. **Memory Wipe**: Надзвичайно дорогий предмет на Маркеті, що дозволяє видалити один запис про "фінансовий провал" з глобальної історії.
 
-## 2. AI Insights & Predictions (Hacker Path)
-*Focus: Using LLMs for deep financial forecasting and contextual advice.*
+## 🏙️ Блок 2: Цифрова Екологія (Оточення)
+11. **The Vault City**: Ваші заощадження будують віртуальне місто. 100 грн — хмарочос, 10 000 грн — космічний ліфт. Місто видно на задньому фоні Dashboard.
+12. **Acid Rain Effects**: Якщо немає внесків 3 дні, в додатку починається "кислотний дощ", який візуально роз'їдає іконки та текст.
+13. **Data Scavenging**: Пошук "кристалів" у власній історії транзакцій (приховані пасхалки за певні типи витрат).
+14. **Oxygen Tax**: Щоденне невелике списання XP, яке зупиняється лише активним стріком (метафора плати за життя в місті).
+15. **Power Grid Logic**: Рівень "Хакера" визначає освітлення інтерфейсу. Низький рівень — екран тьмяний, високий — все сяє неоном.
+16. **Neural Chip Upgrades**: Віртуальні імпланти, які дають реальні слоти для цілей або бонус до XP.
+17. **The Matrix Breach**: Рандомні події, коли додаток "зламано". Потрібно ввести код у терміналі за 30 секунд, щоб отримати мега-нагороду.
+18. **Ecosystem Bloom**: Заощадження "вирощують" цифрові дерева, які генерують пасивний XP кожну годину.
+19. **Glitch-Pets**: Збирання тварин-мутантів, які з'являються лише за умови специфічних фінансових звичок.
+20. **Radioactive Goals**: Цілі з надвисокою нагородою, які щодня "забирають здоров'я" (XP), поки вони не виконані.
 
-11. **The Time Traveler**: 1-year balance prediction based on current habits and real-world inflation.
-12. **Contextual Whispers**: Geofenced AI warnings when entering known "spending trap" locations.
-13. **Goal Conflict Resolver**: Dynamic split suggestions based on competing goal deadlines.
-14. **Synthetic Budgeting**: AI-generated "Perfect Week" spending plans with XP rewards.
-15. **What-If Machine**: Real-time simulation of goal completion dates based on increased savings percentages.
-16. **AI Bounty: "The Arbitrageur"**: Targeted quests to break spending patterns on specific days.
-17. **Personality: "The Drill Sergeant"**: A harsh, military-style AI persona for strict discipline.
-18. **Sentiment Saving**: Correlation analysis between user mood (notes) and savings performance.
-19. **Anomaly Alert**: Automatic detection of unused subscriptions or sudden spikes in recurring costs.
-20. **Inflation Shadow**: Visual tracking of real-world price changes for defined goal items (e.g., PS5).
+## 🕵️ Блок 3: Підпільна Економіка (Ризик та Метагра)
+21. **Background Mining**: Додаток використовує "час простою" для генерації кристалів, якщо телефон на зарядці.
+22. **The Loan Shark AI**: Можна взяти кристали в борг, але AI буде "переслідувати" користувача штрафами, поки борг не повернуть.
+23. **Insider Tips**: AI дає підказку, в якому лутбоксі сьогодні вищий шанс на Legendary скін.
+24. **Badge Barter**: Можливість анонімно обміняти свої досягнення на Skill Points з іншими гравцями.
+25. **Counterfeit Credits**: Ризикована міні-гра на подвоєння кристалів з шансом "бану" в Маркеті на 48 годин.
+26. **Corporate Espionage**: "Крадіжка" теми інтерфейсу у гравця вищого рівня через розгадування шифру.
+27. **The Burner Account**: Тимчасова "секретна" ціль, яку AI не аналізує для загальних звітів (для таємних заощаджень).
+28. **Crypto-Proxy Goal**: Симуляція крипто-гаманця, баланс якого прикріплений до реальної ціни BTC/ETH.
+29. **Hack-the-Bill**: Міні-гра: "розріж" свої рахунки лазером, щоб візуально зменшити їхній вплив на історію.
+30. **The Syndicate**: Закритий чат та Маркет лише для тих, у кого рівень заощаджень понад 100 000 грн.
 
-## 3. Social Mechanics (Alliance Path)
-*Focus: Peer-to-peer accountability and collective progression.*
+## ⚔️ Блок 4: Війни Фракцій (Соціум)
+31. **Faction: The Technocrats**: Орієнтація на загальний баланс. Бонус: вищий Magnate XP.
+32. **Faction: The Street Punks**: Орієнтація на стріки та активність. Бонус: вищий Resilience XP.
+33. **Faction: The Netrunners**: Орієнтація на термінал та CLI. Бонус: вищий Hacker XP.
+34. **Territory Control**: Альянси захоплюють "категорії" (напр. "Кафе"). Заощадження в цій категорії дають вплив фракції.
+35. **The Virus Attack**: Можливість надіслати "вірус" (нешкідливий глітч) іншому Альянсу, якщо ваш Альянс зберіг більше за тиждень.
+36. **Financial Grand Prix**: Щомісячні перегони фракцій: хто збере найбільший % від доходу.
+37. **Propaganda Ads**: Члени Альянсу можуть створювати власні мотиваційні "банери", які бачать інші члени.
+38. **The Traitor Mechanic**: Можливість "донести" на незаписану покупку друга (якщо бачите її в реалі) за нагороду. (Dark Cyberpunk style).
+39. **Diplomatic Immunity**: Рідкісний предмет для уникнення штрафів всієї фракції.
+40. **The Citadel**: Глобальна ціль, де всі фракції скидаються на "Мега-проект" (напр. реальна висадка дерев через фонди).
 
-21. **The Great Raid**: Alliance-wide savings goals with massive collective rewards.
-22. **Cyber-Duel: High Stakes**: Crystal-betting duels on who can save a target amount first.
-23. **Guardian Angel**: Using personal Freeze Tokens to save a teammate's streak.
-24. **Alliance Skill Tree**: Shared XP pool to unlock global multipliers for all members.
-25. **Mercenary Bounties**: High-level players setting tasks for newcomers with crystal rewards.
-26. **The "Signal" Flare**: Crowdsourced support to resist spending urges in real-time.
-27. **Alliance Terminal**: A shared CLI log showing the collective pulse of the squad.
-28. **Reputation Ranks**: High-status tiers for elite savers with access to exclusive events.
-29. **Gift of the Magi**: Gifting cosmetic items to celebrate a friend's milestones.
-30. **Alliance Headquarters**: A shared virtual space that evolves visually as the group saves more.
+## 🛠️ Блок 5: Deep-Tech Інтеграції (Залізо)
+41. **AR Vault View**: Перегляд свого "міста заощаджень" у доповненій реальності на робочому столі.
+42. **NFC-Tag Impulse Save**: Дотик телефоном до фізичної мітки (на гаманці) автоматично робить мікро-депозит 20 грн.
+43. **Voice-Command CLI**: Використання голосових команд для терміналу ("System, save 100 credits!").
+44. **Smart-Watch Taptic Nudge**: Легкий удар по зап'ястю кожного разу, коли ви витрачаєте гроші (відчуття "витоку" ресурсу).
+45. **Stream Deck Plugin**: Фізичні кнопки на столі для перевірки стріку та швидкого сейву.
+46. **Adaptive Ambient Noise**: Генерація звуків дощу або офісу, які стають чистішими, чим вища фінансова дисципліна.
+47. **AI Ghost Takeover**: AI коуч іноді "захоплює" екран, щоб показати персоналізований мем про ваші витрати.
+48. **QR-Code Scavenging**: Пошук QR-кодів у реальному світі (партнерські локації) для отримання бонусів у Vault.
+49. **Cyber-Browser Extension**: Попап AI-коуча, який з'являється при вході на сайти магазинів (Amazon/AliExpress).
+50. **Biometric Truth Test**: Вимога FaceID для підтвердження витрати, яка не входить у бюджет.
 
-## 4. RPG & Bosses (Gamification Core)
-*Focus: Visualizing financial obstacles as enemies to defeat.*
-
-31. **Boss: "The Subscription Hydra"**: An enemy that grows heads for every active recurring payment.
-32. **Avatar Evolution: "Frame to Mech"**: Physical growth of the avatar into a massive cyber-unit.
-33. **The Glitch Dungeon**: A 7-day challenge mode with micro-quests and high failure stakes.
-34. **Boss: "The Black Friday Titan"**: A seasonal event requiring collective resistance against discounts.
-35. **Skill Node: "Overclock"**: Temporary XP double-down with high crystal penalty for failure.
-36. **Pet: "Cyber-Phoenix"**: A pet that requires ritual savings to "revive" after a lost streak.
-37. **Class: "Technomancer"**: Terminal-based UI hacking capabilities for high-level players.
-38. **Achievement: "The Zero-Day"**: Reward for completing a full year without using a single Freeze Token.
-39. **Boss: "Unexpected Repair"**: Randomly appearing enemy that rewards "Emergency Fund" usage.
-40. **Cyber-Market Auctions**: Live crystal-based bidding for ultra-rare cosmetic items.
-
-## 5. Geek Mode & Analytics (Magnate Path)
-*Focus: Deep data visualization for financial strategists.*
-
-41. **Cashflow Heatmap**: 3D visualization of spending vs. saving hours.
-42. **Burn Rate Calculator**: Real-time analysis of disposable income depletion.
-43. **JSON Master Sync**: Exportable data for personal financial dashboards (Notion/Obsidian).
-44. **Monte Carlo Simulation**: Probability analysis of hitting goals given historical variance.
-45. **Multi-Currency Arbitrage**: Asset simulation for BTC, Gold, and foreign currencies.
-46. **Goal Dependency Graph**: Visual mapping of how individual goals impact each other.
-47. **Efficiency Score**: A 0-100 metric for budget discipline.
-48. **Historical Shadow**: Overlapping past performance graphs for year-over-year comparison.
-49. **Terminal CLI: /grep**: Regex search for transaction history and notes.
-50. **Geek-Panel Customization**: Modular dashboard for building custom analytic widgets.
-
-## 6. Immersion & Economy (Environment Path)
-*Focus: Aesthetic and technical integration into the user's life.*
-
-51. **Theme: "The Matrix"**: Matrix-style falling code during terminal deposits.
-52. **Wearable: Haptic Pulse**: Heartbeat-pattern vibrations for "Critical Deposits".
-53. **Smart Home: Victory Sound**: Automated celebratory music playback upon goal completion.
-54. **Consumable: "Data Purge"**: Item to reset AI's memory of specific bad habits.
-55. **Dark Zone UI**: High-contrast, low-light mode for late-night app usage.
-56. **Dynamic Icon**: Home screen icon that reflects the current streak state.
-57. **Ambient Synthwave**: Procedural music that reacts to savings progress.
-58. **Consumable: "XP Overcharge"**: 24-hour XP boost with glitch-debuff risks.
-59. **The Architect Mode**: Mini-editor for custom Vault Card designs.
-60. **Interactive Widget**: Desktop widget for one-tap "Quick Deposits" and streak tracking.
+## ⏳ Блок 6: Спадщина та Час (Legacy)
+51. **Dead Man's Switch**: Якщо не відкривати додаток 30 днів, він надсилає "соромливий" імейл вашому ментору.
+52. **Time Capsule**: Послання самому собі в майбутнє, яке відкриється лише при досягненні цілі.
+53. **Avatar Legacy**: Після досягнення 50 рівня старий аватар стає "наставником" (статичний бонус) для нового.
+54. **Prestige: The Great Reset**: Скидання рівня до 1 в обмін на перманентний +5% множник до всіх нагород.
+55. **Chronos-Goal**: Ціль, яку *треба* виконати за конкретний час, інакше весь прогрес згорає (Hardcore Mode).
+56. **Seasonal UI Cycles**: Інтерфейс змінюється з реальними порами року (Cyber-Winter, Neon-Spring).
+57. **The Wealth Simulation**: Екран, що показує ваш аватар у "Пентхаусі" або "Підворітті" залежно від поточного темпу заощаджень.
+58. **Life-Log Integration**: Кореляція між кількістю кроків (Google Fit) та заощадженнями. Здоров'я = Багатство.
+59. **Aging Badges**: Значки, які "старіють" і стають платиновими лише через рік утримання.
+60. **The Architect Terminal**: Режим, де користувач може писати власні прості "скрипти" (логіку) для правил свого сховища.
