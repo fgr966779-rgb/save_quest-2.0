@@ -1,37 +1,42 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/providers/l10n.dart';
 import '../../../core/providers/savings_notifier.dart';
 import '../../../core/utils/money_utils.dart';
 import '../../../core/widgets/dual_progress_ring.dart';
-import '../../../core/widgets/neon_button.dart';
-import '../../../core/widgets/neon_progress_bar.dart';
-import '../../../core/widgets/glass_card.dart';
-import '../../../core/widgets/saving_goal_card.dart';
-import '../../gamification/providers/bounty_provider.dart';
-import '../../gamification/models/bounty_model.dart';
-import '../../../data/database.dart';
-import '../../gamification/widgets/daily_spin_dialog.dart';
 import '../../../core/widgets/neon_avatar_painter.dart';
+import '../../../core/widgets/financial_health_thermometer.dart';
+import '../../../core/models/avatar_config.dart';
 import '../../../core/providers/banking_provider.dart';
 import '../../../core/providers/events_notifier.dart';
+import '../../../core/providers/financial_health_provider.dart';
+
+// New clean widgets (may be created in parallel — forward-import safe).
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/progress_bar.dart';
+import '../../../core/widgets/goal_card.dart';
+
+// Existing feature widgets
 import '../widgets/banking_insights_card.dart';
+import '../../gamification/providers/bounty_provider.dart';
 import '../../gamification/providers/quest_provider.dart';
-import '../../gamification/models/daily_quest.dart';
 import '../../gamification/providers/daily_bonus_provider.dart';
+import '../../gamification/models/daily_quest.dart';
+import '../../gamification/widgets/daily_spin_dialog.dart';
 import '../../gamification/widgets/daily_bonus_dialog.dart';
 import '../../gamification/widgets/shield_activation_dialog.dart';
+import '../../../data/database.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+  const DashboardScreen({super.key});
 
   @override
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
@@ -40,6 +45,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
+    // Listen for daily bonus / shield activation dialogs
     ref.listen<AsyncValue<DailyBonusState>>(dailyBonusProvider, (previous, next) {
       if (next is AsyncData<DailyBonusState>) {
         final state = next.value;
@@ -63,267 +69,72 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final goalsAsync = ref.watch(goalsProvider);
     final profileAsync = ref.watch(userProfileProvider);
     final currentLocale = ref.watch(localeProvider);
+    final brightness = Theme.of(context).brightness;
+    final settings = ref.watch(settingsServiceProvider);
 
     String t(String key) => AppLocalizations.get(currentLocale, key);
 
     return Scaffold(
-      backgroundColor: Colors.transparent, // Let ShellScaffold background handle it
-      appBar: buildAppBar(context, t),
+      backgroundColor: Colors.transparent,
+      appBar: _buildAppBar(context, t),
       body: RefreshIndicator(
         onRefresh: () async {
-          // Relies on live Streams from Drift, so no-op pull to refresh suffices
           await Future.delayed(const Duration(milliseconds: 400));
         },
-        color: AppColors.cyanAccent,
-        backgroundColor: AppColors.background,
+        color: AppColors.accent,
+        backgroundColor: AppColors.surface(brightness),
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spaceXl,
+            vertical: AppTheme.spaceMd,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header Segment
-              _buildHeader(context, profileAsync, t)
-                  .animate()
-                  .fadeIn(duration: 400.ms, delay: 50.ms)
-                  .slideY(begin: -0.1, end: 0.0),
-              const SizedBox(height: 16.0),
+              // ── Header: Avatar + Greeting + Level ──
+              _buildHeader(context, profileAsync, brightness, t),
+              const SizedBox(height: AppTheme.spaceXl),
 
-              // Streak Banner
-              _buildStreakBanner(profileAsync, t)
-                  .animate()
-                  .fadeIn(duration: 400.ms, delay: 100.ms)
-                  .slideY(begin: 0.1, end: 0.0),
-              const SizedBox(height: 16.0),
+              // ── Streak Banner ──
+              _buildStreakBanner(profileAsync, brightness, t),
+              const SizedBox(height: AppTheme.spaceLg),
 
-              // Quick Actions — 2x2 grid with reduced height
-              Row(
-                children: [
-                  Expanded(
-                    child: NeonButton(
-                      text: t('dash_market'),
-                      baseColor: AppColors.goldGlow,
-                      glowColor: AppColors.goldGlow,
-                      icon: const Icon(Icons.storefront, color: Colors.black, size: 16),
-                      height: 46.0,
-                      onPressed: () => context.push('/market'),
-                    ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  Expanded(
-                    child: NeonButton(
-                      text: t('dash_spin'),
-                      baseColor: AppColors.cyanAccent,
-                      glowColor: AppColors.cyanAccent,
-                      icon: const Icon(Icons.casino, color: Colors.black, size: 16),
-                      height: 46.0,
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (_) => const DailySpinDialog(),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ).animate().fadeIn(duration: 400.ms, delay: 150.ms).scaleXY(begin: 0.96, end: 1.0),
-              const SizedBox(height: 8.0),
-              Row(
-                children: [
-                  Expanded(
-                    child: NeonButton(
-                      text: t('dash_penalty'),
-                      baseColor: Colors.redAccent,
-                      glowColor: Colors.redAccent,
-                      icon: const Icon(Icons.warning_amber_rounded, color: Colors.black, size: 16),
-                      height: 46.0,
-                      onPressed: () => context.push('/penalty-vault'),
-                    ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  Expanded(
-                    child: NeonButton(
-                      text: t('dash_squad'),
-                      baseColor: AppColors.magentaAccent,
-                      glowColor: AppColors.magentaAccent,
-                      icon: const Icon(Icons.group, color: Colors.black, size: 16),
-                      height: 46.0,
-                      onPressed: () => context.push('/squads'),
-                    ),
-                  ),
-                ],
-              ).animate().fadeIn(duration: 400.ms, delay: 150.ms).scaleXY(begin: 0.96, end: 1.0),
-              const SizedBox(height: 8.0),
-              SizedBox(
-                width: double.infinity,
-                child: NeonButton(
-                  text: '🏆 Лідерборди',
-                  baseColor: AppColors.goldAccent,
-                  glowColor: AppColors.goldAccent,
-                  icon: const Icon(Icons.emoji_events, color: Colors.black, size: 16),
-                  height: 46.0,
-                  onPressed: () => context.push('/leaderboards'),
-                ),
-              ).animate().fadeIn(duration: 400.ms, delay: 150.ms).scaleXY(begin: 0.96, end: 1.0),
-              const SizedBox(height: 16.0),
+              // ── Progress Rings ──
+              _buildProgressRings(goalsAsync),
+              const SizedBox(height: AppTheme.spaceLg),
 
-              // Active Cyber-Event Banner
-              Consumer(
-                builder: (context, ref, child) {
-                  final activeEvent = ref.watch(eventsProvider);
-                  if (activeEvent == null || !activeEvent.isActive) {
-                    return const SizedBox.shrink();
-                  }
-                  
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 16.0),
-                    padding: const EdgeInsets.all(12.0),
-                    decoration: BoxDecoration(
-                      color: AppColors.magentaAccent.withOpacity(0.15),
-                      border: Border.all(color: AppColors.magentaAccent),
-                      borderRadius: BorderRadius.circular(8.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.magentaAccent.withOpacity(0.4),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.public, color: AppColors.magentaAccent, size: 28),
-                        const SizedBox(width: 12.0),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                activeEvent.title,
-                                style: AppTextStyles.orbitronHeading(
-                                  fontSize: 12.0,
-                                  color: AppColors.magentaAccent,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 2.0),
-                              Text(
-                                activeEvent.description,
-                                style: const TextStyle(
-                                  fontSize: 10.0,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ).animate(onPlay: (controller) => controller.repeat(reverse: true)).fadeIn(duration: 800.ms).then().fade(end: 0.7);
-                },
-              ),
+              // ── Deposit CTA ──
+              _buildDepositButton(context, t),
+              const SizedBox(height: AppTheme.spaceXxl),
 
-              // Blacklist Virus Banner
-              Consumer(
-                builder: (context, ref, child) {
-                  final profileAsync = ref.watch(userProfileProvider);
-                  return profileAsync.when(
-                    data: (profile) {
-                      if (profile == null || profile.penaltyBalance <= 0) {
-                        return const SizedBox.shrink();
-                      }
-                      
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 16.0),
-                        padding: const EdgeInsets.all(12.0),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent.withOpacity(0.15),
-                          border: Border.all(color: Colors.redAccent),
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.bug_report, color: Colors.redAccent, size: 28)
-                                .animate(onPlay: (c) => c.repeat(reverse: true))
-                                .shake(duration: 300.ms),
-                            const SizedBox(width: 12.0),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'СИСТЕМА ІНФІКОВАНА',
-                                    style: AppTextStyles.orbitronHeading(
-                                      fontSize: 12.0,
-                                      color: Colors.redAccent,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(duration: 500.ms, color: Colors.white),
-                                  const SizedBox(height: 2.0),
-                                  const Text(
-                                    'Виявлено транзакції з Blacklist. Несплачені штрафи пошкоджують Аватар!',
-                                    style: TextStyle(
-                                      fontSize: 10.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
-                  );
-                },
-              ),
+              // ── Goal Cards ──
+              _buildGoalCards(context, ref, goalsAsync, settings),
+              const SizedBox(height: AppTheme.spaceXl),
 
-              // AI Insights Banner
+              // ── Daily Quests ──
+              _buildDailyQuestsCard(ref, brightness),
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Quick Actions ──
+              _buildQuickActions(context, t),
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── Financial Health Thermometer ──
+              _buildFinancialHealth(brightness),
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // ── AI Insights ──
               const BankingInsightsCard(),
-              const SizedBox(height: 12.0),
+              const SizedBox(height: AppTheme.spaceLg),
 
-              // AI Daily Bounty
-              _buildDailyBounty(context, ref)
-                  .animate()
-                  .fadeIn(duration: 400.ms, delay: 180.ms)
-                  .slideY(begin: 0.1, end: 0.0),
-              const SizedBox(height: 12.0),
+              // ── Event Banner ──
+              _buildEventBanner(brightness),
+              const SizedBox(height: AppTheme.spaceSm),
 
-              // Daily Quests Checklist
-              _buildDailyQuestsCard(ref)
-                  .animate()
-                  .fadeIn(duration: 400.ms, delay: 200.ms)
-                  .slideY(begin: 0.1, end: 0.0),
-
-              // Interactive concentric rings
-              _buildCenterpiece(goalsAsync)
-                  .animate()
-                  .fadeIn(duration: 500.ms, delay: 200.ms)
-                  .scale(
-                    begin: const Offset(0.92, 0.92),
-                    end: const Offset(1.0, 1.0),
-                    curve: Curves.easeOutBack,
-                  ),
-              const SizedBox(height: 28.0),
-
-              // Deposit Action Button
-              NeonButton(
-                text: t('dash_deposit'),
-                baseColor: AppColors.cyanAccent,
-                glowColor: AppColors.cyanAccent,
-                icon: const Icon(Icons.add_card_rounded, color: Colors.black, size: 20),
-                onPressed: () => context.push('/deposit'),
-              ).animate().fadeIn(duration: 400.ms, delay: 250.ms).slideY(begin: 0.15, end: 0.0),
-              const SizedBox(height: 28.0),
-
-              // Goals List Cards
-              _buildGoalCards(context, ref, goalsAsync)
-                  .animate()
-                  .fadeIn(duration: 500.ms, delay: 300.ms)
-                  .slideY(begin: 0.1, end: 0.0),
-              const SizedBox(height: 12.0),
+              // ── Penalty Banner ──
+              _buildPenaltyBanner(profileAsync, brightness),
+              const SizedBox(height: AppTheme.spaceXxxl),
             ],
           ),
         ),
@@ -331,175 +142,128 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  // ==========================================
-  // SUB-WIDGETS
-  // ==========================================
+  // ============================================
+  // APP BAR
+  // ============================================
+  PreferredSizeWidget _buildAppBar(BuildContext context, String Function(String) t) {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      title: Text(
+        'PiggyVault',
+        style: AppTypography.h3(context),
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(Icons.person_outline_rounded),
+          onPressed: () => context.push('/avatar-builder'),
+          tooltip: t('dash_profile_tooltip'),
+        ),
+        IconButton(
+          icon: Icon(Icons.notifications_none_rounded),
+          onPressed: () => context.push('/notifications'),
+          tooltip: t('dash_notifications_tooltip'),
+        ),
+      ],
+    );
+  }
 
-  Widget _buildHeader(BuildContext context, AsyncValue<UserProfile?> profileAsync, String Function(String) t) {
-    final isPrivacyMode = ref.watch(settingsServiceProvider).privacyMode;
-
+  // ============================================
+  // HEADER — Avatar, Greeting, Level
+  // ============================================
+  Widget _buildHeader(
+    BuildContext context,
+    AsyncValue<UserProfile?> profileAsync,
+    Brightness brightness,
+    String Function(String) t,
+  ) {
     return profileAsync.when(
-      loading: () => const SizedBox(height: 70, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('Error loading profile: $e', style: const TextStyle(color: Colors.red)),
+      loading: () => const SizedBox(height: 64),
+      error: (_, __) => const SizedBox.shrink(),
       data: (profile) {
         if (profile == null) return const SizedBox.shrink();
 
-        // Level threshold: 1000 * level^1.5
         final currentLevel = profile.level;
         final currentXp = profile.xp;
-        final xpNeededForNext = SavingsNotifier.xpRequiredForLevel(currentLevel);
-        final progress = (currentXp / xpNeededForNext).clamp(0.0, 1.0);
+        final xpNeeded = SavingsNotifier.xpRequiredForLevel(currentLevel);
+        final xpProgress = (currentXp / xpNeeded).clamp(0.0, 1.0);
 
-        final avatarConfig = profile.avatarConfig != null 
-            ? AvatarConfig.fromJson(profile.avatarConfig!) 
+        final avatarConfig = profile.avatarConfig != null
+            ? AvatarConfig.fromJson(profile.avatarConfig!)
             : const AvatarConfig();
 
         return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Avatar
+            GestureDetector(
+              onLongPress: () {
+                HapticFeedback.heavyImpact();
+                final settings = ref.read(settingsServiceProvider);
+                settings.privacyMode = !settings.privacyMode;
+                setState(() {});
+              },
+              child: NeonAvatarWidget(
+                config: avatarConfig,
+                size: 48.0,
+                brightness: brightness,
+              ),
+            ),
+            const SizedBox(width: AppTheme.spaceLg),
+
+            // Greeting
             Expanded(
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (profile.avatarConfig != null && profile.avatarConfig!.isNotEmpty) ...[
-                    GestureDetector(
-                      onLongPress: () {
-                        HapticFeedback.heavyImpact();
-                        final settings = ref.read(settingsServiceProvider);
-                        settings.privacyMode = !settings.privacyMode;
-                        // setState to trigger rebuild of header
-                        setState(() {});
-                      },
-                      child: NeonAvatarWidget(
-                        config: avatarConfig,
-                        size: 46.0,
-                      ),
-                    ),
-                    const SizedBox(width: 12.0),
-                  ],
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t('dash_vault'),
-                          style: AppTextStyles.rajdhaniMedium(
-                            fontSize: 12.0,
-                            color: AppColors.cyanAccent,
-                          ).copyWith(letterSpacing: 2.0),
-                        ),
-                        GestureDetector(
-                          onDoubleTap: () {
-                            context.push('/terminal');
-                          },
-                          child: Text(
-                            t('dash_title'),
-                            style: AppTextStyles.orbitronHeading(
-                              fontSize: 22.0,
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.bold,
-                            ).copyWith(
-                              shadows: [
-                                Shadow(
-                                  color: AppColors.cyanAccent.withOpacity(0.6),
-                                  blurRadius: 12.0,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  Text(
+                    t('dash_welcome'),
+                    style: AppTypography.bodySmall(context),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    t('dash_title'),
+                    style: AppTypography.h2(context),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8.0),
-            // Level Badge with interactive XP bar
+
+            // Level Chip
             Container(
-              width: 140.0,
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spaceMd,
+                vertical: AppTheme.spaceSm,
+              ),
               decoration: BoxDecoration(
-                color: AppColors.cardBgLight,
-                borderRadius: BorderRadius.circular(10.0),
-                border: Border.all(color: AppColors.borderNeon, width: 1.0),
+                color: AppColors.accentMutedBg(brightness),
+                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'LVL $currentLevel',
-                        style: AppTextStyles.orbitronHeading(
-                          fontSize: 11.0,
-                          color: AppColors.goldGlow,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '$currentXp/$xpNeededForNext XP',
-                        style: const TextStyle(
-                          fontSize: 9.0,
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'LVL $currentLevel',
+                    style: AppTypography.overline(context,
+                        color: AppColors.accent),
                   ),
-                  const SizedBox(height: 6.0),
-                  NeonProgressBar(
-                    progress: progress,
-                    activeColor: AppColors.goldGlow,
-                    glowColor: AppColors.goldGlow,
-                    height: 4.0,
-                  ),
-                  const SizedBox(height: 6.0),
-                  Row(
-                    children: [
-                      const Icon(Icons.token, color: AppColors.cyanAccent, size: 10),
-                      const SizedBox(width: 4.0),
-                      Text(
-                        'CREDITS: ${avatarConfig.credits}',
-                        style: const TextStyle(
-                          fontSize: 9.0,
-                          color: AppColors.cyanAccent,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (avatarConfig.integrity < 1.0) ...[
-                    const SizedBox(height: 6.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'INTEGRITY WARNING',
-                          style: TextStyle(
-                            fontSize: 8.0,
-                            color: Colors.redAccent,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          '${(avatarConfig.integrity * 100).toInt()}%',
-                          style: const TextStyle(
-                            fontSize: 8.0,
-                            color: Colors.redAccent,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: 80,
+                    height: 4,
+                    child: LinearProgressIndicator(
+                      value: xpProgress,
+                      backgroundColor: AppColors.border(brightness),
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(AppColors.accent),
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    const SizedBox(height: 4.0),
-                    NeonProgressBar(
-                      progress: avatarConfig.integrity,
-                      activeColor: Colors.redAccent,
-                      glowColor: Colors.redAccent,
-                      height: 4.0,
-                    ),
-                  ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$currentXp / $xpNeeded XP',
+                    style: AppTypography.caption(context,
+                        color: AppColors.textTertiary(brightness)),
+                  ),
                 ],
               ),
             ),
@@ -509,9 +273,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildStreakBanner(AsyncValue<UserProfile?> profileAsync, String Function(String) t) {
+  // ============================================
+  // STREAK BANNER
+  // ============================================
+  Widget _buildStreakBanner(
+    AsyncValue<UserProfile?> profileAsync,
+    Brightness brightness,
+    String Function(String) t,
+  ) {
     return profileAsync.when(
-      loading: () => const SizedBox(height: 50),
+      loading: () => const SizedBox(height: 56),
       error: (_, __) => const SizedBox.shrink(),
       data: (profile) {
         if (profile == null) return const SizedBox.shrink();
@@ -520,68 +291,67 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final hasStreak = streak > 0;
         final tokens = profile.freezeTokens;
 
-        return GlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          gradient: hasStreak
-              ? LinearGradient(
-                  colors: [
-                    AppColors.fireOrange.withOpacity(0.08),
-                    Colors.transparent,
-                  ],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                )
-              : null,
+        return SurfaceCard(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spaceLg,
+            vertical: AppTheme.spaceMd,
+          ),
           child: Row(
             children: [
               Icon(
-                hasStreak ? Icons.local_fire_department_rounded : Icons.opacity_rounded,
-                color: hasStreak ? AppColors.fireOrange : AppColors.textMuted,
-                size: 28.0,
+                hasStreak
+                    ? Icons.local_fire_department_rounded
+                    : Icons.opacity_rounded,
+                color: hasStreak ? AppColors.warning : AppColors.textTertiary(brightness),
+                size: 28,
               ),
-              const SizedBox(width: 12.0),
+              const SizedBox(width: AppTheme.spaceMd),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      hasStreak ? '${t('dash_streak_active')} $streak ${t('dash_days')}' : t('dash_streak_inactive'),
-                      style: AppTextStyles.orbitronHeading(
-                        fontSize: 12.0,
-                        color: hasStreak ? AppColors.fireOrange : AppColors.textSecondary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      hasStreak
+                          ? '${t('dash_streak_active')} $streak ${t('dash_days').toLowerCase()}'
+                          : t('dash_streak_inactive'),
+                      style: AppTypography.bodySmall(context,
+                          color: hasStreak
+                              ? AppColors.warning
+                              : AppColors.textSecondary(brightness)),
                     ),
-                    const SizedBox(height: 2.0),
+                    const SizedBox(height: 2),
                     Text(
-                      hasStreak ? t('dash_streak_tip_active') : t('dash_streak_tip_inactive'),
-                      style: TextStyle(
-                        fontSize: 10.0,
-                        color: AppColors.textMuted,
-                      ),
+                      hasStreak
+                          ? t('dash_streak_tip_active')
+                          : t('dash_streak_tip_inactive'),
+                      style: AppTypography.caption(context),
                     ),
                   ],
                 ),
               ),
-              // Freeze tokens counter
+              // Freeze tokens
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spaceSm,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.cyanAccent.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(6.0),
-                  border: Border.all(color: AppColors.cyanAccent.withOpacity(0.4), width: 1.0),
+                  color: AppColors.accentMutedBg(brightness),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.ac_unit_rounded, color: AppColors.cyanAccent, size: 14.0),
-                    const SizedBox(width: 4.0),
+                    Icon(
+                      Icons.ac_unit_rounded,
+                      color: AppColors.accent,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
-                      '$tokens CRYSH',
-                      style: AppTextStyles.orbitronHeading(
-                        fontSize: 9.0,
-                        color: AppColors.cyanAccent,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      '$tokens',
+                      style: AppTypography.caption(context,
+                          color: AppColors.accent),
                     ),
                   ],
                 ),
@@ -593,45 +363,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  AppBar buildAppBar(BuildContext context, String Function(String) t) {
-    return AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          t('dash_title'),
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 20.0,
-            color: AppColors.cyanAccent,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.pets, color: AppColors.goldGlow),
-            onPressed: () => context.push('/pets'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.card_giftcard, color: Colors.purpleAccent),
-            onPressed: () => context.push('/lootboxes'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.shield, color: AppColors.magentaAccent),
-            onPressed: () => context.push('/class-selection'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.auto_delete_outlined, color: AppColors.cyanAccent),
-            onPressed: () => context.push('/regret-archive'),
-          ),
-        ],
-      );
-  }
-
-  Widget _buildCenterpiece(AsyncValue<List<Goal>> goalsAsync) {
+  // ============================================
+  // PROGRESS RINGS
+  // ============================================
+  Widget _buildProgressRings(AsyncValue<List<Goal>> goalsAsync) {
     return goalsAsync.when(
-      loading: () => const SizedBox(
-        height: 200,
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const SizedBox(height: 200),
       error: (_, __) => const SizedBox(height: 200),
       data: (goals) {
         if (goals.length < 2) return const SizedBox(height: 200);
@@ -639,23 +376,43 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final goalA = goals.firstWhere((g) => g.id == 'goal_a');
         final goalB = goals.firstWhere((g) => g.id == 'goal_b');
 
-        final double ratioA = (goalA.currentAmount / goalA.targetAmount).clamp(0.0, 1.0);
-        final double ratioB = (goalB.currentAmount / goalB.targetAmount).clamp(0.0, 1.0);
+        final ratioA = (goalA.currentAmount / goalA.targetAmount).clamp(0.0, 1.0);
+        final ratioB = (goalB.currentAmount / goalB.targetAmount).clamp(0.0, 1.0);
 
         return Center(
           child: DualProgressRing(
             progressA: ratioA,
             progressB: ratioB,
-            size: 210.0,
-            strokeWidth: 13.0,
-            ringSpacing: 10.0,
+            size: 180,
+            strokeWidth: 12,
+            ringSpacing: 10,
           ),
         );
       },
     );
   }
 
-  Widget _buildGoalCards(BuildContext context, WidgetRef ref, AsyncValue<List<Goal>> goalsAsync) {
+  // ============================================
+  // DEPOSIT CTA
+  // ============================================
+  Widget _buildDepositButton(BuildContext context, String Function(String) t) {
+    return AppButton(
+      label: t('dash_deposit'),
+      variant: ButtonVariant.primary,
+      icon: Icons.add_card_rounded,
+      onPressed: () => context.push('/deposit'),
+    );
+  }
+
+  // ============================================
+  // GOAL CARDS
+  // ============================================
+  Widget _buildGoalCards(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<Goal>> goalsAsync,
+    SettingsService settings,
+  ) {
     return goalsAsync.when(
       loading: () => const SizedBox(height: 100),
       error: (_, __) => const SizedBox.shrink(),
@@ -664,72 +421,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
         final goalA = goals.firstWhere((g) => g.id == 'goal_a');
         final goalB = goals.firstWhere((g) => g.id == 'goal_b');
-        final isCiphered = ref.watch(settingsServiceProvider).privacyMode;
+        final isPrivate = settings.privacyMode;
 
         return Column(
           children: [
-            GestureDetector(
-              onVerticalDragEnd: (details) async {
-                if (details.primaryVelocity != null && details.primaryVelocity! < -300) {
-                  // Swipe up detected - Quick Deposit 50
-                  HapticFeedback.heavyImpact();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Швидкий внесок: 50.00 ${goalA.currency} до ${goalA.name}!'),
-                      backgroundColor: AppColors.cyanAccent.withOpacity(0.8),
-                    ),
-                  );
-                  final activeEvent = ref.read(eventsProvider);
-                  await ref.read(savingsNotifierProvider.notifier).createDeposit(
-                        amount: 50.0,
-                        goalAPercent: 100.0,
-                        activeEvent: activeEvent,
-                      );
-                }
-              },
-              child: SavingGoalCard(
-                title: goalA.name,
-                currentAmount: centsToDisplay(goalA.currentAmount),
-                targetAmount: centsToDisplay(goalA.targetAmount),
-                currency: goalA.currency,
-                icon: Icons.sports_esports_rounded,
-                accentColor: AppColors.cyanAccent,
-                heroTag: 'goal_hero_goal_a',
-                isCiphered: isCiphered,
-                onTap: () => context.push('/goal-detail/${goalA.id}'),
-              ),
+            _buildSingleGoalCard(
+              context: context,
+              ref: ref,
+              goal: goalA,
+              icon: Icons.sports_esports_rounded,
+              accentColor: AppColors.goalA,
+              isPrivate: isPrivate,
+              heroTag: 'goal_hero_goal_a',
             ),
-            const SizedBox(height: 16.0),
-            GestureDetector(
-              onVerticalDragEnd: (details) async {
-                if (details.primaryVelocity != null && details.primaryVelocity! < -300) {
-                  // Swipe up detected - Quick Deposit 50
-                  HapticFeedback.heavyImpact();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Швидкий внесок: 50.00 ${goalB.currency} до ${goalB.name}!'),
-                      backgroundColor: AppColors.magentaAccent.withOpacity(0.8),
-                    ),
-                  );
-                  final activeEvent = ref.read(eventsProvider);
-                  await ref.read(savingsNotifierProvider.notifier).createDeposit(
-                        amount: 50.0,
-                        goalAPercent: 0.0,
-                        activeEvent: activeEvent,
-                      );
-                }
-              },
-              child: SavingGoalCard(
-                title: goalB.name,
-                currentAmount: centsToDisplay(goalB.currentAmount),
-                targetAmount: centsToDisplay(goalB.targetAmount),
-                currency: goalB.currency,
-                icon: Icons.monitor_rounded,
-                accentColor: AppColors.magentaAccent,
-                heroTag: 'goal_hero_goal_b',
-                isCiphered: isCiphered,
-                onTap: () => context.push('/goal-detail/${goalB.id}'),
-              ),
+            const SizedBox(height: AppTheme.spaceMd),
+            _buildSingleGoalCard(
+              context: context,
+              ref: ref,
+              goal: goalB,
+              icon: Icons.monitor_rounded,
+              accentColor: AppColors.goalB,
+              isPrivate: isPrivate,
+              heroTag: 'goal_hero_goal_b',
             ),
           ],
         );
@@ -737,99 +450,55 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildDailyBounty(BuildContext context, WidgetRef ref) {
-    final bountyAsync = ref.watch(bountyProvider);
+  Widget _buildSingleGoalCard({
+    required BuildContext context,
+    required WidgetRef ref,
+    required Goal goal,
+    required IconData icon,
+    required Color accentColor,
+    required bool isPrivate,
+    required String heroTag,
+  }) {
+    final displayCurrent = isPrivate ? '•••' : centsToDisplay(goal.currentAmount);
+    final displayTarget = isPrivate ? '•••' : centsToDisplay(goal.targetAmount);
+    final progress = (goal.currentAmount / goal.targetAmount).clamp(0.0, 1.0);
 
-    return bountyAsync.when(
-      loading: () => const SizedBox(height: 60, child: Center(child: CircularProgressIndicator())),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (bounty) {
-        if (bounty == null) return const SizedBox.shrink();
-
-        final isDark = Theme.of(context).brightness == Brightness.dark;
-        
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16.0),
-          decoration: BoxDecoration(
-            color: bounty.isCompleted 
-                ? AppColors.goldGlow.withOpacity(0.1) 
-                : AppColors.cyanAccent.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(16.0),
-            border: Border.all(
-              color: bounty.isCompleted 
-                  ? AppColors.goldGlow.withOpacity(0.5) 
-                  : AppColors.cyanAccent.withOpacity(0.3),
+    return GestureDetector(
+      onVerticalDragEnd: (details) async {
+        if (details.primaryVelocity != null && details.primaryVelocity! < -300) {
+          HapticFeedback.heavyImpact();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(t('dash_quick_deposit_snack')),
+              behavior: SnackBarBehavior.floating,
             ),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16.0),
-              onTap: bounty.isCompleted ? null : () {
-                // Future: show details dialog
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  children: [
-                    Icon(
-                      bounty.isCompleted ? Icons.check_circle : Icons.assignment,
-                      color: bounty.isCompleted ? AppColors.goldGlow : AppColors.cyanAccent,
-                      size: 28,
-                    ),
-                    const SizedBox(width: 16.0),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                bounty.title.toUpperCase(),
-                                style: AppTextStyles.orbitronHeading(
-                                  fontSize: 11.0,
-                                  color: bounty.isCompleted ? AppColors.goldGlow : AppColors.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const Spacer(),
-                              if (!bounty.isCompleted)
-                                Text(
-                                  '${bounty.targetAmount.toStringAsFixed(0)} ${ref.watch(settingsServiceProvider).currency}',
-                                  style: AppTextStyles.orbitronHeading(
-                                    fontSize: 10.0,
-                                    color: AppColors.cyanAccent,
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 4.0),
-                          Text(
-                            bounty.isCompleted ? 'КОНТРАКТ ВИКОНАНО!' : bounty.description,
-                            style: TextStyle(
-                              fontSize: 11.0,
-                              color: isDark ? AppColors.textSecondary : AppColors.textLightSecondary,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
+          );
+          final activeEvent = ref.read(eventsProvider);
+          await ref.read(savingsNotifierProvider.notifier).createDeposit(
+                amount: 50.0,
+                goalAPercent: goal.id == 'goal_a' ? 100.0 : 0.0,
+                activeEvent: activeEvent,
+              );
+        }
       },
+      child: GoalCard(
+        title: goal.name,
+        currentAmount: isPrivate ? 0 : centsToDisplay(goal.currentAmount),
+        targetAmount: isPrivate ? 0 : centsToDisplay(goal.targetAmount),
+        currency: goal.currency,
+        icon: icon,
+        accentColor: accentColor,
+        onTap: () => context.push('/goal-detail/${goal.id}'),
+        heroTag: heroTag,
+        isCiphered: isPrivate,
+      ),
     );
   }
 
-  // ==========================================
+  // ============================================
   // DAILY QUESTS CHECKLIST
-  // ==========================================
-  Widget _buildDailyQuestsCard(WidgetRef ref) {
+  // ============================================
+  Widget _buildDailyQuestsCard(WidgetRef ref, Brightness brightness) {
     final questsAsync = ref.watch(questProvider);
 
     return questsAsync.when(
@@ -839,56 +508,53 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         if (quests.isEmpty) return const SizedBox.shrink();
 
         final completedCount = quests.where((q) => q.isCompleted).length;
+        final allDone = completedCount == quests.length;
 
-        return GlassCard(
-          padding: const EdgeInsets.all(16.0),
+        return SurfaceCard(
+          padding: const EdgeInsets.all(AppTheme.spaceLg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header row
+              // Header
               Row(
                 children: [
-                  const Icon(Icons.assignment_turned_in, color: AppColors.cyanAccent, size: 20),
-                  const SizedBox(width: 8.0),
+                  Icon(
+                    Icons.assignment_turned_in_rounded,
+                    color: AppColors.accent,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppTheme.spaceSm),
                   Text(
-                    'ЩОДЕННІ КВЕСТИ',
-                    style: AppTextStyles.orbitronHeading(
-                      fontSize: 12.0,
-                      color: AppColors.cyanAccent,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    t('dash_daily_quests'),
+                    style: AppTypography.h3(context),
                   ),
                   const Spacer(),
+                  // Count badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spaceSm,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
-                      color: completedCount == quests.length
-                          ? AppColors.cyanAccent.withOpacity(0.2)
-                          : AppColors.cardBg,
-                      borderRadius: BorderRadius.circular(12.0),
-                      border: Border.all(
-                        color: completedCount == quests.length
-                            ? AppColors.cyanAccent
-                            : AppColors.borderNeon,
-                        width: 1.0,
-                      ),
+                      color: allDone
+                          ? AppColors.successMuted
+                          : AppColors.accentMutedBg(brightness),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                     ),
                     child: Text(
                       '$completedCount/${quests.length}',
-                      style: AppTextStyles.rajdhaniMedium(
-                        fontSize: 11.0,
-                        color: completedCount == quests.length
-                            ? AppColors.cyanAccent
-                            : AppColors.textSecondary,
-                      ),
+                      style: AppTypography.caption(context,
+                          color: allDone
+                              ? AppColors.success
+                              : AppColors.accent),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12.0),
+              const SizedBox(height: AppTheme.spaceMd),
 
               // Quest items
-              ...quests.map((quest) => _buildQuestItem(quest)),
+              ...quests.map((q) => _buildQuestItem(q, brightness)),
             ],
           ),
         );
@@ -896,92 +562,371 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  Widget _buildQuestItem(DailyQuest quest) {
-    final isCompleted = quest.isCompleted;
+  Widget _buildQuestItem(DailyQuest quest, Brightness brightness) {
+    final done = quest.isCompleted;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceSm),
       child: Row(
         children: [
           // Checkbox
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            width: 22.0,
-            height: 22.0,
+          Container(
+            width: 22,
+            height: 22,
             decoration: BoxDecoration(
-              color: isCompleted ? AppColors.cyanAccent.withOpacity(0.2) : Colors.transparent,
-              borderRadius: BorderRadius.circular(6.0),
+              color: done
+                  ? AppColors.accentMutedBg(brightness)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(6),
               border: Border.all(
-                color: isCompleted ? AppColors.cyanAccent : AppColors.borderNeon,
+                color: done ? AppColors.accent : AppColors.border(brightness),
                 width: 1.5,
               ),
             ),
-            child: isCompleted
-                ? const Icon(Icons.check, color: AppColors.cyanAccent, size: 14)
+            child: done
+                ? const Icon(Icons.check, color: AppColors.accent, size: 14)
                 : null,
           ),
-          const SizedBox(width: 10.0),
+          const SizedBox(width: AppTheme.spaceMd),
 
-          // Text
+          // Title + description
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   quest.title,
-                  style: TextStyle(
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.w600,
-                    color: isCompleted
-                        ? AppColors.textSecondary
-                        : AppColors.textPrimary,
-                    decoration: isCompleted ? TextDecoration.lineThrough : null,
-                    decorationColor: AppColors.textSecondary,
-                  ),
+                  style: AppTypography.bodySmall(context,
+                      color: done
+                          ? AppColors.textSecondary(brightness)
+                          : AppColors.textPrimary(brightness)),
                 ),
                 Text(
                   quest.description,
-                  style: TextStyle(
-                    fontSize: 10.0,
-                    color: isCompleted
-                        ? AppColors.textSecondary.withOpacity(0.5)
-                        : AppColors.textSecondary,
-                  ),
+                  style: AppTypography.caption(context),
                 ),
               ],
             ),
           ),
 
-          // Rewards badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-            decoration: BoxDecoration(
-              color: isCompleted
-                  ? AppColors.cyanAccent.withOpacity(0.1)
-                  : AppColors.magentaAccent.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8.0),
+          // Reward badge
+          if (!done)
+            Text(
+              '+${quest.rewardXp}XP',
+              style: AppTypography.caption(context,
+                  color: AppColors.accent),
             ),
-            child: Text(
-              isCompleted ? '✓' : '+${quest.rewardXp}XP +${quest.rewardCredits}CR',
-              style: TextStyle(
-                fontSize: 9.0,
-                fontWeight: FontWeight.bold,
-                color: isCompleted ? AppColors.cyanAccent : AppColors.magentaAccent,
-              ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================
+  // QUICK ACTIONS ROW
+  // ============================================
+  Widget _buildQuickActions(BuildContext context, String Function(String) t) {
+    return Wrap(
+      alignment: WrapAlignment.spaceEvenly,
+      runSpacing: 8.0,
+      children: [
+        _QuickActionButton(
+          icon: Icons.storefront_rounded,
+          label: t('dash_market'),
+          onTap: () => context.push('/market'),
+        ),
+        _QuickActionButton(
+          icon: Icons.casino_rounded,
+          label: t('dash_spin'),
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (_) => const DailySpinDialog(),
+            );
+          },
+        ),
+        _QuickActionButton(
+          icon: Icons.emoji_events_rounded,
+          label: t('dash_leaderboard'),
+          onTap: () => context.push('/leaderboards'),
+        ),
+        _QuickActionButton(
+          icon: Icons.shield_rounded,
+          label: t('dash_class'),
+          onTap: () => context.push('/class-selection'),
+        ),
+        _QuickActionButton(
+          icon: Icons.calculate_rounded,
+          label: t('calc_title'),
+          onTap: () => context.push('/savings-calculator'),
+        ),
+        _QuickActionButton(
+          icon: Icons.flag_rounded,
+          label: t('challenge_title'),
+          onTap: () => context.push('/weekly-challenges'),
+        ),
+      ],
+    );
+  }
+
+  // ============================================
+  // FINANCIAL HEALTH THERMOMETER
+  // ============================================
+  Widget _buildFinancialHealth(Brightness brightness) {
+    final healthAsync = ref.watch(financialHealthProvider);
+    final locale = ref.read(localeProvider);
+    final t = (String key) => AppLocalizations.get(locale, key);
+
+    return SurfaceCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            t('health_title'),
+            style: AppTypography.h3(context),
+          ),
+          const SizedBox(height: 12),
+          healthAsync.when(
+            loading: () => const SizedBox(
+              height: 200,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (health) {
+              return Row(
+                children: [
+                  // Thermometer
+                  FinancialHealthThermometer(
+                    score: health.score,
+                    brightness: brightness,
+                  ),
+                  const SizedBox(width: 16),
+                  // Breakdown
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _HealthDetailRow(
+                          label: t('health_streak'),
+                          value: health.streakScore,
+                          weight: '40%',
+                        ),
+                        const SizedBox(height: 8),
+                        _HealthDetailRow(
+                          label: t('health_goals'),
+                          value: health.goalScore,
+                          weight: '40%',
+                        ),
+                        const SizedBox(height: 8),
+                        _HealthDetailRow(
+                          label: t('health_avoided'),
+                          value: health.avoidedScore,
+                          weight: '20%',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================
+  // EVENT BANNER
+  // ============================================
+  Widget _buildEventBanner(Brightness brightness) {
+    final activeEvent = ref.watch(eventsProvider);
+    if (activeEvent == null || !activeEvent.isActive) {
+      return const SizedBox.shrink();
+    }
+
+    return SurfaceCard(
+      padding: const EdgeInsets.all(AppTheme.spaceMd),
+      borderColor: AppColors.accent,
+      child: Row(
+        children: [
+          Icon(Icons.event_rounded, color: AppColors.accent, size: 24),
+          const SizedBox(width: AppTheme.spaceMd),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  activeEvent.title,
+                  style: AppTypography.bodySmall(context,
+                      color: AppColors.accent),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  activeEvent.description,
+                  style: AppTypography.caption(context),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+
+  // ============================================
+  // PENALTY BANNER
+  // ============================================
+  Widget _buildPenaltyBanner(
+    AsyncValue<UserProfile?> profileAsync,
+    Brightness brightness,
+  ) {
+    return profileAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (profile) {
+        if (profile == null || profile.penaltyBalance <= 0) {
+          return const SizedBox.shrink();
+        }
+
+        return SurfaceCard(
+          padding: const EdgeInsets.all(AppTheme.spaceMd),
+          borderColor: AppColors.error,
+          child: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded,
+                  color: AppColors.error, size: 24),
+              const SizedBox(width: AppTheme.spaceMd),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t('dash_active_penalties'),
+                      style: AppTypography.bodySmall(context,
+                          color: AppColors.error),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      t('dash_penalties_detected'),
+                      style: AppTypography.caption(context),
+                    ),
+                  ],
+                ),
+              ),
+              AppButton(
+                label: t('dash_penalties_btn'),
+                variant: ButtonVariant.ghost,
+                size: ButtonSize.small,
+                onPressed: () => context.push('/penalty-vault'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
-// Quick inline math exponent calculator for Dart environment
-class MathHelper {
-  static double pow(double x, double exponent) {
-    if (exponent == 0) return 1.0;
-    if (exponent == 1) return x;
-    // Basic approximation since dart:math only works with num values
-    return math.pow(x, exponent).toDouble();
+// ============================================
+// HEALTH DETAIL ROW (local widget)
+// ============================================
+class _HealthDetailRow extends StatelessWidget {
+  final String label;
+  final double value;
+  final String weight;
+
+  const _HealthDetailRow({
+    required this.label,
+    required this.value,
+    required this.weight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final pct = value.round();
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(label, style: AppTypography.bodySmall(context)),
+        ),
+        Text(
+          '$pct%',
+          style: AppTypography.caption(
+            context,
+            color: pct >= 70
+                ? AppColors.success
+                : pct >= 40
+                    ? AppColors.chartAmber
+                    : AppColors.error,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '($weight)',
+          style: AppTypography.overline(context),
+        ),
+      ],
+    );
+  }
+}
+
+// ============================================
+// QUICK ACTION BUTTON (local widget)
+// ============================================
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spaceSm,
+          vertical: AppTheme.spaceSm,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceMuted(brightness),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              ),
+              child: Icon(
+                icon,
+                color: AppColors.textPrimary(brightness),
+                size: 22,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spaceXs),
+            Text(
+              label,
+              style: AppTypography.caption(context),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

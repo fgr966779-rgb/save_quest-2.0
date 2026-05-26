@@ -4,65 +4,89 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
-import '../../../core/widgets/particle_background.dart';
+import '../../../core/services/biometric_service.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProviderStateMixin {
-  late AnimationController _scanController;
-  late Animation<double> _scanAnimation;
-
-  late AnimationController _logoController;
-  late Animation<double> _logoOpacity;
-  late Animation<double> _logoScale;
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    _scanController = AnimationController(
+    _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _scanAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _scanController, curve: Curves.easeInOut),
+      duration: const Duration(milliseconds: 1200),
     );
 
-    _logoController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    )..forward();
-
-    _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeOut),
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
     );
 
-    _logoScale = Tween<double>(begin: 0.7, end: 1.0).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeOutBack),
-    );
-
-    _navigateToNext();
+    // Fade in, then navigate after delay
+    _controller.forward().then((_) {
+      _navigateToNext();
+    });
   }
 
   @override
   void dispose() {
-    _scanController.dispose();
-    _logoController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   Future<void> _navigateToNext() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
+    await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
 
     final settings = ref.read(settingsServiceProvider);
+
+    // If biometric is enabled, require authentication before proceeding
+    if (settings.isBiometricEnabled && settings.hasCompletedOnboarding) {
+      final bio = BiometricService();
+      final canAuth = await bio.canEnable();
+
+      if (canAuth && mounted) {
+        final locale = ref.read(localeProvider);
+        final reason = AppLocalizations.get(locale, 'biometric_auth_reason');
+        final success = await bio.authenticate(reason: reason);
+
+        if (!mounted) return;
+
+        if (!success) {
+          // Auth failed — show SnackBar and stay on splash (user can retry)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.get(locale, 'biometric_failed'),
+                style: AppTypography.bodySmall(context, color: Colors.white),
+              ),
+              backgroundColor: AppColors.error,
+              action: SnackBarAction(
+                label: 'Retry',
+                textColor: Colors.white,
+                onPressed: () => _navigateToNext(),
+              ),
+            ),
+          );
+          return;
+        }
+      }
+    }
+
+    if (!mounted) return;
+
     if (settings.hasCompletedOnboarding) {
       context.go('/dashboard');
     } else {
@@ -72,96 +96,50 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.watch(localeProvider);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          const ParticleBackground(),
-          // Central Vault branding with FadeTransition + ScaleTransition
-          Center(
-            child: FadeTransition(
-              opacity: _logoOpacity,
-              child: ScaleTransition(
-                scale: _logoScale,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 90.0,
-                      height: 90.0,
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.cyanAccent, width: 2.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.cyanAccent.withOpacity(0.4),
-                            blurRadius: 16.0,
-                            spreadRadius: 2.0,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.vpn_key_rounded,
-                        color: AppColors.cyanAccent,
-                        size: 40.0,
-                      ),
-                    ),
-                    const SizedBox(height: 24.0),
-                    Text(
-                      'PIGGYVAULT',
-                      style: AppTextStyles.orbitronHeading(
-                        fontSize: 28.0,
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.bold,
-                      ).copyWith(letterSpacing: 2.0),
-                    ),
-                    const SizedBox(height: 8.0),
-                    Text(
-                      'СКАРБНИЧКА МРІЇ',
-                      style: AppTextStyles.rajdhaniMedium(
-                        fontSize: 14.0,
-                        color: AppColors.cyanAccent,
-                      ).copyWith(letterSpacing: 4.0),
-                    ),
-                  ],
+      backgroundColor: AppColors.background(brightness),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Clean icon in accent-colored circle
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  color: AppColors.accentMutedBg(brightness),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.savings_rounded,
+                  color: AppColors.accent,
+                  size: 44,
                 ),
               ),
-            ),
-          ),
-          // Cinematic scanning horizontal neon line — thinner (2px) but brighter
-          AnimatedBuilder(
-            animation: _scanAnimation,
-            builder: (context, child) {
-              return Positioned(
-                top: MediaQuery.of(context).size.height * _scanAnimation.value,
-                left: 0.0,
-                right: 0.0,
-                child: Container(
-                  height: 2.0,
-                  decoration: BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.cyanAccent.withOpacity(1.0),
-                        blurRadius: 10.0,
-                        spreadRadius: 3.0,
-                      ),
-                    ],
-                    gradient: const LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        AppColors.cyanAccent,
-                        Colors.white,
-                        AppColors.cyanAccent,
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
+              const SizedBox(height: 24),
+              Text(
+                'PiggyVault',
+                style: AppTypography.h1(
+                  context,
+                  color: AppColors.textPrimary(brightness),
                 ),
-              );
-            },
+              ),
+              const SizedBox(height: 8),
+              Text(
+                AppLocalizations.get(locale, 'onb_splash_tagline'),
+                style: AppTypography.bodySmall(
+                  context,
+                  color: AppColors.textTertiary(brightness),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

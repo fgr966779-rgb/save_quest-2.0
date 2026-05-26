@@ -33,9 +33,12 @@ import '../../features/dashboard/screens/terminal_screen.dart';
 import '../../features/dashboard/screens/price_analysis_screen.dart';
 import '../../features/remote_control/screens/remote_control_screen.dart';
 import '../../features/dashboard/screens/shell_scaffold.dart';
+import '../../features/gamification/screens/notification_center_screen.dart';
 
 import '../../features/dashboard/screens/goal_complete_screen.dart';
-
+import '../../features/dashboard/screens/savings_calculator_screen.dart';
+import '../../features/gamification/screens/weekly_challenges_screen.dart';
+import '../../features/gamification/screens/savings_stats_screen.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   final settings = ref.watch(settingsServiceProvider);
 
@@ -188,6 +191,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const RegretArchiveScreen(),
       ),
       GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationCenterScreen(),
+      ),
+      GoRoute(
         path: '/terminal',
         builder: (context, state) => const TerminalScreen(),
       ),
@@ -212,6 +219,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           final goalId = int.tryParse(state.pathParameters['goalId'] ?? '') ?? 0;
           return GoalDetailScreen(goalId: goalId);
         },
+      ),
+      GoRoute(
+        path: '/savings-calculator',
+        builder: (context, state) => const SavingsCalculatorScreen(),
+      ),
+      GoRoute(
+        path: '/weekly-challenges',
+        builder: (context, state) => const WeeklyChallengesScreen(),
+      ),
+      GoRoute(
+        path: '/savings-stats',
+        builder: (context, state) => const SavingsStatsScreen(),
       ),
       GoRoute(
         path: '/goal-complete',

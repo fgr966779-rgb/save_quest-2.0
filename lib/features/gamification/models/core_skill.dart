@@ -58,9 +58,9 @@ class CoreSkillSystem {
 
   static Color getSkillColor(CoreSkillType type) {
     switch (type) {
-      case CoreSkillType.hacker: return const Color(0xFF00FF41); // Matrix Green
-      case CoreSkillType.magnate: return AppColors.goldGlow;
-      case CoreSkillType.resilience: return AppColors.magentaAccent;
+      case CoreSkillType.hacker: return AppColors.skillHacker;
+      case CoreSkillType.magnate: return AppColors.skillMagnate;
+      case CoreSkillType.resilience: return AppColors.skillResilience;
     }
   }
 

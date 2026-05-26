@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,8 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/widgets/glass_card.dart';
-import '../../../core/widgets/neon_button.dart';
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/providers/l10n.dart';
 import '../services/remote_control_service.dart';
 
 class RemoteControlScreen extends ConsumerStatefulWidget {
@@ -64,20 +64,22 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.watch(localeProvider);
     final state = ref.watch(remoteControlProvider);
     final notifier = ref.read(remoteControlProvider.notifier);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0.0,
         title: Text(
-          'КІБЕР-УПРАВЛІННЯ ПК',
-          style: AppTextStyles.orbitronHeading(fontSize: 16.0, color: AppColors.cyanAccent),
+          AppLocalizations.get(locale, 'remote_title'),
+          style: AppTypography.h3(context, color: AppColors.accent),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary(brightness)),
           onPressed: () {
             notifier.disconnect();
             context.pop();
@@ -88,24 +90,24 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
             IconButton(
               icon: Icon(
                 _directTouchMode ? Icons.touch_app : Icons.mouse,
-                color: AppColors.cyanAccent,
+                color: AppColors.accent,
               ),
-              tooltip: _directTouchMode ? 'Режим: Прямий Клік' : 'Режим: Трекпад',
+              tooltip: AppLocalizations.get(locale, _directTouchMode ? 'remote_mode_direct' : 'remote_mode_trackpad'),
               onPressed: () {
                 HapticFeedback.lightImpact();
                 setState(() => _directTouchMode = !_directTouchMode);
               },
             ),
             IconButton(
-              icon: const Icon(Icons.flash_on, color: AppColors.goldAccent),
-              tooltip: 'Виміряти затримку',
+              icon: const Icon(Icons.flash_on, color: AppColors.warning),
+              tooltip: AppLocalizations.get(locale, 'remote_latency'),
               onPressed: () {
                 notifier.measureLatency();
               },
             ),
             IconButton(
-              icon: const Icon(Icons.power_settings_new, color: Colors.redAccent),
-              tooltip: 'Відключитися',
+              icon: const Icon(Icons.power_settings_new, color: AppColors.error),
+              tooltip: AppLocalizations.get(locale, 'remote_disconnect'),
               onPressed: () {
                 HapticFeedback.heavyImpact();
                 notifier.disconnect();
@@ -123,6 +125,9 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
   }
 
   Widget _buildConnectionSettings(RemoteControlState state, RemoteControlNotifier notifier) {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.watch(localeProvider);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Column(
@@ -134,25 +139,28 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.cyanAccent.withOpacity(0.08),
-                border: Border.all(color: AppColors.cyanAccent.withOpacity(0.3), width: 2.0),
+                color: AppColors.accent.withOpacity(0.08),
+                border: Border.all(color: AppColors.accent.withOpacity(0.3), width: 2.0),
               ),
-              child: const Icon(Icons.terminal, color: AppColors.cyanAccent, size: 48.0),
+              child: Icon(Icons.terminal, color: AppColors.accent, size: 48.0),
             ),
           ),
           const SizedBox(height: 24.0),
           Center(
             child: Text(
               'VAULT-17 LINK PORTAL',
-              style: AppTextStyles.orbitronHeading(fontSize: 18.0, color: Colors.white),
+              style: AppTypography.h2(context),
             ),
           ),
           const SizedBox(height: 8.0),
           Center(
             child: Text(
-              'Встановіть з\'єднання з хост-сервером Node.js',
+              AppLocalizations.get(locale, 'remote_desc'),
               textAlign: TextAlign.center,
-              style: AppTextStyles.interBody(fontSize: 12.0, color: AppColors.textSecondary),
+              style: AppTypography.body(
+                context,
+                color: AppColors.textSecondary(brightness),
+              ),
             ),
           ),
           const SizedBox(height: 32.0),
@@ -161,18 +169,18 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
             Container(
               padding: const EdgeInsets.all(12.0),
               decoration: BoxDecoration(
-                color: Colors.redAccent.withOpacity(0.1),
+                color: AppColors.error.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8.0),
-                border: Border.all(color: Colors.redAccent.withOpacity(0.4)),
+                border: Border.all(color: AppColors.error.withOpacity(0.4)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.redAccent),
+                  const Icon(Icons.error_outline, color: AppColors.error),
                   const SizedBox(width: 12.0),
                   Expanded(
                     child: Text(
                       state.error!,
-                      style: const TextStyle(color: Colors.white, fontSize: 12.0),
+                      style: AppTypography.bodySmall(context),
                     ),
                   ),
                 ],
@@ -181,21 +189,20 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
             const SizedBox(height: 20.0),
           ],
 
-          GlassCard(
+          SurfaceCard(
             padding: const EdgeInsets.all(20.0),
-            borderColor: AppColors.cyanAccent.withOpacity(0.3),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildInputField(
-                  label: 'IP АДРЕСА ПК',
+                  label: AppLocalizations.get(locale, 'remote_ip_label'),
                   controller: _ipController,
                   hint: '192.168.1.100',
                   icon: Icons.wifi,
                 ),
                 const SizedBox(height: 16.0),
                 _buildInputField(
-                  label: 'ПОРТ WebSocket',
+                  label: AppLocalizations.get(locale, 'remote_port_label'),
                   controller: _portController,
                   hint: '8080',
                   icon: Icons.settings_ethernet,
@@ -203,9 +210,9 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
                 ),
                 const SizedBox(height: 16.0),
                 _buildInputField(
-                  label: 'КІБЕР-ПАРОЛЬ (PIN)',
+                  label: AppLocalizations.get(locale, 'remote_pin_label'),
                   controller: _passwordController,
-                  hint: 'Введіть пароль від сервера',
+                  hint: AppLocalizations.get(locale, 'remote_pin_hint'),
                   icon: Icons.lock_outline,
                   obscure: true,
                 ),
@@ -215,11 +222,10 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
           const SizedBox(height: 32.0),
           
           _isConnecting 
-              ? const Center(child: CircularProgressIndicator(color: AppColors.cyanAccent))
-              : NeonButton(
-                  text: 'ВСТАНОВИТИ З\'ЄДНАННЯ',
-                  baseColor: AppColors.cyanAccent,
-                  glowColor: AppColors.cyanAccent,
+              ? Center(child: CircularProgressIndicator(color: AppColors.accent))
+              : AppButton(
+                  label: AppLocalizations.get(locale, 'remote_connect_btn'),
+                  variant: ButtonVariant.primary,
                   onPressed: () async {
                     HapticFeedback.heavyImpact();
                     setState(() => _isConnecting = true);
@@ -237,6 +243,9 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
   }
 
   Widget _buildStreamingViewport(RemoteControlState state, RemoteControlNotifier notifier) {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.watch(localeProvider);
+
     return Column(
       children: [
         // Top status indicators
@@ -252,30 +261,30 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
                     height: 8,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.greenAccent,
+                      color: AppColors.success,
                     ),
                   ),
                   const SizedBox(width: 8.0),
                   Text(
-                    'З\'ЄДНАНО',
-                    style: AppTextStyles.orbitronHeading(fontSize: 10.0, color: AppColors.greenAccent),
+                    AppLocalizations.get(locale, 'remote_connected'),
+                    style: AppTypography.overline(context, color: AppColors.success),
                   ),
                 ],
               ),
               Text(
-                'ПІНГ: ${state.latency}мс',
-                style: AppTextStyles.orbitronHeading(fontSize: 10.0, color: AppColors.textSecondary),
+                '${AppLocalizations.get(locale, 'remote_ping')}${state.latency}${AppLocalizations.get(locale, 'remote_ping_ms')}',
+                style: AppTypography.overline(context, color: AppColors.textSecondary(brightness)),
               ),
               Row(
                 children: [
                   Text(
-                    'ЯКІСТЬ: ',
-                    style: AppTextStyles.orbitronHeading(fontSize: 9.0, color: AppColors.textSecondary),
+                    AppLocalizations.get(locale, 'remote_quality'),
+                    style: AppTypography.caption(context, color: AppColors.textSecondary(brightness)),
                   ),
                   DropdownButton<int>(
                     value: state.quality,
-                    dropdownColor: AppColors.cardBg,
-                    style: AppTextStyles.orbitronHeading(fontSize: 10.0, color: AppColors.cyanAccent),
+                    dropdownColor: AppColors.surface(brightness),
+                    style: AppTypography.overline(context, color: AppColors.accent),
                     underline: const SizedBox(),
                     items: [30, 45, 60, 75, 90].map((q) {
                       return DropdownMenuItem<int>(
@@ -302,19 +311,19 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
             decoration: BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.circular(12.0),
-              border: Border.all(color: AppColors.borderNeonActive, width: 2.0),
+              border: Border.all(color: AppColors.borderStrong(brightness), width: 2.0),
             ),
             clipBehavior: Clip.antiAlias,
             child: state.frameBytes == null
-                ? const Center(
+                ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(color: AppColors.cyanAccent),
-                        SizedBox(height: 16.0),
+                        CircularProgressIndicator(color: AppColors.accent),
+                        const SizedBox(height: 16.0),
                         Text(
-                          'Очікування потоку екрану...',
-                          style: TextStyle(color: Colors.white60, fontSize: 12.0),
+                          AppLocalizations.get(locale, 'remote_streaming'),
+                          style: TextStyle(color: AppColors.textTertiary(brightness), fontSize: 12.0),
                         ),
                       ],
                     ),
@@ -389,18 +398,21 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
           ),
         ),
 
-        // Cyberpunk floating modifier keyboard quick bar
+        // Controller quick bar
         _buildQuickControllerSheet(notifier),
       ],
     );
   }
 
   Widget _buildQuickControllerSheet(RemoteControlNotifier notifier) {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.watch(localeProvider);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(12.0, 8.0, 12.0, 16.0),
       decoration: BoxDecoration(
-        color: AppColors.cardBg,
-        border: Border(top: BorderSide(color: AppColors.borderNeon.withOpacity(0.5))),
+        color: AppColors.surface(brightness),
+        border: Border(top: BorderSide(color: AppColors.border(brightness))),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -416,7 +428,7 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
                 _buildModifierButton('shift', 'SHIFT'),
                 _buildModifierButton('win', 'WIN'),
                 const SizedBox(width: 8.0),
-                const VerticalDivider(color: Colors.white24, width: 1),
+                VerticalDivider(color: AppColors.borderStrong(brightness), width: 1),
                 const SizedBox(width: 8.0),
                 _buildShortcutButton('esc', 'ESC'),
                 _buildShortcutButton('tab', 'TAB'),
@@ -435,17 +447,17 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_downward_rounded, color: AppColors.magentaAccent),
-                    tooltip: 'Скрол Вниз',
+                    icon: const Icon(Icons.arrow_downward_rounded, color: AppColors.goalB),
+                    tooltip: AppLocalizations.get(locale, 'remote_scroll_down'),
                     onPressed: () {
                       HapticFeedback.lightImpact();
                       notifier.sendMouseScroll(-120);
                     },
                   ),
-                  const Icon(Icons.unfold_more_rounded, color: Colors.white38, size: 16),
+                  Icon(Icons.unfold_more_rounded, color: AppColors.textTertiary(brightness), size: 16),
                   IconButton(
-                    icon: const Icon(Icons.arrow_upward_rounded, color: AppColors.cyanAccent),
-                    tooltip: 'Скрол Вгору',
+                    icon: const Icon(Icons.arrow_upward_rounded, color: AppColors.accent),
+                    tooltip: AppLocalizations.get(locale, 'remote_scroll_up'),
                     onPressed: () {
                       HapticFeedback.lightImpact();
                       notifier.sendMouseScroll(120);
@@ -458,24 +470,24 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_left, color: Colors.white),
+                    icon: Icon(Icons.arrow_left, color: AppColors.textPrimary(brightness)),
                     onPressed: () => _sendKeyPressWithModifiers('left'),
                   ),
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_drop_up, color: Colors.white),
+                        icon: Icon(Icons.arrow_drop_up, color: AppColors.textPrimary(brightness)),
                         onPressed: () => _sendKeyPressWithModifiers('up'),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                        icon: Icon(Icons.arrow_drop_down, color: AppColors.textPrimary(brightness)),
                         onPressed: () => _sendKeyPressWithModifiers('down'),
                       ),
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.arrow_right, color: Colors.white),
+                    icon: Icon(Icons.arrow_right, color: AppColors.textPrimary(brightness)),
                     onPressed: () => _sendKeyPressWithModifiers('right'),
                   ),
                 ],
@@ -484,13 +496,13 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
               // Full Text Input keyboard dialog
               TextButton.icon(
                 style: TextButton.styleFrom(
-                  backgroundColor: AppColors.cyanAccent.withOpacity(0.1),
-                  side: const BorderSide(color: AppColors.cyanAccent),
+                  backgroundColor: AppColors.accent.withOpacity(0.1),
+                  side: BorderSide(color: AppColors.accent),
                 ),
-                icon: const Icon(Icons.keyboard, color: AppColors.cyanAccent, size: 18),
+                icon: Icon(Icons.keyboard, color: AppColors.accent, size: 18),
                 label: Text(
-                  'ТЕКСТ',
-                  style: AppTextStyles.orbitronHeading(fontSize: 10.0, color: AppColors.cyanAccent),
+                  AppLocalizations.get(locale, 'remote_text_btn'),
+                  style: AppTypography.overline(context, color: AppColors.accent),
                 ),
                 onPressed: () {
                   HapticFeedback.mediumImpact();
@@ -505,33 +517,35 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
   }
 
   Widget _buildModifierButton(String modifierKey, String label) {
+    final brightness = Theme.of(context).brightness;
     final bool isActive = _activeModifiers.contains(modifierKey);
     return Padding(
       padding: const EdgeInsets.only(right: 6.0),
       child: ChoiceChip(
         label: Text(
           label,
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 9.0,
-            color: isActive ? Colors.black : Colors.white,
+          style: AppTypography.overline(
+            context,
+            color: isActive ? Colors.black : AppColors.textPrimary(brightness),
           ),
         ),
         selected: isActive,
-        selectedColor: AppColors.cyanAccent,
-        backgroundColor: AppColors.cardBgLight,
+        selectedColor: AppColors.accent,
+        backgroundColor: AppColors.surfaceMuted(brightness),
         onSelected: (_) => _toggleModifier(modifierKey),
       ),
     );
   }
 
   Widget _buildShortcutButton(String key, String label) {
+    final brightness = Theme.of(context).brightness;
     return Padding(
       padding: const EdgeInsets.only(right: 6.0),
       child: ActionChip(
-        backgroundColor: AppColors.cardBgLight,
+        backgroundColor: AppColors.surfaceMuted(brightness),
         label: Text(
           label,
-          style: AppTextStyles.orbitronHeading(fontSize: 9.0, color: Colors.white),
+          style: AppTypography.overline(context, color: AppColors.textPrimary(brightness)),
         ),
         onPressed: () => _sendKeyPressWithModifiers(key),
       ),
@@ -546,15 +560,15 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
     bool obscure = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
+    final brightness = Theme.of(context).brightness;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           label,
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 10.0,
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.bold,
+          style: AppTypography.caption(
+            context,
+            color: AppColors.textSecondary(brightness),
           ),
         ),
         const SizedBox(height: 6.0),
@@ -562,13 +576,13 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
           controller: controller,
           obscureText: obscure,
           keyboardType: keyboardType,
-          style: const TextStyle(color: Colors.white, fontSize: 13.0),
+          style: TextStyle(color: AppColors.textPrimary(brightness), fontSize: 13.0),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: AppColors.textMuted.withOpacity(0.5)),
-            prefixIcon: Icon(icon, color: AppColors.cyanAccent, size: 18.0),
+            hintStyle: TextStyle(color: AppColors.textTertiary(brightness).withOpacity(0.5)),
+            prefixIcon: Icon(icon, color: AppColors.accent, size: 18.0),
             filled: true,
-            fillColor: Colors.black.withOpacity(0.3),
+            fillColor: AppColors.surfaceMuted(brightness),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
               borderSide: BorderSide.none,
@@ -581,37 +595,42 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
   }
 
   void _showTextInputDialog(RemoteControlNotifier notifier) {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.read(localeProvider);
     final textEditController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: AppColors.cardBg,
+          backgroundColor: AppColors.surface(brightness),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
-            side: const BorderSide(color: AppColors.cyanAccent),
+            side: BorderSide(color: AppColors.accent),
           ),
           title: Text(
-            'ВВЕДЕННЯ ТЕКСТУ НА ПК',
-            style: AppTextStyles.orbitronHeading(fontSize: 12.0, color: AppColors.cyanAccent),
+            AppLocalizations.get(locale, 'remote_text_dialog_title'),
+            style: AppTypography.h3(context, color: AppColors.accent),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Введений нижче текст буде послідовно надіслано на ваш ПК як натискання клавіш.',
-                style: AppTextStyles.interBody(fontSize: 10.0, color: AppColors.textSecondary),
+                AppLocalizations.get(locale, 'remote_text_dialog_desc'),
+                style: AppTypography.bodySmall(
+                  context,
+                  color: AppColors.textSecondary(brightness),
+                ),
               ),
               const SizedBox(height: 16.0),
               TextField(
                 controller: textEditController,
                 autofocus: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  hintText: 'Введіть текст...',
-                  hintStyle: TextStyle(color: Colors.white30),
-                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.cyanAccent)),
+                style: TextStyle(color: AppColors.textPrimary(brightness)),
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.get(locale, 'remote_text_hint'),
+                  hintStyle: TextStyle(color: AppColors.textTertiary(brightness)),
+                  enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border(brightness))),
+                  focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.accent)),
                 ),
               ),
             ],
@@ -619,15 +638,15 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
           actions: [
             TextButton(
               child: Text(
-                'СКАСУВАТИ',
-                style: AppTextStyles.orbitronHeading(fontSize: 10.0, color: Colors.white),
+                AppLocalizations.get(locale, 'common_cancel'),
+                style: AppTypography.body(context, color: AppColors.textSecondary(brightness)),
               ),
               onPressed: () => Navigator.of(context).pop(),
             ),
             TextButton(
               child: Text(
-                'НАДІСЛАТИ',
-                style: AppTextStyles.orbitronHeading(fontSize: 10.0, color: AppColors.cyanAccent),
+                AppLocalizations.get(locale, 'remote_send_btn'),
+                style: AppTypography.body(context, color: AppColors.accent),
               ),
               onPressed: () {
                 final txt = textEditController.text;

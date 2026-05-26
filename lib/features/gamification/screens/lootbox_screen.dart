@@ -5,9 +5,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
-import '../../../core/widgets/neon_button.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/surface_card.dart';
 import '../../../data/database.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -71,26 +72,41 @@ class _LootboxScreenState extends ConsumerState<LootboxScreen> with TickerProvid
     }
 
     if (mounted) {
+      final currentLocale = ref.read(localeProvider);
       setState(() {
         _isOpening = false;
         if (xpReward > 0) _openedReward = '+$xpReward XP';
         if (freezeReward > 0) _openedReward = '+$freezeReward FREEZE TOKEN';
       });
 
+      final brightness = Theme.of(context).brightness;
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (_) => AlertDialog(
-          backgroundColor: AppColors.background,
-          title: Text('ЛУТБОКС ВІДКРИТО!', style: AppTextStyles.orbitronHeading(fontSize: 18, color: AppColors.goldGlow)),
-          content: Text('Ваша нагорода:\n\n$_openedReward', style: const TextStyle(color: Colors.white, fontSize: 16)),
+          backgroundColor: AppColors.surface(brightness),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: AppColors.border(brightness)),
+          ),
+          title: Text(
+            AppLocalizations.get(currentLocale, 'loot_opened_title'),
+            style: AppTypography.h2(
+              context,
+              color: AppColors.warning,
+            ),
+          ),
+          content: Text(
+            '${AppLocalizations.get(currentLocale, 'loot_your_reward')}\n\n$_openedReward',
+            style: AppTypography.body(context),
+          ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
                 setState(() => _openedReward = null);
               },
-              child: const Text('КРУТО!', style: TextStyle(color: AppColors.cyanAccent)),
+              child: Text(AppLocalizations.get(currentLocale, 'loot_awesome_btn'), style: TextStyle(color: AppColors.accent)),
             ),
           ],
         ),
@@ -100,26 +116,25 @@ class _LootboxScreenState extends ConsumerState<LootboxScreen> with TickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'ЛУТБОКСИ',
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 18.0,
-            color: Colors.purpleAccent,
-            fontWeight: FontWeight.bold,
-          ),
+          t('loot_title'),
+          style: AppTypography.h2(context),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary(brightness), size: 20),
           onPressed: () => context.pop(),
         ),
       ),
       body: FutureBuilder<List<Lootbox>>(
-        // Rebuild when future changes
         future: (ref.read(databaseProvider).select(ref.read(databaseProvider).lootboxes)
           ..where((t) => t.isOpened.equals(false))).get(),
         builder: (context, snapshot) {
@@ -131,11 +146,11 @@ class _LootboxScreenState extends ConsumerState<LootboxScreen> with TickerProvid
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.card_giftcard, size: 80, color: AppColors.textMuted),
+                  Icon(Icons.card_giftcard, size: 80, color: AppColors.textTertiary(brightness)),
                   const SizedBox(height: 16),
-                  Text('У вас немає закритих лутбоксів.', style: AppTextStyles.rajdhaniMedium(fontSize: 16, color: AppColors.textSecondary)),
+                  Text(t('loot_empty'), style: AppTypography.body(context)),
                   const SizedBox(height: 8),
-                  const Text('Робіть внески, щоб отримати шанс на дроп!', style: TextStyle(color: AppColors.textMuted)),
+                  Text(t('loot_empty_hint'), style: AppTypography.bodySmall(context)),
                 ],
               ),
             );
@@ -155,10 +170,9 @@ class _LootboxScreenState extends ConsumerState<LootboxScreen> with TickerProvid
                 itemBuilder: (context, index) {
                   final box = boxes[index];
                   final isRare = box.rarity == 'rare';
-                  final color = isRare ? AppColors.goldGlow : Colors.blueAccent;
+                  final color = isRare ? AppColors.warning : AppColors.accent;
 
-                  return GlassCard(
-                    borderColor: color.withOpacity(0.5),
+                  return SurfaceCard(
                     padding: const EdgeInsets.all(12),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -166,14 +180,13 @@ class _LootboxScreenState extends ConsumerState<LootboxScreen> with TickerProvid
                         Icon(Icons.inventory_2, size: 60, color: color),
                         const SizedBox(height: 12),
                         Text(
-                          isRare ? 'РІДКІСНИЙ' : 'ЗВИЧАЙНИЙ',
-                          style: AppTextStyles.orbitronHeading(fontSize: 12, color: color, fontWeight: FontWeight.bold),
+                          isRare ? t('loot_rarity_rare') : t('loot_rarity_common'),
+                          style: AppTypography.overline(context, color: color),
                         ),
                         const Spacer(),
-                        NeonButton(
-                          text: 'ВІДКРИТИ',
-                          baseColor: color,
-                          glowColor: color,
+                        AppButton(
+                          label: t('loot_open_btn'),
+                          variant: ButtonVariant.primary,
                           onPressed: _isOpening ? null : () => _openLootbox(box),
                         ),
                       ],
@@ -184,13 +197,13 @@ class _LootboxScreenState extends ConsumerState<LootboxScreen> with TickerProvid
               if (_isOpening)
                 Container(
                   color: Colors.black.withOpacity(0.5),
-                  child: const Center(
+                  child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        CircularProgressIndicator(color: AppColors.magentaAccent),
-                        SizedBox(height: 16),
-                        Text('Відкриття лутбоксу...', style: TextStyle(color: Colors.white)),
+                        const CircularProgressIndicator(color: AppColors.accent),
+                        const SizedBox(height: 16),
+                        Text(t('loot_opening'), style: TextStyle(color: Colors.white)),
                       ],
                     ),
                   ),

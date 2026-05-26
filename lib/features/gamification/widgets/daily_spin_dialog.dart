@@ -4,21 +4,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/providers/providers.dart';
-import '../../../core/widgets/neon_button.dart';
+import '../../../core/providers/l10n.dart';
 import '../providers/quest_provider.dart';
 
 class DailySpinDialog extends ConsumerStatefulWidget {
-  const DailySpinDialog({Key? key}) : super(key: key);
+  const DailySpinDialog({super.key});
 
   @override
   ConsumerState<DailySpinDialog> createState() => _DailySpinDialogState();
 }
 
-class _DailySpinDialogState extends ConsumerState<DailySpinDialog> with SingleTickerProviderStateMixin {
+class _DailySpinDialogState extends ConsumerState<DailySpinDialog>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  
+
   bool _isSpinning = false;
   bool _hasSpun = false;
   String _rewardText = '';
@@ -34,8 +37,12 @@ class _DailySpinDialogState extends ConsumerState<DailySpinDialog> with SingleTi
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 3));
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOutCirc);
+    _controller =
+        AnimationController(vsync: this, duration: const Duration(seconds: 3));
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutCirc,
+    );
   }
 
   @override
@@ -53,8 +60,9 @@ class _DailySpinDialogState extends ConsumerState<DailySpinDialog> with SingleTi
         lastSpin.year == now.year &&
         lastSpin.month == now.month &&
         lastSpin.day == now.day) {
+      final locale = ref.read(localeProvider);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ви вже крутили рулетку сьогодні!')),
+        SnackBar(content: Text(AppLocalizations.get(locale, 'spin_already'))),
       );
       return;
     }
@@ -65,8 +73,9 @@ class _DailySpinDialogState extends ConsumerState<DailySpinDialog> with SingleTi
 
     final random = Random();
     final targetIndex = random.nextInt(_rewards.length);
-    final extraSpins = 3; 
-    final targetAngle = (extraSpins * 2 * pi) + (targetIndex * (2 * pi / _rewards.length));
+    final extraSpins = 3;
+    final targetAngle = (extraSpins * 2 * pi) +
+        (targetIndex * (2 * pi / _rewards.length));
 
     _animation = Tween<double>(begin: 0, end: targetAngle).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeOutCirc),
@@ -79,13 +88,14 @@ class _DailySpinDialogState extends ConsumerState<DailySpinDialog> with SingleTi
         _rewardText = _rewards[targetIndex];
       });
       settings.lastSpinDate = now;
-      
+
       // Trigger Daily Quest
       ref.read(questProvider.notifier).completeQuest('spin_roulette');
 
       // Apply reward
       if (_rewardText.contains('XP')) {
-        final xpAmount = int.tryParse(_rewardText.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+        final xpAmount =
+            int.tryParse(_rewardText.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
         final db = ref.read(databaseProvider);
         final profile = await db.getUserProfile();
         if (profile != null) {
@@ -98,7 +108,8 @@ class _DailySpinDialogState extends ConsumerState<DailySpinDialog> with SingleTi
         final db = ref.read(databaseProvider);
         final profile = await db.getUserProfile();
         if (profile != null) {
-          final updated = profile.copyWith(freezeTokens: profile.freezeTokens + 1);
+          final updated =
+              profile.copyWith(freezeTokens: profile.freezeTokens + 1);
           await db.insertUserProfile(updated);
           // ignore: unused_result
           ref.refresh(userProfileProvider);
@@ -109,32 +120,26 @@ class _DailySpinDialogState extends ConsumerState<DailySpinDialog> with SingleTi
 
   @override
   Widget build(BuildContext context) {
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
+
+    final brightness = Theme.of(context).brightness;
+
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
         padding: const EdgeInsets.all(24.0),
         decoration: BoxDecoration(
-          color: AppColors.background.withOpacity(0.9),
+          color: AppColors.surface(brightness),
           borderRadius: BorderRadius.circular(20.0),
-          border: Border.all(color: AppColors.magentaAccent, width: 2.0),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.magentaAccent.withOpacity(0.3),
-              blurRadius: 20.0,
-              spreadRadius: 5.0,
-            ),
-          ],
+          border: Border.all(color: AppColors.border(brightness)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'ЩОДЕННА РУЛЕТКА',
-              style: AppTextStyles.orbitronHeading(
-                fontSize: 18.0,
-                color: AppColors.magentaAccent,
-                fontWeight: FontWeight.bold,
-              ),
+              t('spin_title'),
+              style: AppTypography.h2(context, color: AppColors.accent),
             ),
             const SizedBox(height: 32.0),
             AnimatedBuilder(
@@ -147,19 +152,26 @@ class _DailySpinDialogState extends ConsumerState<DailySpinDialog> with SingleTi
                     height: 200,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.cyanAccent, width: 4.0),
-                      gradient: const SweepGradient(
+                      border: Border.all(
+                        color: AppColors.accent,
+                        width: 3.0,
+                      ),
+                      gradient: SweepGradient(
                         colors: [
-                          AppColors.cardBgLight,
-                          AppColors.cardBg,
-                          AppColors.cardBgLight,
-                          AppColors.cardBg,
-                          AppColors.cardBgLight,
+                          AppColors.surfaceMuted(brightness),
+                          AppColors.border(brightness),
+                          AppColors.surfaceMuted(brightness),
+                          AppColors.border(brightness),
+                          AppColors.surfaceMuted(brightness),
                         ],
                       ),
                     ),
                     child: Center(
-                      child: Icon(Icons.star, color: AppColors.goldGlow.withOpacity(0.5), size: 100),
+                      child: Icon(
+                        Icons.star,
+                        color: AppColors.accent.withOpacity(0.3),
+                        size: 100,
+                      ),
                     ),
                   ),
                 );
@@ -168,26 +180,31 @@ class _DailySpinDialogState extends ConsumerState<DailySpinDialog> with SingleTi
             const SizedBox(height: 32.0),
             if (_hasSpun) ...[
               Text(
-                'ВАШ ПРИЗ:',
-                style: AppTextStyles.rajdhaniMedium(fontSize: 14.0, color: AppColors.textSecondary),
+                t('spin_result'),
+                style: AppTypography.bodySmall(context),
               ),
               const SizedBox(height: 8.0),
               Text(
                 _rewardText,
-                style: AppTextStyles.orbitronHeading(fontSize: 24.0, color: AppColors.goldGlow),
+                style: AppTypography.metric(context, color: AppColors.accent),
               ),
             ] else ...[
-              NeonButton(
-                text: _isSpinning ? 'КРУТИТЬСЯ...' : 'КРУТИТИ!',
-                baseColor: AppColors.magentaAccent,
-                glowColor: AppColors.magentaAccent,
+              AppButton(
+                label: _isSpinning ? t('spin_spinning') : t('spin_spin_btn'),
+                variant: ButtonVariant.primary,
                 onPressed: _isSpinning ? null : _spin,
               ),
             ],
             const SizedBox(height: 16.0),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('ЗАКРИТИ', style: TextStyle(color: AppColors.textSecondary)),
+              child: Text(
+                t('common_close'),
+                style: AppTypography.body(
+                  context,
+                  color: AppColors.textTertiary(brightness),
+                ),
+              ),
             ),
           ],
         ),

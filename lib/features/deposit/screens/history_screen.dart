@@ -5,14 +5,17 @@ import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/providers/savings_notifier.dart';
 import '../../../core/utils/money_utils.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/empty_state.dart';
+import '../../../core/widgets/loading_skeleton.dart';
 import '../../../data/database.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
-  const HistoryScreen({Key? key}) : super(key: key);
+  const HistoryScreen({super.key});
 
   @override
   ConsumerState<HistoryScreen> createState() => _HistoryScreenState();
@@ -26,6 +29,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   Widget build(BuildContext context) {
     final depositsAsync = ref.watch(depositsProvider);
     final goalsAsync = ref.watch(goalsProvider);
+    final locale = ref.watch(localeProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -37,44 +41,43 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
             children: [
               // Header
               Text(
-                'ІСТОРІЯ ТРАНЗАКЦІЙ',
-                style: AppTextStyles.rajdhaniMedium(
-                  fontSize: 12.0,
-                  color: AppColors.magentaAccent,
-                ).copyWith(letterSpacing: 2.0),
+                AppLocalizations.get(locale, 'hist_title'),
+                style: AppTypography.h1(context),
               ),
+              const SizedBox(height: 4),
               Text(
-                'АРХІВ СЕЙФУ',
-                style: AppTextStyles.orbitronHeading(
-                  fontSize: 20.0,
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
+                AppLocalizations.get(locale, 'hist_subtitle'),
+                style: AppTypography.body(context),
               ),
               const SizedBox(height: 20.0),
 
               // Search & Filter Box
-              _buildSearchAndFilter(),
+              _buildSearchAndFilter(locale),
               const SizedBox(height: 20.0),
 
               // History list
               Expanded(
                 child: depositsAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () => const SkeletonList(itemCount: 4),
                   error: (err, _) => Center(
-                    child: Text(
-                      'Помилка завантаження: $err',
-                      style: const TextStyle(color: AppColors.magentaAccent),
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Text(
+                        '${AppLocalizations.get(locale, 'hist_load_error')}$err',
+                        style: AppTypography.body(context, color: AppColors.error),
+                      ),
                     ),
                   ),
                   data: (deposits) {
-                    final activeDeposits = deposits.where((d) => !d.isDeleted).toList();
+                    final activeDeposits =
+                        deposits.where((d) => !d.isDeleted).toList();
 
                     // Filter deposits by search query and target goal
                     final filtered = activeDeposits.where((dep) {
-                      final matchesSearch = dep.amount.toString().contains(_searchQuery) ||
-                          _searchQuery.isEmpty;
-                      
+                      final matchesSearch =
+                          dep.amount.toString().contains(_searchQuery) ||
+                              _searchQuery.isEmpty;
+
                       if (!matchesSearch) return false;
 
                       if (_selectedFilter == 'goal_a') {
@@ -86,14 +89,10 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     }).toList();
 
                     if (filtered.isEmpty) {
-                      return Center(
-                        child: Text(
-                          'ТРАНЗАКЦІЙ НЕ ЗНАЙДЕНО',
-                          style: AppTextStyles.orbitronHeading(
-                            fontSize: 13.0,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
+                      return EmptyState(
+                        icon: const Icon(Icons.receipt_long_outlined),
+                        title: AppLocalizations.get(locale, 'hist_empty_title'),
+                        description: AppLocalizations.get(locale, 'hist_empty_desc'),
                       );
                     }
 
@@ -109,18 +108,20 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.only(
+                                  left: 4, bottom: 8.0, top: 12.0),
                               child: Text(
-                                group.dateString.toUpperCase(),
-                                style: AppTextStyles.orbitronHeading(
-                                  fontSize: 10.0,
-                                  color: AppColors.cyanAccent,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                group.dateString,
+                                style: AppTypography.overline(context),
                               ),
                             ),
-                            ...group.items.map((dep) => _buildDepositItem(dep, goalsAsync.value ?? [])).toList(),
-                            const SizedBox(height: 16.0),
+                            ...group.items
+                                .map((dep) => _buildDepositItem(
+                                      dep,
+                                      goalsAsync.value ?? [],
+                                      locale,
+                                    ))
+                                .toList(),
                           ],
                         );
                       },
@@ -135,42 +136,31 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Widget _buildSearchAndFilter() {
+  Widget _buildSearchAndFilter(String locale) {
     return Column(
       children: [
-        // Search bar
+        // Search bar — uses theme InputDecorationTheme
         TextField(
           onChanged: (val) {
             setState(() {
               _searchQuery = val;
             });
           },
-          style: AppTextStyles.orbitronHeading(fontSize: 13.0, color: Colors.white),
+          style: AppTypography.body(context),
           decoration: InputDecoration(
-            hintText: 'Пошук за сумою...',
-            hintStyle: const TextStyle(color: AppColors.textSecondary),
-            prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
-            filled: true,
-            fillColor: AppColors.cardBg.withOpacity(0.4),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: BorderSide(color: AppColors.borderNeon.withOpacity(0.3)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12.0),
-              borderSide: const BorderSide(color: AppColors.cyanAccent),
-            ),
+            hintText: AppLocalizations.get(locale, 'hist_search_hint'),
+            prefixIcon: Icon(Icons.search),
           ),
         ),
         const SizedBox(height: 12.0),
         // Filter tabs
         Row(
           children: [
-            _buildFilterButton('Всі', 'all'),
+            _buildFilterButton(AppLocalizations.get(locale, 'hist_filter_all'), 'all'),
             const SizedBox(width: 8.0),
-            _buildFilterButton('Ціль A', 'goal_a'),
+            _buildFilterButton(AppLocalizations.get(locale, 'dash_goal_a'), 'goal_a'),
             const SizedBox(width: 8.0),
-            _buildFilterButton('Ціль B', 'goal_b'),
+            _buildFilterButton(AppLocalizations.get(locale, 'dash_goal_b'), 'goal_b'),
           ],
         ),
       ],
@@ -178,7 +168,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }
 
   Widget _buildFilterButton(String label, String code) {
+    final brightness = Theme.of(context).brightness;
     final bool active = _selectedFilter == code;
+
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -190,19 +182,22 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           decoration: BoxDecoration(
-            color: active ? AppColors.magentaAccent.withOpacity(0.15) : AppColors.cardBg.withOpacity(0.3),
+            color: active
+                ? AppColors.accent.withOpacity(0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(8.0),
             border: Border.all(
-              color: active ? AppColors.magentaAccent : AppColors.borderNeon.withOpacity(0.3),
+              color: active
+                  ? AppColors.accent
+                  : AppColors.border(brightness),
             ),
           ),
           child: Text(
-            label.toUpperCase(),
+            label,
             textAlign: TextAlign.center,
-            style: AppTextStyles.orbitronHeading(
-              fontSize: 10.0,
-              color: active ? AppColors.textPrimary : AppColors.textSecondary,
-              fontWeight: FontWeight.bold,
+            style: AppTypography.bodySmall(
+              context,
+              color: active ? AppColors.accent : null,
             ),
           ),
         ),
@@ -210,13 +205,25 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Widget _buildDepositItem(Deposit dep, List<Goal> goals) {
-    final currency = goals.isNotEmpty ? goals.first.currency : '\$';
+  Widget _buildDepositItem(Deposit dep, List<Goal> goals, String locale) {
+    final brightness = Theme.of(context).brightness;
+    final currency = goals.isNotEmpty ? goals.first.currency : '₴';
     final now = DateTime.now();
     final bool canDelete = now.difference(dep.createdAt).inHours < 24;
 
+    // Determine stripe color
+    final Color stripeColor;
+    if (dep.goalAAmount > 0 && dep.goalBAmount > 0) {
+      // Both goals — use a gradient stripe
+      stripeColor = AppColors.goalA;
+    } else if (dep.goalAAmount > 0) {
+      stripeColor = AppColors.goalA;
+    } else {
+      stripeColor = AppColors.goalB;
+    }
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10.0),
+      padding: const EdgeInsets.only(bottom: 8.0),
       child: Dismissible(
         key: Key(dep.id.toString()),
         direction: canDelete ? DismissDirection.endToStart : DismissDirection.none,
@@ -228,143 +235,146 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
         },
         background: Container(
           alignment: Alignment.centerRight,
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          margin: const EdgeInsets.only(bottom: 8.0),
           decoration: BoxDecoration(
-            color: AppColors.magentaAccent.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12.0),
-            border: Border.all(color: AppColors.magentaAccent),
+            color: AppColors.error,
+            borderRadius: BorderRadius.circular(16.0),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-                'ВИДАЛИТИ',
+                AppLocalizations.get(locale, 'hist_swipe_delete'),
                 style: TextStyle(
-                  color: AppColors.magentaAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12.0,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13.0,
                 ),
               ),
               SizedBox(width: 8.0),
-              Icon(Icons.delete_sweep, color: AppColors.magentaAccent),
+              Icon(Icons.delete_outline, color: Colors.white),
             ],
           ),
         ),
         child: GestureDetector(
           onTap: () => _showDetailsModal(dep, goals),
-          child: GlassCard(
-            padding: EdgeInsets.zero,
-            borderColor: canDelete ? AppColors.cyanAccent.withOpacity(0.3) : AppColors.borderNeon.withOpacity(0.2),
+          child: Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16.0),
+              border: Border.all(
+                color: AppColors.border(brightness),
+              ),
+              color: AppColors.surface(brightness),
+            ),
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                // Colored left stripe: cyan=goalA, magenta=goalB, both=split
-                Container(
-                  width: 3.0,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16.0),
-                      bottomLeft: Radius.circular(16.0),
+                  // Colored left stripe (3px)
+                  Container(
+                    width: 3.0,
+                    decoration: BoxDecoration(
+                      gradient: dep.goalAAmount > 0 && dep.goalBAmount > 0
+                          ? const LinearGradient(
+                              colors: [AppColors.goalA, AppColors.goalB],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            )
+                          : null,
+                      color: dep.goalAAmount > 0 && dep.goalBAmount > 0
+                          ? null
+                          : stripeColor,
                     ),
-                    gradient: dep.goalAAmount > 0 && dep.goalBAmount > 0
-                        ? const LinearGradient(
-                            colors: [AppColors.cyanAccent, AppColors.magentaAccent],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          )
-                        : null,
-                    color: dep.goalAAmount > 0 && dep.goalBAmount > 0
-                        ? null
-                        : dep.goalAAmount > 0
-                            ? AppColors.cyanAccent
-                            : AppColors.magentaAccent,
                   ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8.0),
-                                decoration: BoxDecoration(
-                                  color: canDelete ? AppColors.cyanAccent.withOpacity(0.1) : AppColors.borderNeon.withOpacity(0.1),
-                                  shape: BoxShape.circle,
+                  // Content
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14.0, vertical: 12.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8.0),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceMuted(brightness),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.add,
+                                    color: AppColors.textSecondary(brightness),
+                                    size: 18.0,
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.shield,
-                                  color: canDelete ? AppColors.cyanAccent : AppColors.textSecondary,
-                                  size: 20.0,
-                                ),
-                              ),
-                              const SizedBox(width: 12.0),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'ВНЕСОК #${dep.id.length > 8 ? dep.id.substring(0, 8) : dep.id}',
-                                      style: AppTextStyles.orbitronHeading(
-                                        fontSize: 12.0,
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.bold,
+                                const SizedBox(width: 12.0),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${AppLocalizations.get(locale, 'hist_entry_label')}${dep.id.length > 8 ? dep.id.substring(0, 8) : dep.id}',
+                                        style: AppTypography.bodySmall(context),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2.0),
-                                    Text(
-                                      DateFormat('HH:mm').format(dep.createdAt),
-                                      style: const TextStyle(fontSize: 10.0, color: AppColors.textSecondary),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 2.0),
+                                      Text(
+                                        DateFormat('HH:mm')
+                                            .format(dep.createdAt),
+                                        style: AppTypography.caption(context),
+                                      ),
+                                    ],
+                                  ),
                                 ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '+${formatAmount(dep.amount)} $currency',
+                                style: AppTypography.amount(context),
+                              ),
+                              const SizedBox(height: 4.0),
+                              Row(
+                                children: [
+                                  if (dep.goalAAmount > 0)
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      margin:
+                                          const EdgeInsets.only(right: 4.0),
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.goalA,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  if (dep.goalBAmount > 0)
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.goalB,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                ],
                               ),
                             ],
                           ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '+${formatAmount(dep.amount)} $currency',
-                              style: AppTextStyles.orbitronHeading(
-                                fontSize: 14.0,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 2.0),
-                            Row(
-                              children: [
-                                if (dep.goalAAmount > 0)
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    margin: const EdgeInsets.only(right: 4.0),
-                                    decoration: const BoxDecoration(color: AppColors.cyanAccent, shape: BoxShape.circle),
-                                  ),
-                                if (dep.goalBAmount > 0)
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(color: AppColors.magentaAccent, shape: BoxShape.circle),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
             ),
           ),
         ),
@@ -374,34 +384,33 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   Future<bool> _showDeleteConfirmation(Deposit dep, String currency) async {
     HapticFeedback.heavyImpact();
+    final locale = ref.read(localeProvider);
     final bool? result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardBg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-          side: const BorderSide(color: AppColors.magentaAccent, width: 1.5),
-        ),
         title: Text(
-          'СКАСУВАННЯ ТРАНЗАКЦІЇ',
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 14.0,
-            color: AppColors.magentaAccent,
-            fontWeight: FontWeight.bold,
-          ),
+          AppLocalizations.get(locale, 'hist_cancel_dialog_title'),
+          style: AppTypography.h3(context),
         ),
         content: Text(
-          'Ви дійсно бажаєте видалити внесок на суму ${formatAmount(dep.amount)} $currency? Цю дію неможливо скасувати.',
-          style: AppTextStyles.rajdhaniMedium(fontSize: 14.0, color: AppColors.textPrimary),
+          AppLocalizations.get(locale, 'hist_cancel_dialog_desc'),
+          style: AppTypography.body(context),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('ВІДМІНА', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              AppLocalizations.get(locale, 'common_cancel'),
+              style: AppTypography.body(context,
+                  color: AppColors.textSecondary(Theme.of(context).brightness)),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('ВИДАЛИТИ', style: TextStyle(color: AppColors.magentaAccent, fontWeight: FontWeight.bold)),
+            child: Text(
+              AppLocalizations.get(locale, 'common_delete'),
+              style: AppTypography.body(context, color: AppColors.error),
+            ),
           ),
         ],
       ),
@@ -410,54 +419,60 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   }
 
   void _showDetailsModal(Deposit dep, List<Goal> goals) {
-    HapticFeedback.lightImpact();
+    HapticFeedback.heavyImpact();
+    final locale = ref.read(localeProvider);
     final goalA = goals.firstWhere((g) => g.id == 'goal_a');
     final goalB = goals.firstWhere((g) => g.id == 'goal_b');
+    final brightness = Theme.of(context).brightness;
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
-        return Container(
+        return Padding(
           padding: const EdgeInsets.all(24.0),
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
-            border: Border.all(color: AppColors.borderNeon.withOpacity(0.3), width: 1.5),
-          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Handle bar
               Center(
                 child: Container(
-                  width: 50.0,
+                  width: 40.0,
                   height: 4.0,
                   decoration: BoxDecoration(
-                    color: AppColors.textSecondary.withOpacity(0.3),
+                    color: AppColors.border(brightness),
                     borderRadius: BorderRadius.circular(2.0),
                   ),
                 ),
               ),
               const SizedBox(height: 24.0),
               Text(
-                'ДЕТАЛІ ТРАНЗАКЦІЇ',
+                AppLocalizations.get(locale, 'hist_detail_title'),
                 textAlign: TextAlign.center,
-                style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                style: AppTypography.h2(context),
               ),
               const SizedBox(height: 24.0),
 
-              // Allocation Split visual
+              // Allocation split visual
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildModalGoalDetail(goalA.name, '${formatAmount(dep.goalAAmount)} ${goalA.currency}', AppColors.cyanAccent),
-                  Container(
-                    width: 1.5,
-                    height: 40.0,
-                    color: AppColors.borderNeon.withOpacity(0.3),
+                  _buildModalGoalDetail(
+                    goalA.name,
+                    '${formatAmount(dep.goalAAmount)} ${goalA.currency}',
+                    AppColors.goalA,
                   ),
-                  _buildModalGoalDetail(goalB.name, '${formatAmount(dep.goalBAmount)} ${goalB.currency}', AppColors.magentaAccent),
+                  Container(
+                    width: 1,
+                    height: 40.0,
+                    color: AppColors.border(brightness),
+                  ),
+                  _buildModalGoalDetail(
+                    goalB.name,
+                    '${formatAmount(dep.goalBAmount)} ${goalB.currency}',
+                    AppColors.goalB,
+                  ),
                 ],
               ),
               const SizedBox(height: 32.0),
@@ -466,24 +481,34 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Час транзакції:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.0)),
+                  Text(
+                    AppLocalizations.get(locale, 'hist_detail_time'),
+                    style: AppTypography.body(context),
+                  ),
                   Text(
                     DateFormat('dd.MM.yyyy HH:mm').format(dep.createdAt),
-                    style: AppTextStyles.orbitronHeading(fontSize: 12.0, color: Colors.white),
+                    style: AppTypography.bodySmall(context),
                   ),
                 ],
               ),
               const SizedBox(height: 12.0),
-              // Security status check
+              // Edit status
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Статус редагування:', style: TextStyle(color: AppColors.textSecondary, fontSize: 13.0)),
                   Text(
-                    DateTime.now().difference(dep.createdAt).inHours < 24 ? 'АКТИВНИЙ СЕЙФ' : 'ЗАБЛОКОВАНО (24Г)',
-                    style: AppTextStyles.orbitronHeading(
-                      fontSize: 12.0,
-                      color: DateTime.now().difference(dep.createdAt).inHours < 24 ? AppColors.cyanAccent : AppColors.textSecondary,
+                    AppLocalizations.get(locale, 'hist_detail_status'),
+                    style: AppTypography.body(context),
+                  ),
+                  Text(
+                    DateTime.now().difference(dep.createdAt).inHours < 24
+                        ? AppLocalizations.get(locale, 'hist_status_active')
+                        : AppLocalizations.get(locale, 'hist_status_locked'),
+                    style: AppTypography.bodySmall(
+                      context,
+                      color: DateTime.now().difference(dep.createdAt).inHours < 24
+                          ? AppColors.success
+                          : null,
                     ),
                   ),
                 ],
@@ -496,21 +521,22 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Widget _buildModalGoalDetail(String title, String amount, Color accentColor) {
+  Widget _buildModalGoalDetail(
+      String title, String amount, Color accentColor) {
     return Expanded(
       child: Column(
         children: [
           Text(
-            title.toUpperCase(),
+            title,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 11.0, color: accentColor, fontWeight: FontWeight.bold),
+            style: AppTypography.bodySmall(context, color: accentColor),
           ),
           const SizedBox(height: 6.0),
           Text(
             amount,
-            style: AppTextStyles.orbitronHeading(fontSize: 16.0, color: Colors.white, fontWeight: FontWeight.bold),
+            style: AppTypography.metric(context),
           ),
         ],
       ),
@@ -520,7 +546,8 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
   List<DateGroupedDeposits> _groupDepositsByDate(List<Deposit> items) {
     final Map<String, List<Deposit>> groups = {};
     for (var dep in items) {
-      final String formattedDate = DateFormat('dd MMMM yyyy', 'uk').format(dep.createdAt);
+      final String formattedDate =
+          DateFormat('dd MMMM yyyy', 'uk').format(dep.createdAt);
       if (groups.containsKey(formattedDate)) {
         groups[formattedDate]!.add(dep);
       } else {
@@ -528,7 +555,9 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
       }
     }
 
-    return groups.entries.map((e) => DateGroupedDeposits(dateString: e.key, items: e.value)).toList();
+    return groups.entries
+        .map((e) => DateGroupedDeposits(dateString: e.key, items: e.value))
+        .toList();
   }
 }
 

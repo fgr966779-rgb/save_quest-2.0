@@ -8,7 +8,7 @@ import '../utils/money_utils.dart';
 import '../../features/gamification/models/achievement_model.dart';
 import '../../features/gamification/models/badge_model.dart';
 import '../../features/gamification/screens/skill_tree_screen.dart' show allSkillNodes;
-import '../../core/widgets/neon_avatar_painter.dart';
+import '../../core/models/avatar_config.dart';
 import '../providers/events_notifier.dart';
 import '../../features/gamification/providers/bounty_provider.dart';
 import '../../features/gamification/providers/quest_provider.dart';

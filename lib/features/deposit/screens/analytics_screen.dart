@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/utils/money_utils.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/loading_skeleton.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../data/database.dart';
 
 import '../../gamification/providers/quest_provider.dart';
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
-  const AnalyticsScreen({Key? key}) : super(key: key);
+  const AnalyticsScreen({super.key});
 
   @override
   ConsumerState<AnalyticsScreen> createState() => _AnalyticsScreenState();
@@ -31,6 +35,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   Widget build(BuildContext context) {
     final goalsAsync = ref.watch(goalsProvider);
     final depositsAsync = ref.watch(depositsProvider);
+    final locale = ref.watch(localeProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -41,32 +46,35 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           children: [
             // Title
             Text(
-              'АНАЛІТИЧНИЙ ВІДСІК',
-              style: AppTextStyles.rajdhaniMedium(
-                fontSize: 12.0,
-                color: AppColors.cyanAccent,
-              ).copyWith(letterSpacing: 2.0),
+              AppLocalizations.get(locale, 'analytics_title'),
+              style: AppTypography.h1(context),
             ),
+            const SizedBox(height: 4),
             Text(
-              'ПРОЕКЦІЇ ТА ДИНАМІКА',
-              style: AppTextStyles.orbitronHeading(
-                fontSize: 20.0,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+              AppLocalizations.get(locale, 'analytics_subtitle'),
+              style: AppTypography.body(context),
             ),
             const SizedBox(height: 24.0),
 
             // Allocations breakdown (Pie chart)
-            _buildAllocationBreakdownCard(goalsAsync),
+            _buildAllocationBreakdownCard(goalsAsync, locale),
             const SizedBox(height: 20.0),
 
             // Timeline Projections Graph (Line Chart)
-            _buildTimelineChartCard(depositsAsync),
+            _buildTimelineChartCard(depositsAsync, locale),
             const SizedBox(height: 20.0),
 
             // Projections breakdown card
-            _buildProjectionsSummaryCard(goalsAsync, depositsAsync),
+            _buildProjectionsSummaryCard(goalsAsync, depositsAsync, locale),
+            const SizedBox(height: 20.0),
+
+            // Penalty / Avoided Stats link
+            AppButton(
+              label: AppLocalizations.get(locale, 'stats_title'),
+              onPressed: () => context.push('/savings-stats'),
+              variant: ButtonVariant.secondary,
+              icon: const Icon(Icons.bar_chart_rounded, size: 18),
+            ),
             const SizedBox(height: 12.0),
           ],
         ),
@@ -74,9 +82,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  Widget _buildAllocationBreakdownCard(AsyncValue<List<Goal>> goalsAsync) {
+  Widget _buildAllocationBreakdownCard(AsyncValue<List<Goal>> goalsAsync, String locale) {
     return goalsAsync.when(
-      loading: () => const SizedBox(height: 150, child: Center(child: CircularProgressIndicator())),
+      loading: () => const SkeletonList(itemCount: 2),
       error: (_, __) => const SizedBox.shrink(),
       data: (goals) {
         if (goals.isEmpty) return const SizedBox.shrink();
@@ -88,18 +96,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         final double percentA = total > 0 ? (totalA / total * 100) : 50;
         final double percentB = total > 0 ? (totalB / total * 100) : 50;
 
-        return GlassCard(
+        final brightness = Theme.of(context).brightness;
+
+        return SurfaceCard(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'РОЗПОДІЛ НАКОПИЧЕНИХ КОШТІВ',
-                style: AppTextStyles.orbitronHeading(
-                  fontSize: 12.0,
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
+                AppLocalizations.get(locale, 'analytics_distribution'),
+                style: AppTypography.h3(context),
               ),
               const SizedBox(height: 24.0),
               Row(
@@ -114,25 +120,25 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         centerSpaceRadius: 28,
                         sections: [
                           PieChartSectionData(
-                            color: AppColors.cyanAccent,
+                            color: AppColors.goalA,
                             value: percentA,
                             title: '${percentA.toInt()}%',
                             radius: 20,
-                            titleStyle: const TextStyle(
+                            titleStyle: TextStyle(
                               fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary(brightness),
                             ),
                           ),
                           PieChartSectionData(
-                            color: AppColors.magentaAccent,
+                            color: AppColors.goalB,
                             value: percentB,
                             title: '${percentB.toInt()}%',
                             radius: 20,
-                            titleStyle: const TextStyle(
+                            titleStyle: TextStyle(
                               fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary(brightness),
                             ),
                           ),
                         ],
@@ -148,13 +154,13 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                         _buildLegendItem(
                           goals.firstWhere((g) => g.id == 'goal_a').name,
                           '${formatAmount(totalA)} ${goals.first.currency}',
-                          AppColors.cyanAccent,
+                          AppColors.goalA,
                         ),
                         const SizedBox(height: 12.0),
                         _buildLegendItem(
                           goals.firstWhere((g) => g.id == 'goal_b').name,
                           '${formatAmount(totalB)} ${goals.first.currency}',
-                          AppColors.magentaAccent,
+                          AppColors.goalB,
                         ),
                       ],
                     ),
@@ -172,8 +178,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     return Row(
       children: [
         Container(
-          width: 12.0,
-          height: 12.0,
+          width: 10.0,
+          height: 10.0,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 8.0),
@@ -182,14 +188,14 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title.toUpperCase(),
+                title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 10.0, color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+                style: AppTypography.bodySmall(context),
               ),
               Text(
                 amount,
-                style: AppTextStyles.orbitronHeading(fontSize: 13.0, color: AppColors.textPrimary),
+                style: AppTypography.amount(context),
               ),
             ],
           ),
@@ -198,9 +204,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  Widget _buildTimelineChartCard(AsyncValue<List<Deposit>> depositsAsync) {
+  Widget _buildTimelineChartCard(AsyncValue<List<Deposit>> depositsAsync, String locale) {
     return depositsAsync.when(
-      loading: () => const SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
+      loading: () => const SkeletonList(itemCount: 2),
       error: (_, __) => const SizedBox.shrink(),
       data: (deposits) {
         // Reverse list to show chronological progression
@@ -217,31 +223,29 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         spotsB.add(const FlSpot(0, 0));
 
         for (int i = 0; i < timeline.length; i++) {
-          // Convert kopecks to display units for chart Y axis
           cumA += centsToDisplay(timeline[i].goalAAmount);
           cumB += centsToDisplay(timeline[i].goalBAmount);
           spotsA.add(FlSpot((i + 1).toDouble(), cumA));
           spotsB.add(FlSpot((i + 1).toDouble(), cumB));
         }
 
-        // Limit spot lengths for perfect chart drawing
+        // Limit spot lengths for chart readability
         if (spotsA.length > 8) {
           spotsA = spotsA.sublist(spotsA.length - 8);
           spotsB = spotsB.sublist(spotsB.length - 8);
         }
 
-        return GlassCard(
+        final brightness = Theme.of(context).brightness;
+        final gridColor = AppColors.border(brightness).withOpacity(0.15);
+
+        return SurfaceCard(
           padding: const EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'КІБЕР-ДИНАМІКА ПОТОКУ',
-                style: AppTextStyles.orbitronHeading(
-                  fontSize: 12.0,
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
+                AppLocalizations.get(locale, 'analytics_dynamics'),
+                style: AppTypography.h3(context),
               ),
               const SizedBox(height: 24.0),
               SizedBox(
@@ -252,7 +256,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       show: true,
                       drawVerticalLine: false,
                       getDrawingHorizontalLine: (val) => FlLine(
-                        color: AppColors.borderNeon.withOpacity(0.15),
+                        color: gridColor,
                         strokeWidth: 1.0,
                       ),
                     ),
@@ -263,24 +267,24 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       LineChartBarData(
                         spots: spotsA,
                         isCurved: true,
-                        color: AppColors.cyanAccent,
-                        barWidth: 3,
+                        color: AppColors.goalA,
+                        barWidth: 2.5,
                         dotData: FlDotData(show: spotsA.length < 5),
                         belowBarData: BarAreaData(
                           show: true,
-                          color: AppColors.cyanAccent.withOpacity(0.06),
+                          color: AppColors.goalA.withOpacity(0.06),
                         ),
                       ),
                       // Goal B progress line
                       LineChartBarData(
                         spots: spotsB,
                         isCurved: true,
-                        color: AppColors.magentaAccent,
-                        barWidth: 3,
+                        color: AppColors.goalB,
+                        barWidth: 2.5,
                         dotData: FlDotData(show: spotsB.length < 5),
                         belowBarData: BarAreaData(
                           show: true,
-                          color: AppColors.magentaAccent.withOpacity(0.06),
+                          color: AppColors.goalB.withOpacity(0.06),
                         ),
                       ),
                     ],
@@ -294,7 +298,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  Widget _buildProjectionsSummaryCard(AsyncValue<List<Goal>> goalsAsync, AsyncValue<List<Deposit>> depositsAsync) {
+  Widget _buildProjectionsSummaryCard(
+    AsyncValue<List<Goal>> goalsAsync,
+    AsyncValue<List<Deposit>> depositsAsync,
+    String locale,
+  ) {
     return goalsAsync.when(
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
@@ -321,32 +329,47 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
               }
             }
 
-            final double remainingA = (centsToDisplay(goalA.targetAmount) - centsToDisplay(goalA.currentAmount)).clamp(0, double.infinity);
-            final double remainingB = (centsToDisplay(goalB.targetAmount) - centsToDisplay(goalB.currentAmount)).clamp(0, double.infinity);
+            final double remainingA =
+                (centsToDisplay(goalA.targetAmount) - centsToDisplay(goalA.currentAmount))
+                    .clamp(0, double.infinity);
+            final double remainingB =
+                (centsToDisplay(goalB.targetAmount) - centsToDisplay(goalB.currentAmount))
+                    .clamp(0, double.infinity);
 
             final double rateA = totalAWeekly / 7.0;
             final double rateB = totalBWeekly / 7.0;
 
-            final String daysRemainingA = rateA > 0 ? '${(remainingA / rateA).ceil()} днів' : '∞ (відсутній потік)';
-            final String daysRemainingB = rateB > 0 ? '${(remainingB / rateB).ceil()} днів' : '∞ (відсутній потік)';
+            final String daysRemainingA =
+                rateA > 0 ? '${(remainingA / rateA).ceil()}${AppLocalizations.get(locale, 'daily_bonus_days')}' : '∞';
+            final String daysRemainingB =
+                rateB > 0 ? '${(remainingB / rateB).ceil()}${AppLocalizations.get(locale, 'daily_bonus_days')}' : '∞';
 
-            return GlassCard(
+            return SurfaceCard(
               padding: const EdgeInsets.all(18.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'ТИЖНЕВА АКТИВНІСТЬ ТА ПРОГНОЗ',
-                    style: AppTextStyles.orbitronHeading(
-                      fontSize: 12.0,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    AppLocalizations.get(locale, 'analytics_projection'),
+                    style: AppTypography.h3(context),
                   ),
                   const SizedBox(height: 16.0),
-                  _buildProjectionSummaryRow(goalA.name, '${totalAWeekly.toStringAsFixed(2)} ${goalA.currency}', daysRemainingA, AppColors.cyanAccent),
-                  const Divider(color: AppColors.borderNeon, height: 24.0),
-                  _buildProjectionSummaryRow(goalB.name, '${totalBWeekly.toStringAsFixed(2)} ${goalB.currency}', daysRemainingB, AppColors.magentaAccent),
+                  _buildProjectionSummaryRow(
+                    goalA.name,
+                    '${totalAWeekly.toStringAsFixed(2)} ${goalA.currency}',
+                    daysRemainingA,
+                    AppColors.goalA,
+                  ),
+                  Divider(
+                    color: AppColors.border(Theme.of(context).brightness),
+                    height: 24.0,
+                  ),
+                  _buildProjectionSummaryRow(
+                    goalB.name,
+                    '${totalBWeekly.toStringAsFixed(2)} ${goalB.currency}',
+                    daysRemainingB,
+                    AppColors.goalB,
+                  ),
                 ],
               ),
             );
@@ -356,7 +379,13 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  Widget _buildProjectionSummaryRow(String goalName, String weeklySum, String expectedDays, Color accentColor) {
+  Widget _buildProjectionSummaryRow(
+    String goalName,
+    String weeklySum,
+    String expectedDays,
+    Color accentColor,
+    String locale,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -365,15 +394,15 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                goalName.toUpperCase(),
+                goalName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.orbitronHeading(fontSize: 12.0, color: accentColor, fontWeight: FontWeight.bold),
+                style: AppTypography.bodySmall(context, color: accentColor),
               ),
               const SizedBox(height: 3.0),
               Text(
-                'За останні 7 днів: $weeklySum',
-                style: const TextStyle(fontSize: 11.0, color: AppColors.textSecondary),
+                '${AppLocalizations.get(locale, 'analytics_weekly_sum')}$weeklySum',
+                style: AppTypography.caption(context),
               ),
             ],
           ),
@@ -381,17 +410,17 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const Text(
-              'ДО 100% МІШЕНІ',
-              style: TextStyle(fontSize: 9.0, color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+            Text(
+              AppLocalizations.get(locale, 'analytics_to_100'),
+              style: AppTypography.overline(context),
             ),
             const SizedBox(height: 2.0),
             Text(
               expectedDays,
-              style: AppTextStyles.orbitronHeading(fontSize: 13.0, color: Colors.white, fontWeight: FontWeight.bold),
+              style: AppTypography.metric(context),
             ),
           ],
-        )
+        ),
       ],
     );
   }

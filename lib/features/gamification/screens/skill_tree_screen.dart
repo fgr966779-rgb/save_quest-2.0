@@ -1,13 +1,11 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
 import '../../../data/database.dart';
 import '../models/core_skill.dart';
@@ -17,19 +15,19 @@ import '../models/core_skill.dart';
 // ─────────────────────────────────────────────
 class SkillNode {
   final String id;
-  final String title;
-  final String description;
+  final String titleKey;
+  final String descKey;
   final int cost;
   final IconData icon;
   final Color color;
   final int requiredLevel;
   final String? requiresSkill; // must be unlocked first
-  final CoreSkillType branch; 
+  final CoreSkillType branch;
 
   const SkillNode({
     required this.id,
-    required this.title,
-    required this.description,
+    required this.titleKey,
+    required this.descKey,
     required this.cost,
     required this.icon,
     required this.color,
@@ -43,8 +41,8 @@ final List<SkillNode> allSkillNodes = [
   // ── Hacker ──
   SkillNode(
     id: 'hacker_easter_egg',
-    title: 'Ghost in the Shell',
-    description: 'Відкриває секретні команди в терміналі.',
+    titleKey: 'skill_name_hacker',
+    descKey: 'skill_ghost_desc',
     cost: 1,
     icon: Icons.code,
     color: CoreSkillSystem.getSkillColor(CoreSkillType.hacker),
@@ -53,8 +51,8 @@ final List<SkillNode> allSkillNodes = [
   ),
   SkillNode(
     id: 'hacker_crit_boost',
-    title: 'Критичний Обхід',
-    description: '+10 % до шансу критичного внеску (25 % → 35 %).',
+    titleKey: 'skill_crit_title',
+    descKey: 'skill_crit_desc',
     cost: 2,
     icon: Icons.auto_awesome,
     color: CoreSkillSystem.getSkillColor(CoreSkillType.hacker),
@@ -62,12 +60,12 @@ final List<SkillNode> allSkillNodes = [
     requiresSkill: 'hacker_easter_egg',
     branch: CoreSkillType.hacker,
   ),
-  
+
   // ── Magnate ──
   SkillNode(
     id: 'magnate_xp_boost',
-    title: 'Дивіденди XP',
-    description: '+5 % XP за кожен внесок.',
+    titleKey: 'skill_dividends_title',
+    descKey: 'skill_dividends_desc',
     cost: 1,
     icon: Icons.trending_up,
     color: CoreSkillSystem.getSkillColor(CoreSkillType.magnate),
@@ -76,8 +74,8 @@ final List<SkillNode> allSkillNodes = [
   ),
   SkillNode(
     id: 'magnate_discount',
-    title: 'Торгова Хитрість',
-    description: 'Знижки на всі товари Чорного Ринку.',
+    titleKey: 'skill_trade_title',
+    descKey: 'skill_trade_desc',
     cost: 2,
     icon: Icons.local_offer_rounded,
     color: CoreSkillSystem.getSkillColor(CoreSkillType.magnate),
@@ -89,8 +87,8 @@ final List<SkillNode> allSkillNodes = [
   // ── Resilience ──
   SkillNode(
     id: 'resilience_shield',
-    title: 'Щит Серії',
-    description: 'Авто-захист при пропуску 1 дня (не витрачає Freeze Token).',
+    titleKey: 'skill_shield_title',
+    descKey: 'skill_shield_desc',
     cost: 2,
     icon: Icons.shield_rounded,
     color: CoreSkillSystem.getSkillColor(CoreSkillType.resilience),
@@ -99,8 +97,8 @@ final List<SkillNode> allSkillNodes = [
   ),
   SkillNode(
     id: 'resilience_penalty_reduction',
-    title: 'Залізний Кордон',
-    description: 'Вартість штрафів знижена на 15 %.',
+    titleKey: 'skill_iron_title',
+    descKey: 'skill_iron_desc',
     cost: 3,
     icon: Icons.security,
     color: CoreSkillSystem.getSkillColor(CoreSkillType.resilience),
@@ -120,23 +118,22 @@ class SkillTreeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
     final skillsAsync = ref.watch(unlockedSkillsProvider);
+    final brightness = Theme.of(context).brightness;
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary(brightness), size: 20),
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'ДЕРЕВО НАВИЧОК',
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 18,
-            color: AppColors.goldGlow,
-            fontWeight: FontWeight.bold,
-          ),
+          t('skill_title'),
+          style: AppTypography.h3(context, color: AppColors.warning),
         ),
         actions: [
           profileAsync.when(
@@ -151,7 +148,7 @@ class SkillTreeScreen extends ConsumerWidget {
       ),
       body: skillsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Помилка: $e', style: const TextStyle(color: Colors.red))),
+        error: (e, _) => Center(child: Text('${t('skill_error')}$e', style: TextStyle(color: AppColors.error))),
         data: (unlocked) {
           final unlockedIds = unlocked.map((s) => s.id).toSet();
           final sp = profileAsync.value?.skillPoints ?? 0;
@@ -170,6 +167,7 @@ class SkillTreeScreen extends ConsumerWidget {
                 xp: profileAsync.value?.hackerXp ?? 0,
                 sp: sp,
                 unlockedIds: unlockedIds,
+                t: t,
               ),
               const SizedBox(height: 32),
               _buildSkillPillar(
@@ -180,6 +178,7 @@ class SkillTreeScreen extends ConsumerWidget {
                 xp: profileAsync.value?.magnateXp ?? 0,
                 sp: sp,
                 unlockedIds: unlockedIds,
+                t: t,
               ),
               const SizedBox(height: 32),
               _buildSkillPillar(
@@ -190,6 +189,7 @@ class SkillTreeScreen extends ConsumerWidget {
                 xp: profileAsync.value?.resilienceXp ?? 0,
                 sp: sp,
                 unlockedIds: unlockedIds,
+                t: t,
               ),
             ],
           );
@@ -206,26 +206,21 @@ class SkillTreeScreen extends ConsumerWidget {
     required int xp,
     required int sp,
     required Set<String> unlockedIds,
+    required String Function(String) t,
   }) {
+    final brightness = Theme.of(context).brightness;
     final color = CoreSkillSystem.getSkillColor(type);
     final name = CoreSkillSystem.getSkillName(type);
     final icon = CoreSkillSystem.getSkillIcon(type);
     final progress = CoreSkillSystem.getProgressToNextLevel(xp);
-    
+
     final nodes = allSkillNodes.where((n) => n.branch == type).toList();
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBg,
+        color: AppColors.surface(brightness),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.05),
-            blurRadius: 20,
-            spreadRadius: 2,
-          ),
-        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -241,15 +236,11 @@ class SkillTreeScreen extends ConsumerWidget {
                   children: [
                     Text(
                       name.toUpperCase(),
-                      style: AppTextStyles.orbitronHeading(
-                        fontSize: 18,
-                        color: color,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppTypography.h3(context, color: color),
                     ),
                     Text(
                       'Level $level',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                      style: AppTypography.caption(context),
                     ),
                   ],
                 ),
@@ -261,7 +252,7 @@ class SkillTreeScreen extends ConsumerWidget {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: Colors.white10,
+              backgroundColor: AppColors.surfaceMuted(brightness),
               valueColor: AlwaysStoppedAnimation<Color>(color),
               minHeight: 4,
             ),
@@ -280,13 +271,14 @@ class SkillTreeScreen extends ConsumerWidget {
                 isUnlocked: isUnlocked,
                 canUnlock: canUnlock,
                 isLocked: !reqMet || !depMet,
+                currentLocale: currentLocale,
                 onTap: () {
                   if (canUnlock) {
                     _unlockSkill(context, ref, node);
                   } else if (!isUnlocked) {
-                    String msg = 'Потрібно: ${node.cost} SP.';
-                    if (!reqMet) msg += ' Рівень $name: ${node.requiredLevel}.';
-                    if (!depMet) msg += ' Попередній вузол заблоковано.';
+                    String msg = '${t('skill_req_level')}${node.cost} SP.';
+                    if (!reqMet) msg += ' ${t('skill_req_text')}$name: ${node.requiredLevel}.';
+                    if (!depMet) msg += ' ${t('skill_locked_dep')}';
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(msg)),
                     );
@@ -297,7 +289,7 @@ class SkillTreeScreen extends ConsumerWidget {
           }),
         ],
       ),
-    ).animate().fade(duration: 400.ms).slideY(begin: 0.05);
+    );
   }
 
   Future<void> _unlockSkill(BuildContext context, WidgetRef ref, SkillNode node) async {
@@ -326,6 +318,7 @@ class _SkillNodeCard extends StatelessWidget {
   final bool canUnlock;
   final bool isLocked;
   final VoidCallback onTap;
+  final String currentLocale;
 
   const _SkillNodeCard({
     required this.node,
@@ -333,18 +326,23 @@ class _SkillNodeCard extends StatelessWidget {
     required this.canUnlock,
     required this.isLocked,
     required this.onTap,
+    required this.currentLocale,
   });
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+
     final borderColor = isUnlocked
         ? node.color
         : canUnlock
             ? node.color.withOpacity(0.5)
-            : Colors.white12;
-            
-    final iconColor = isUnlocked ? node.color : Colors.white38;
-    final titleColor = isUnlocked ? AppColors.textPrimary : Colors.white54;
+            : AppColors.border(brightness);
+
+    final iconColor = isUnlocked ? node.color : AppColors.textDisabled(brightness);
+    final titleColor = isUnlocked
+        ? AppColors.textPrimary(brightness)
+        : AppColors.textSecondary(brightness);
 
     return InkWell(
       onTap: onTap,
@@ -362,7 +360,7 @@ class _SkillNodeCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isUnlocked ? node.color.withOpacity(0.2) : Colors.white10,
+                color: isUnlocked ? node.color.withOpacity(0.2) : AppColors.surfaceMuted(brightness),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -377,21 +375,13 @@ class _SkillNodeCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    node.title,
-                    style: AppTextStyles.rajdhaniMedium(
-                      fontSize: 16,
-                      color: titleColor,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    AppLocalizations.get(currentLocale, node.titleKey),
+                    style: AppTypography.h3(context, color: titleColor),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    node.description,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                      height: 1.3,
-                    ),
+                    AppLocalizations.get(currentLocale, node.descKey),
+                    style: AppTypography.caption(context),
                   ),
                 ],
               ),
@@ -399,19 +389,17 @@ class _SkillNodeCard extends StatelessWidget {
             const SizedBox(width: 8),
             if (isUnlocked)
               Icon(Icons.check_circle, color: node.color, size: 24)
-                .animate()
-                .scale(duration: 400.ms, curve: Curves.easeOutBack)
             else
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: canUnlock ? node.color : Colors.white12,
+                  color: canUnlock ? node.color : AppColors.surfaceMuted(brightness),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   '${node.cost} SP',
                   style: TextStyle(
-                    color: canUnlock ? AppColors.background : Colors.white54,
+                    color: canUnlock ? AppColors.background(brightness) : AppColors.textSecondary(brightness),
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                   ),
@@ -430,30 +418,22 @@ class _SpBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.cardBg,
+        color: AppColors.surface(brightness),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.goldGlow.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.goldGlow.withOpacity(0.2),
-            blurRadius: 8,
-          ),
-        ],
+        border: Border.all(color: AppColors.warning.withOpacity(0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.stars_rounded, color: AppColors.goldGlow, size: 16),
+          const Icon(Icons.stars_rounded, color: AppColors.warning, size: 16),
           const SizedBox(width: 6),
           Text(
             '$sp SP',
-            style: AppTextStyles.orbitronHeading(
-              fontSize: 14,
-              color: AppColors.textPrimary,
-            ),
+            style: AppTypography.bodySmall(context, color: AppColors.textPrimary(brightness)),
           ),
         ],
       ),

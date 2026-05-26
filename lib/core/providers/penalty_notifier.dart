@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/database.dart';
-import '../widgets/neon_avatar_painter.dart';
+import '../models/avatar_config.dart';
 import 'providers.dart';
 
 class Fine {

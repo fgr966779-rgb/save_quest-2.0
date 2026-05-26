@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
 import '../../../data/database.dart';
 
@@ -13,13 +14,14 @@ class CustomizationScreen extends ConsumerWidget {
   void _selectTheme(BuildContext context, WidgetRef ref, String theme) async {
     final db = ref.read(databaseProvider);
     final profile = await db.getUserProfile();
+    final currentLocale = ref.read(localeProvider);
     if (profile != null) {
       await db.insertUserProfile(profile.copyWith(currentTheme: theme));
       // ignore: unused_result
       ref.refresh(userProfileProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Тему змінено на $theme!')),
+          SnackBar(content: Text(AppLocalizations.format(currentLocale, 'custom_theme_saved', {'theme': theme}))),
         );
       }
     }
@@ -28,22 +30,21 @@ class CustomizationScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
+    final brightness = Theme.of(context).brightness;
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'КАСТОМІЗАЦІЯ',
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 18.0,
-            color: AppColors.cyanAccent,
-            fontWeight: FontWeight.bold,
-          ),
+          t('custom_title'),
+          style: AppTypography.h2(context),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary(brightness), size: 20),
           onPressed: () => context.pop(),
         ),
       ),
@@ -56,15 +57,15 @@ class CustomizationScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16.0),
             children: [
               Text(
-                'КОЛЬОРОВІ ТЕМИ',
-                style: AppTextStyles.rajdhaniMedium(fontSize: 16.0, color: AppColors.textSecondary),
+                t('custom_colors'),
+                style: AppTypography.body(context),
               ),
               const SizedBox(height: 16.0),
               _buildThemeOption(
                 context, ref, 
                 id: 'default', 
-                name: 'НЕОНОВИЙ КІБЕРПАНК (NEON)', 
-                color: AppColors.cyanAccent, 
+                name: t('custom_theme_neon'), 
+                color: AppColors.accent, 
                 isSelected: currentTheme == 'default',
                 isUnlocked: true,
               ),
@@ -72,27 +73,27 @@ class CustomizationScreen extends ConsumerWidget {
               _buildThemeOption(
                 context, ref, 
                 id: 'gold', 
-                name: 'ПРЕСТИЖНИЙ ЗОЛОТИЙ (GOLD)', 
-                color: AppColors.goldGlow, 
+                name: t('custom_theme_gold'), 
+                color: AppColors.warning, 
                 isSelected: currentTheme == 'gold',
                 isUnlocked: unlockedLevel >= 5,
-                unlockCondition: 'Досягніть 5-го рівня',
+                unlockCondition: t('custom_unlock_level_5'),
               ),
               const SizedBox(height: 12.0),
               _buildThemeOption(
                 context, ref, 
                 id: 'crimson', 
-                name: 'БАГРЯНИЙ ЖАХ (CRIMSON)', 
-                color: Colors.redAccent, 
+                name: t('custom_theme_crimson'), 
+                color: AppColors.error, 
                 isSelected: currentTheme == 'crimson',
                 isUnlocked: unlockedLevel >= 10,
-                unlockCondition: 'Досягніть 10-го рівня',
+                unlockCondition: t('custom_unlock_level_10'),
               ),
               const SizedBox(height: 32.0),
               
               Text(
-                'ПЕРСОНАЛІЗАЦІЯ',
-                style: AppTextStyles.rajdhaniMedium(fontSize: 16.0, color: AppColors.textSecondary),
+                t('custom_personal'),
+                style: AppTypography.body(context),
               ),
               const SizedBox(height: 16.0),
               
@@ -103,31 +104,31 @@ class CustomizationScreen extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.all(16.0),
                   decoration: BoxDecoration(
-                    color: AppColors.cardBgLight,
-                    borderRadius: BorderRadius.circular(12.0),
-                    border: Border.all(color: AppColors.cyanAccent.withOpacity(0.5), width: 1.0),
+                    color: AppColors.surfaceMuted(brightness),
+                    borderRadius: BorderRadius.circular(16.0),
+                    border: Border.all(color: AppColors.border(brightness)),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8.0),
                         decoration: BoxDecoration(
-                          color: AppColors.cyanAccent.withOpacity(0.1),
+                          color: AppColors.accentMutedBg(brightness),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.face, color: AppColors.cyanAccent),
+                        child: Icon(Icons.face, color: AppColors.accent),
                       ),
                       const SizedBox(width: 16.0),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('RPG АВАТАР', style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: AppColors.cyanAccent)),
-                            const Text('Налаштуйте вигляд вашого кібер-робота', style: TextStyle(color: AppColors.textMuted, fontSize: 11.0)),
+                            Text(t('custom_avatar_link'), style: AppTypography.h3(context, color: AppColors.accent)),
+                            Text(t('custom_avatar_desc'), style: AppTypography.bodySmall(context)),
                           ],
                         ),
                       ),
-                      const Icon(Icons.arrow_forward_ios, color: AppColors.cyanAccent, size: 16),
+                      Icon(Icons.arrow_forward_ios, color: AppColors.textTertiary(brightness), size: 16),
                     ],
                   ),
                 ),
@@ -136,7 +137,7 @@ class CustomizationScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('${t('common_error')}: $e')),
       ),
     );
   }
@@ -149,14 +150,19 @@ class CustomizationScreen extends ConsumerWidget {
     required bool isUnlocked,
     String? unlockCondition,
   }) {
+    final brightness = Theme.of(context).brightness);
+
     return Opacity(
       opacity: isUnlocked ? 1.0 : 0.5,
       child: Container(
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: AppColors.cardBgLight,
-          borderRadius: BorderRadius.circular(12.0),
-          border: Border.all(color: isSelected ? color : AppColors.borderNeon.withOpacity(0.3), width: isSelected ? 2.0 : 1.0),
+          color: AppColors.surfaceMuted(brightness),
+          borderRadius: BorderRadius.circular(16.0),
+          border: Border.all(
+            color: isSelected ? color : AppColors.border(brightness),
+            width: isSelected ? 2.0 : 1.0,
+          ),
         ),
         child: Row(
           children: [
@@ -169,21 +175,21 @@ class CustomizationScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: color)),
+                  Text(name, style: AppTypography.h3(context, color: color)),
                   if (!isUnlocked && unlockCondition != null)
-                    Text('Блоковано: $unlockCondition', style: const TextStyle(color: AppColors.textMuted, fontSize: 11.0)),
+                    Text('${t('custom_locked')}$unlockCondition', style: AppTypography.bodySmall(context)),
                 ],
               ),
             ),
             if (isSelected)
-              const Icon(Icons.check_circle, color: Colors.white)
+              Icon(Icons.check_circle, color: color)
             else if (isUnlocked)
               TextButton(
                 onPressed: () => _selectTheme(context, ref, id),
-                child: Text('ОБРАТИ', style: TextStyle(color: color)),
+                child: Text(t('custom_select_btn'), style: TextStyle(color: color)),
               )
             else
-              const Icon(Icons.lock, color: AppColors.textMuted),
+              Icon(Icons.lock, color: AppColors.textTertiary(brightness)),
           ],
         ),
       ),

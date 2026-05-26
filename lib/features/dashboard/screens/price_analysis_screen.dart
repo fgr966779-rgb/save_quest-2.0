@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/services/price_analysis_service.dart';
 import '../../../core/utils/money_utils.dart';
-import '../../../core/widgets/glass_card.dart';
-import '../../../core/widgets/neon_button.dart';
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/app_button.dart';
 
 class PriceAnalysisScreen extends ConsumerStatefulWidget {
   final String? initialQuery;
@@ -45,10 +46,11 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
   }
 
   Future<void> _run() async {
+    final locale = ref.read(localeProvider);
     final query = _controller.text.trim();
     if (query.isEmpty) {
       setState(() {
-        _error = 'Введіть назву товару для аналізу';
+        _error = AppLocalizations.get(locale, 'price_enter_product');
         _analysis = null;
       });
       return;
@@ -68,7 +70,7 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'Не вдалося отримати ціни: $e';
+        _error = '${AppLocalizations.get(locale, 'price_fetch_error')}$e';
         _isLoading = false;
       });
     }
@@ -76,15 +78,17 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.watch(localeProvider);
     final currency = widget.currency ?? '₴';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildHeader(context),
+            _buildHeader(context, locale),
             Expanded(
               child: SingleChildScrollView(
                 padding:
@@ -92,23 +96,25 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildSearchCard(),
+                    _buildSearchCard(context, locale),
                     const SizedBox(height: 20.0),
-                    if (_error != null) _buildErrorCard(_error!),
+                    if (_error != null) _buildErrorCard(context, _error!),
                     if (_analysis != null) ...[
-                      _buildSummaryCard(_analysis!, currency),
+                      _buildSummaryCard(context, locale, _analysis!, currency),
                       const SizedBox(height: 16.0),
                       if (widget.targetAmountKopecks != null)
                         _buildGoalImpactCard(
+                          context,
+                          locale,
                           _analysis!,
                           widget.targetAmountKopecks!,
                           currency,
                         ),
                       if (widget.targetAmountKopecks != null)
                         const SizedBox(height: 16.0),
-                      _buildQuotesCard(_analysis!, currency),
+                      _buildQuotesCard(context, locale, _analysis!, currency),
                       const SizedBox(height: 16.0),
-                      _buildRecommendationCard(_analysis!),
+                      _buildRecommendationCard(context, locale, _analysis!),
                     ],
                   ],
                 ),
@@ -120,14 +126,16 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, String locale) {
+    final brightness = Theme.of(context).brightness;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: AppColors.textPrimary),
+            icon: Icon(Icons.arrow_back_ios_new_rounded,
+                color: AppColors.textPrimary(brightness)),
             onPressed: () => context.pop(),
           ),
           const SizedBox(width: 8.0),
@@ -136,19 +144,15 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'СКАНЕР РИНКУ',
-                  style: AppTextStyles.rajdhaniMedium(
-                    fontSize: 11,
-                    color: AppColors.cyanAccent,
-                  ).copyWith(letterSpacing: 2),
+                  AppLocalizations.get(locale, 'price_scanner_header'),
+                  style: AppTypography.overline(
+                    context,
+                    color: AppColors.accent,
+                  ),
                 ),
                 Text(
-                  'АНАЛІЗ ЦІНИ',
-                  style: AppTextStyles.orbitronHeading(
-                    fontSize: 18,
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  AppLocalizations.get(locale, 'price_analysis_title'),
+                  style: AppTypography.h2(context),
                 ),
               ],
             ),
@@ -158,80 +162,73 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
     );
   }
 
-  Widget _buildSearchCard() {
-    return GlassCard(
+  Widget _buildSearchCard(BuildContext context, String locale) {
+    final brightness = Theme.of(context).brightness;
+
+    return SurfaceCard(
       padding: const EdgeInsets.all(16.0),
-      borderColor: AppColors.cyanAccent.withOpacity(0.3),
-      glowColor: AppColors.cyanAccent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'ЦІЛЬОВИЙ ТОВАР',
-            style: AppTextStyles.orbitronHeading(
-              fontSize: 12,
-              color: AppColors.cyanAccent,
-              fontWeight: FontWeight.bold,
-            ),
+            AppLocalizations.get(locale, 'price_target_product'),
+            style: AppTypography.overline(context, color: AppColors.accent),
           ),
           const SizedBox(height: 12.0),
           TextField(
             controller: _controller,
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 15.0),
+            style: TextStyle(color: AppColors.textPrimary(brightness), fontSize: 15.0),
             decoration: InputDecoration(
-              hintText: 'Наприклад: PS5, монітор 27"',
-              hintStyle: const TextStyle(color: AppColors.textMuted),
+              hintText: AppLocalizations.get(locale, 'price_hint'),
+              hintStyle: TextStyle(color: AppColors.textTertiary(brightness)),
               filled: true,
-              fillColor: AppColors.cardBgLight,
-              prefixIcon: const Icon(Icons.search_rounded,
-                  color: AppColors.cyanAccent),
+              fillColor: AppColors.surfaceMuted(brightness),
+              prefixIcon: Icon(Icons.search_rounded,
+                  color: AppColors.accent),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.0),
                 borderSide: BorderSide(
-                  color: AppColors.borderNeon.withOpacity(0.5),
+                  color: AppColors.border(brightness),
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.0),
                 borderSide: BorderSide(
-                  color: AppColors.borderNeon.withOpacity(0.5),
+                  color: AppColors.border(brightness),
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12.0),
-                borderSide: const BorderSide(color: AppColors.cyanAccent),
+                borderSide: BorderSide(color: AppColors.accent),
               ),
             ),
             onSubmitted: (_) => _run(),
           ),
           const SizedBox(height: 16.0),
-          NeonButton(
-            text: 'СКАНУВАТИ ЦІНИ',
+          AppButton(
+            label: AppLocalizations.get(locale, 'price_scan_btn'),
+            variant: ButtonVariant.primary,
             onPressed: _isLoading ? null : _run,
             isLoading: _isLoading,
-            icon: const Icon(Icons.radar_rounded, color: Colors.black, size: 18),
+            icon: const Icon(Icons.radar_rounded, color: Colors.white, size: 18),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildErrorCard(String message) {
-    return GlassCard(
+  Widget _buildErrorCard(BuildContext context, String message) {
+    return SurfaceCard(
       padding: const EdgeInsets.all(14.0),
-      borderColor: AppColors.magentaAccent.withOpacity(0.5),
       child: Row(
         children: [
           const Icon(Icons.error_outline_rounded,
-              color: AppColors.magentaAccent, size: 22),
+              color: AppColors.error, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 13,
-              ),
+              style: AppTypography.bodySmall(context),
             ),
           ),
         ],
@@ -239,11 +236,11 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
     );
   }
 
-  Widget _buildSummaryCard(PriceAnalysis a, String currency) {
-    return GlassCard(
+  Widget _buildSummaryCard(BuildContext context, String locale, PriceAnalysis a, String currency) {
+    final brightness = Theme.of(context).brightness;
+
+    return SurfaceCard(
       padding: const EdgeInsets.all(20.0),
-      borderColor: AppColors.cyanAccent.withOpacity(0.4),
-      glowColor: AppColors.cyanAccent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -251,30 +248,24 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'ДІАПАЗОН ЦІН',
-                style: AppTextStyles.orbitronHeading(
-                  fontSize: 12,
-                  color: AppColors.cyanAccent,
-                  fontWeight: FontWeight.bold,
-                ),
+                AppLocalizations.get(locale, 'price_range_header'),
+                style: AppTypography.overline(context, color: AppColors.accent),
               ),
               if (a.isEstimate)
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.goldAccent.withOpacity(0.15),
+                    color: AppColors.warning.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                        color: AppColors.goldAccent.withOpacity(0.5)),
+                        color: AppColors.warning.withOpacity(0.5)),
                   ),
                   child: Text(
-                    'ОЦІНКА',
-                    style: TextStyle(
-                      fontSize: 9,
-                      letterSpacing: 1.2,
-                      color: AppColors.goldAccent,
-                      fontWeight: FontWeight.bold,
+                    AppLocalizations.get(locale, 'price_estimate'),
+                    style: AppTypography.overline(
+                      context,
+                      color: AppColors.warning,
                     ),
                   ),
                 ),
@@ -284,21 +275,21 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _metric('МІНІМУМ', a.minPriceKopecks, currency,
-                  AppColors.greenAccent),
-              _metric('СЕРЕДНЯ', a.avgPriceKopecks, currency,
-                  AppColors.cyanAccent),
-              _metric('МАКСИМУМ', a.maxPriceKopecks, currency,
-                  AppColors.magentaAccent),
+              _metric(context, AppLocalizations.get(locale, 'price_min'), a.minPriceKopecks, currency,
+                  AppColors.success),
+              _metric(context, AppLocalizations.get(locale, 'price_avg'), a.avgPriceKopecks, currency,
+                  AppColors.accent),
+              _metric(context, AppLocalizations.get(locale, 'price_max'), a.maxPriceKopecks, currency,
+                  AppColors.error),
             ],
           ),
           const SizedBox(height: 14.0),
           Text(
-            'Розкид: ${formatAmount(a.spreadKopecks)} $currency '
+            '${AppLocalizations.get(locale, 'price_spread')}${formatAmount(a.spreadKopecks)} $currency '
             '(${(a.spreadRatio * 100).toStringAsFixed(1)}%)',
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppColors.textSecondary,
+            style: AppTypography.bodySmall(
+              context,
+              color: AppColors.textSecondary(brightness),
             ),
           ),
         ],
@@ -306,45 +297,38 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
     );
   }
 
-  Widget _metric(String label, int kopecks, String currency, Color color) {
+  Widget _metric(BuildContext context, String label, int kopecks, String currency, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 9,
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.bold,
+          style: AppTypography.caption(
+            context,
+            color: AppColors.textSecondary(Theme.of(context).brightness),
           ),
         ),
         const SizedBox(height: 4),
         Text(
           '${formatAmount(kopecks)} $currency',
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 14,
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTypography.amount(context, color: color),
         ),
       ],
     );
   }
 
   Widget _buildGoalImpactCard(
-      PriceAnalysis a, int targetKopecks, String currency) {
+      BuildContext context, String locale, PriceAnalysis a, int targetKopecks, String currency) {
+    final brightness = Theme.of(context).brightness;
     final diff = targetKopecks - a.minPriceKopecks;
     final overBudget = diff < 0;
-    final color = overBudget ? AppColors.magentaAccent : AppColors.greenAccent;
+    final color = overBudget ? AppColors.error : AppColors.success;
     final label = overBudget
-        ? 'Ціль менша за ринкову ціну на ${formatAmount(-diff)} $currency. '
-            'Розгляньте підняття цілі.'
-        : 'Ваша ціль вища за мінімальну ціну на ${formatAmount(diff)} $currency. '
-            'Можна досягти раніше або обрати кращу комплектацію.';
+        ? AppLocalizations.get(locale, 'price_below_market')
+        : AppLocalizations.get(locale, 'price_above_market');
 
-    return GlassCard(
+    return SurfaceCard(
       padding: const EdgeInsets.all(16.0),
-      borderColor: color.withOpacity(0.4),
       child: Row(
         children: [
           Icon(
@@ -358,22 +342,13 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ПОРІВНЯННЯ З ЦІЛЛЮ',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
+                  AppLocalizations.get(locale, 'price_comparison'),
+                  style: AppTypography.overline(context, color: color),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.textPrimary,
-                    height: 1.35,
-                  ),
+                  style: AppTypography.bodySmall(context),
                 ),
               ],
             ),
@@ -383,19 +358,17 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
     );
   }
 
-  Widget _buildQuotesCard(PriceAnalysis a, String currency) {
-    return GlassCard(
+  Widget _buildQuotesCard(BuildContext context, String locale, PriceAnalysis a, String currency) {
+    final brightness = Theme.of(context).brightness;
+
+    return SurfaceCard(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'ЦІНИ ПО МАГАЗИНАХ',
-            style: AppTextStyles.orbitronHeading(
-              fontSize: 12,
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
+            AppLocalizations.get(locale, 'price_by_store'),
+            style: AppTypography.h3(context),
           ),
           const SizedBox(height: 10),
           ...a.quotes.asMap().entries.map((entry) {
@@ -411,8 +384,8 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
                     height: 8,
                     decoration: BoxDecoration(
                       color: isCheapest
-                          ? AppColors.greenAccent
-                          : AppColors.borderNeonActive,
+                          ? AppColors.success
+                          : AppColors.borderStrong(brightness),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -420,21 +393,16 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
                   Expanded(
                     child: Text(
                       q.store,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: AppTypography.bodySmall(context),
                     ),
                   ),
                   Text(
                     '${formatAmount(q.priceKopecks)} $currency',
-                    style: AppTextStyles.orbitronHeading(
-                      fontSize: 13,
+                    style: AppTypography.amount(
+                      context,
                       color: isCheapest
-                          ? AppColors.greenAccent
-                          : AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
+                          ? AppColors.success
+                          : AppColors.textPrimary(brightness),
                     ),
                   ),
                 ],
@@ -446,36 +414,26 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
     );
   }
 
-  Widget _buildRecommendationCard(PriceAnalysis a) {
-    return GlassCard(
+  Widget _buildRecommendationCard(BuildContext context, String locale, PriceAnalysis a) {
+    return SurfaceCard(
       padding: const EdgeInsets.all(14.0),
-      borderColor: AppColors.purpleGlow.withOpacity(0.4),
       child: Row(
         children: [
           const Icon(Icons.psychology_alt_rounded,
-              color: AppColors.purpleGlow, size: 24),
+              color: AppColors.accent, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ВИСНОВОК АНАЛІТИКА',
-                  style: TextStyle(
-                    fontSize: 9.5,
-                    color: AppColors.purpleGlow,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
+                  AppLocalizations.get(locale, 'price_conclusion'),
+                  style: AppTypography.overline(context, color: AppColors.accent),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   a.recommendation,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textPrimary,
-                    height: 1.4,
-                  ),
+                  style: AppTypography.bodySmall(context),
                 ),
               ],
             ),

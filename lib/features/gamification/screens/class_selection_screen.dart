@@ -5,8 +5,9 @@ import 'package:drift/drift.dart' as drift;
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
-import '../../../core/widgets/neon_button.dart';
+import '../../../core/widgets/app_button.dart';
 
 class ClassSelectionScreen extends ConsumerWidget {
   const ClassSelectionScreen({Key? key}) : super(key: key);
@@ -19,8 +20,9 @@ class ClassSelectionScreen extends ConsumerWidget {
       // ignore: unused_result
       ref.refresh(userProfileProvider);
       if (context.mounted) {
+        final currentLocale = ref.read(localeProvider);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Клас успішно змінено!')),
+          SnackBar(content: Text(AppLocalizations.get(currentLocale, 'class_changed'))),
         );
         context.pop();
       }
@@ -30,22 +32,21 @@ class ClassSelectionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(userProfileProvider);
+    final brightness = Theme.of(context).brightness;
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'ВИБІР КЛАСУ',
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 18.0,
-            color: AppColors.cyanAccent,
-            fontWeight: FontWeight.bold,
-          ),
+          t('class_title'),
+          style: AppTypography.h2(context),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary(brightness), size: 20),
           onPressed: () => context.pop(),
         ),
       ),
@@ -59,40 +60,43 @@ class ClassSelectionScreen extends ConsumerWidget {
               _buildClassCard(
                 context,
                 ref,
-                title: 'ВОЇН (Warrior)',
-                description: 'Надійний та наполегливий. Отримує +10% більше XP за кожен внесок.',
+                title: t('class_warrior_name'),
+                description: t('class_warrior_desc'),
                 icon: Icons.shield,
-                color: Colors.blueAccent,
+                color: AppColors.accent,
                 classId: 'warrior',
                 isSelected: currentClass == 'warrior',
+                t: t,
               ),
               const SizedBox(height: 16.0),
               _buildClassCard(
                 context,
                 ref,
-                title: 'МАГ (Mage)',
-                description: 'Керує ймовірностями. Шанс "Критичного внеску" збільшено з 10% до 25%.',
+                title: t('class_mage_name'),
+                description: t('class_mage_desc'),
                 icon: Icons.auto_awesome,
-                color: Colors.purpleAccent,
+                color: AppColors.goalB,
                 classId: 'mage',
                 isSelected: currentClass == 'mage',
+                t: t,
               ),
               const SizedBox(height: 16.0),
               _buildClassCard(
                 context,
                 ref,
-                title: 'ЗЛОДІЙ (Rogue)',
-                description: 'Швидкий та хитрий. +25 баз. XP. Також має 25% шанс зберегти Freeze Token при втраті стріку.',
+                title: t('class_rogue_name'),
+                description: t('class_rogue_desc'),
                 icon: Icons.speed,
-                color: Colors.greenAccent,
+                color: AppColors.success,
                 classId: 'rogue',
                 isSelected: currentClass == 'rogue',
+                t: t,
               ),
             ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Помилка: $err', style: const TextStyle(color: Colors.red))),
+        error: (err, stack) => Center(child: Text(t('common_error'), style: const TextStyle(color: AppColors.error))),
       ),
     );
   }
@@ -106,18 +110,18 @@ class ClassSelectionScreen extends ConsumerWidget {
     required Color color,
     required String classId,
     required bool isSelected,
+    required String Function(String) t,
   }) {
+    final brightness = Theme.of(context).brightness;
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBgLight.withOpacity(isSelected ? 0.9 : 0.4),
+        color: isSelected ? AppColors.accentMutedBg(brightness) : AppColors.surface(brightness),
         borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
-          color: isSelected ? color : color.withOpacity(0.3),
+          color: isSelected ? color : AppColors.border(brightness),
           width: isSelected ? 2.0 : 1.0,
         ),
-        boxShadow: isSelected
-            ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 15.0, spreadRadius: 2.0)]
-            : [],
       ),
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -130,43 +134,39 @@ class ClassSelectionScreen extends ConsumerWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: AppTextStyles.orbitronHeading(
-                    fontSize: 20.0,
-                    color: color,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: AppTypography.h2(context, color: color),
                 ),
               ),
               if (isSelected)
-                const Icon(Icons.check_circle, color: Colors.white, size: 28.0),
+                Icon(Icons.check_circle, color: color, size: 28.0),
             ],
           ),
           const SizedBox(height: 12.0),
           Text(
             description,
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 14.0, height: 1.5),
+            style: AppTypography.body(context),
           ),
           const SizedBox(height: 20.0),
           if (!isSelected)
-            SizedBox(
-              width: double.infinity,
-              child: NeonButton(
-                text: 'ОБРАТИ ЦЕЙ КЛАС',
-                baseColor: color,
-                glowColor: color,
-                onPressed: () => _selectClass(context, ref, classId),
-              ),
+            AppButton(
+              label: t('class_choose_btn'),
+              variant: ButtonVariant.primary,
+              onPressed: () => _selectClass(context, ref, classId),
             )
           else
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12.0),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8.0),
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.0),
+                border: Border.all(color: color.withOpacity(0.3)),
               ),
-              child: const Center(
-                child: Text('ПОТОЧНИЙ КЛАС', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Center(
+                child: Text(
+                  t('class_current'),
+                  style: AppTypography.body(context, color: color),
+                ),
               ),
             ),
         ],

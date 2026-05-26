@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:confetti/confetti.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/providers/l10n.dart';
 import '../providers/daily_bonus_provider.dart';
 
 class DailyBonusDialog extends ConsumerStatefulWidget {
-  const DailyBonusDialog({Key? key}) : super(key: key);
+  const DailyBonusDialog({super.key});
 
   static void show(BuildContext context) {
     showGeneralDialog(
@@ -55,10 +57,10 @@ class _DailyBonusDialogState extends ConsumerState<DailyBonusDialog> {
   void _claim() async {
     setState(() => _claimed = true);
     _confettiController.play();
-    
+
     // Call the provider to save to DB
     await ref.read(dailyBonusProvider.notifier).claimBonus();
-    
+
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) Navigator.of(context).pop();
     });
@@ -66,13 +68,17 @@ class _DailyBonusDialogState extends ConsumerState<DailyBonusDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
+
     final dailyStateAsync = ref.watch(dailyBonusProvider);
-    
+    final brightness = Theme.of(context).brightness;
+
     return dailyStateAsync.when(
       data: (state) {
         final streak = state.currentBonusStreak;
         final amount = state.bonusAmountForToday;
-        
+
         return Material(
           type: MaterialType.transparency,
           child: Center(
@@ -85,78 +91,75 @@ class _DailyBonusDialogState extends ConsumerState<DailyBonusDialog> {
                   emissionFrequency: 0.05,
                   numberOfParticles: 20,
                   gravity: 0.1,
-                  colors: const [AppColors.goldAccent, AppColors.cyanAccent, AppColors.magentaAccent],
+                  colors: const [
+                    AppColors.accent,
+                    AppColors.accentLight,
+                    AppColors.success,
+                  ],
                 ),
-                Container(
-                  width: 320,
+                SurfaceCard(
+                  margin: EdgeInsets.zero,
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: AppColors.cardBg,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: AppColors.borderNeon, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.cyanGlow,
-                        blurRadius: 20,
-                        spreadRadius: -5,
-                      )
-                    ],
-                  ),
+                  borderRadius: 24,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.calendar_month_rounded, size: 48, color: AppColors.cyanAccent)
-                          .animate(onPlay: (controller) => controller.repeat())
-                          .shimmer(duration: 2000.ms, color: Colors.white),
+                      Icon(
+                        Icons.calendar_month_rounded,
+                        size: 48,
+                        color: AppColors.accent,
+                      ),
                       const SizedBox(height: 16),
                       Text(
-                        'ЩОДЕННА ВИНАГОРОДА',
-                        style: AppTextStyles.orbitronHeading(fontSize: 20).copyWith(color: AppColors.textPrimary),
+                        t('daily_bonus_title'),
+                        style: AppTypography.h2(context),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '🔥 Стрік: ${state.currentBonusStreak} днів',
-                        style: AppTextStyles.interBody(fontSize: 14).copyWith(color: AppColors.streakFireYellow),
+                        AppLocalizations.format(currentLocale, 'daily_bonus_streak', {'days': '$streak'}),
+                        style: AppTypography.body(
+                          context,
+                          color: AppColors.warning,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 32,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.cardBgLight,
+                          color: AppColors.accentMutedBg(brightness),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.goldAccent.withOpacity(0.5)),
+                          border: Border.all(
+                            color: AppColors.accent.withOpacity(0.3),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.diamond_rounded, color: AppColors.goldAccent, size: 28),
+                            const Icon(
+                              Icons.diamond_rounded,
+                              color: AppColors.accent,
+                              size: 28,
+                            ),
                             const SizedBox(width: 8),
                             Text(
                               '+${state.bonusAmountForToday}',
-                              style: AppTextStyles.orbitronHeading(fontSize: 32).copyWith(color: AppColors.goldAccent),
+                              style: AppTypography.display(
+                                context,
+                                color: AppColors.accent,
+                              ),
                             ),
                           ],
                         ),
-                      ).animate().scale(delay: 300.ms, duration: 400.ms, curve: Curves.easeOutBack),
+                      ),
                       const SizedBox(height: 32),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _claimed ? null : _claim,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.cyanAccent,
-                            foregroundColor: AppColors.background,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            elevation: _claimed ? 0 : 8,
-                            shadowColor: AppColors.cyanGlow,
-                          ),
-                          child: Text(
-                            _claimed ? 'Отримано!' : 'Забрати',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                      AppButton(
+                        label: _claimed ? t('daily_bonus_claimed') : t('daily_bonus_claim'),
+                        variant: ButtonVariant.primary,
+                        onPressed: _claimed ? null : _claim,
                       ),
                     ],
                   ),
@@ -166,8 +169,15 @@ class _DailyBonusDialogState extends ConsumerState<DailyBonusDialog> {
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.cyanAccent)),
-      error: (e, st) => Center(child: Text('Помилка: $e', style: const TextStyle(color: Colors.red))),
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppColors.accent),
+      ),
+      error: (e, st) => Center(
+        child: Text(
+          '${t('common_error')}: $e',
+          style: AppTypography.body(context, color: AppColors.error),
+        ),
+      ),
     );
   }
 }

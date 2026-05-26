@@ -2,50 +2,55 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
+import '../theme/app_theme.dart';
 
+/// Clean calculator-style input pad. No Orbitron font, no neon colors.
+/// Replaces old AmountInputPad. Same callback interface: onKeyPressed(String).
 class AmountInputPad extends StatelessWidget {
   final Function(String) onKeyPressed;
 
   const AmountInputPad({
-    Key? key,
+    super.key,
     required this.onKeyPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 3-column digit grid
           Expanded(
             flex: 3,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildRow(['1', '2', '3']),
-                const SizedBox(height: 12.0),
-                _buildRow(['4', '5', '6']),
-                const SizedBox(height: 12.0),
-                _buildRow(['7', '8', '9']),
-                const SizedBox(height: 12.0),
-                _buildRow(['.', '0', '⌫']),
+                _buildRow(context, ['1', '2', '3']),
+                const SizedBox(height: 12),
+                _buildRow(context, ['4', '5', '6']),
+                const SizedBox(height: 12),
+                _buildRow(context, ['7', '8', '9']),
+                const SizedBox(height: 12),
+                _buildRow(context, ['.', '0', '⌫']),
               ],
             ),
           ),
-          const SizedBox(width: 12.0),
+          const SizedBox(width: 12),
+          // Operators column
           Expanded(
             flex: 1,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildColumnItem('🎲'),
-                const SizedBox(height: 12.0),
-                _buildColumnItem('+'),
-                const SizedBox(height: 12.0),
-                _buildColumnItem('-'),
-                const SizedBox(height: 12.0),
-                _buildColumnItem('='),
+                _buildColumnItem(context, '🎲'),
+                const SizedBox(height: 12),
+                _buildColumnItem(context, '+'),
+                const SizedBox(height: 12),
+                _buildColumnItem(context, '-'),
+                const SizedBox(height: 12),
+                _buildColumnItem(context, '='),
               ],
             ),
           ),
@@ -54,13 +59,13 @@ class AmountInputPad extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(List<String> keys) {
+  Widget _buildRow(BuildContext context, List<String> keys) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: keys.map((key) {
         return Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
             child: _InputKey(
               label: key,
               onTap: () => onKeyPressed(key),
@@ -71,7 +76,7 @@ class AmountInputPad extends StatelessWidget {
     );
   }
 
-  Widget _buildColumnItem(String key) {
+  Widget _buildColumnItem(BuildContext context, String key) {
     return _InputKey(
       label: key,
       onTap: () => onKeyPressed(key),
@@ -84,79 +89,87 @@ class _InputKey extends StatefulWidget {
   final VoidCallback onTap;
 
   const _InputKey({
-    Key? key,
+    super.key,
     required this.label,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   State<_InputKey> createState() => _InputKeyState();
 }
 
 class _InputKeyState extends State<_InputKey> with SingleTickerProviderStateMixin {
-  late AnimationController _animController;
-  late Animation<double> _scaleAnim;
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
+    _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 80),
     );
-    _scaleAnim = Tween<double>(begin: 1.0, end: 0.9).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeInOut),
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.92).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
   }
 
   @override
   void dispose() {
-    _animController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final isSpecial = widget.label == '.' || widget.label == '⌫';
+    final brightness = Theme.of(context).brightness;
+    final isSpecial = widget.label == '⌫';
+    final isOperator = {'🎲', '+', '-', '='}.contains(widget.label);
 
     return GestureDetector(
       onTapDown: (_) {
-        _animController.forward();
+        _controller.forward();
         HapticFeedback.lightImpact();
       },
-      onTapUp: (_) {
-        _animController.reverse();
-      },
-      onTapCancel: () {
-        _animController.reverse();
-      },
+      onTapUp: (_) => _controller.reverse(),
+      onTapCancel: () => _controller.reverse(),
       onTap: widget.onTap,
-      child: ScaleTransition(
-        scale: _scaleAnim,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: child,
+          );
+        },
         child: Container(
-          height: 60.0,
+          height: 60,
           decoration: BoxDecoration(
-            color: isSpecial ? Colors.white.withOpacity(0.02) : AppColors.cardBgLight,
-            borderRadius: BorderRadius.circular(12.0),
+            color: isOperator
+                ? AppColors.accent.withOpacity(0.08)
+                : AppColors.surfaceMuted(brightness),
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(
-              color: isSpecial ? AppColors.borderNeon.withOpacity(0.2) : AppColors.borderNeon,
-              width: 1.0,
+              color: isSpecial
+                  ? AppColors.border(brightness)
+                  : AppColors.border(brightness).withOpacity(0.6),
+              width: 1,
             ),
           ),
           child: Center(
             child: widget.label == '⌫'
-                ? const Icon(
+                ? Icon(
                     Icons.backspace_outlined,
-                    color: AppColors.cyanAccent,
-                    size: 20.0,
+                    color: AppColors.textSecondary(brightness),
+                    size: 20,
                   )
                 : Text(
                     widget.label,
-                    style: AppTextStyles.orbitronHeading(
-                      fontSize: 22.0,
-                      color: isSpecial ? AppColors.cyanAccent : AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: isOperator
+                        ? AppTypography.h3(context)
+                        : AppTypography.display(
+                            context,
+                          ).copyWith(fontSize: 24),
                   ),
           ),
         ),

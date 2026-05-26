@@ -2,14 +2,15 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/utils/money_utils.dart';
-import '../../../core/widgets/neon_button.dart';
-import '../../../core/widgets/particle_background.dart';
+import '../../../core/widgets/app_button.dart';
 
-class GoalCompleteScreen extends StatefulWidget {
+class GoalCompleteScreen extends ConsumerStatefulWidget {
   final String goalName;
   final int targetAmount; // in kopecks
   final String currency;
@@ -22,10 +23,10 @@ class GoalCompleteScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<GoalCompleteScreen> createState() => _GoalCompleteScreenState();
+  ConsumerState<GoalCompleteScreen> createState() => _GoalCompleteScreenState();
 }
 
-class _GoalCompleteScreenState extends State<GoalCompleteScreen> with SingleTickerProviderStateMixin {
+class _GoalCompleteScreenState extends ConsumerState<GoalCompleteScreen> with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late List<CelebrationConfetti> _confettiParticles;
 
@@ -49,10 +50,10 @@ class _GoalCompleteScreenState extends State<GoalCompleteScreen> with SingleTick
         vx: (random.nextDouble() - 0.5) * 3,
         vy: -random.nextDouble() * 4 - 2,
         color: index % 3 == 0
-            ? AppColors.cyanAccent
+            ? AppColors.accent
             : index % 3 == 1
-                ? AppColors.magentaAccent
-                : Colors.amberAccent,
+                ? AppColors.goalB
+                : AppColors.warning,
         size: random.nextDouble() * 6 + 4,
         rotation: random.nextDouble() * 2 * pi,
         rotationSpeed: (random.nextDouble() - 0.5) * 0.1,
@@ -68,15 +69,13 @@ class _GoalCompleteScreenState extends State<GoalCompleteScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.watch(localeProvider);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       body: Stack(
         children: [
-          // Cyberpunk stars/particles background
-          const Positioned.fill(
-            child: ParticleBackground(),
-          ),
-
           // Custom celebratory confetti burst overlay
           Positioned.fill(
             child: AnimatedBuilder(
@@ -93,7 +92,7 @@ class _GoalCompleteScreenState extends State<GoalCompleteScreen> with SingleTick
             ),
           ),
 
-          // Glowing vault overlay & text content
+          // Text content
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
@@ -103,30 +102,24 @@ class _GoalCompleteScreenState extends State<GoalCompleteScreen> with SingleTick
                 children: [
                   const Spacer(),
 
-                  // Golden glowing badge or vault icon
+                  // Achievement badge icon
                   Center(
                     child: Container(
                       width: 140,
                       height: 140,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.amberAccent.withOpacity(0.3),
-                            blurRadius: 40.0,
-                            spreadRadius: 5.0,
-                          ),
-                        ],
+                        color: AppColors.warning.withOpacity(0.08),
                         border: Border.all(
-                          color: Colors.amberAccent,
+                          color: AppColors.warning,
                           width: 3.0,
                         ),
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Icon(
                           Icons.workspace_premium_rounded,
                           size: 70,
-                          color: Colors.amberAccent,
+                          color: AppColors.warning,
                         ),
                       ),
                     ),
@@ -135,20 +128,9 @@ class _GoalCompleteScreenState extends State<GoalCompleteScreen> with SingleTick
 
                   // Congratulations title
                   Text(
-                    'ЦІЛЬ ДОСЯГНУТА!',
+                    AppLocalizations.get(locale, 'goal_complete_title'),
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.orbitronHeading(
-                      fontSize: 28.0,
-                      color: Colors.amberAccent,
-                      fontWeight: FontWeight.bold,
-                    ).copyWith(
-                      shadows: [
-                        const Shadow(
-                          color: Colors.amberAccent,
-                          blurRadius: 15.0,
-                        ),
-                      ],
-                    ),
+                    style: AppTypography.h1(context, color: AppColors.warning),
                   ),
                   const SizedBox(height: 16.0),
 
@@ -156,19 +138,15 @@ class _GoalCompleteScreenState extends State<GoalCompleteScreen> with SingleTick
                   Text(
                     widget.goalName.toUpperCase(),
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.orbitronHeading(
-                      fontSize: 18.0,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: AppTypography.h2(context),
                   ),
                   const SizedBox(height: 8.0),
                   Text(
-                    'Ви успішно накопичили повну суму:\n${formatAmount(widget.targetAmount)} ${widget.currency}',
+                    '${AppLocalizations.get(locale, 'goal_complete_desc')}\n${formatAmount(widget.targetAmount)} ${widget.currency}',
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.rajdhaniMedium(
-                      fontSize: 16.0,
-                      color: AppColors.textSecondary,
+                    style: AppTypography.body(
+                      context,
+                      color: AppColors.textSecondary(brightness),
                     ),
                   ),
                   const SizedBox(height: 32.0),
@@ -177,36 +155,32 @@ class _GoalCompleteScreenState extends State<GoalCompleteScreen> with SingleTick
                   Container(
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
-                      color: Colors.amberAccent.withOpacity(0.08),
+                      color: AppColors.warning.withOpacity(0.08),
                       borderRadius: BorderRadius.circular(12.0),
                       border: Border.all(
-                        color: Colors.amberAccent.withOpacity(0.3),
+                        color: AppColors.warning.withOpacity(0.3),
                         width: 1.0,
                       ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.bolt, color: Colors.amberAccent, size: 24),
+                        Icon(Icons.bolt, color: AppColors.warning, size: 24),
                         const SizedBox(width: 12.0),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'БОНУС ЗОЛОТОГО СЕЙФУ',
-                                style: AppTextStyles.orbitronHeading(
-                                  fontSize: 11.0,
-                                  color: Colors.amberAccent,
-                                  fontWeight: FontWeight.bold,
+                                AppLocalizations.get(locale, 'goal_complete_bonus'),
+                                style: AppTypography.overline(
+                                  context,
+                                  color: AppColors.warning,
                                 ),
                               ),
                               const SizedBox(height: 3.0),
-                              const Text(
-                                '+500 XP нараховано до вашого профілю!',
-                                style: TextStyle(
-                                  fontSize: 11.0,
-                                  color: AppColors.textPrimary,
-                                ),
+                              Text(
+                                AppLocalizations.get(locale, 'goal_complete_bonus_desc'),
+                                style: AppTypography.bodySmall(context),
                               ),
                             ],
                           ),
@@ -218,10 +192,9 @@ class _GoalCompleteScreenState extends State<GoalCompleteScreen> with SingleTick
                   const Spacer(),
 
                   // Return to vault
-                  NeonButton(
-                    text: 'ПОВЕРНУТИСЬ В СЕЙФ',
-                    baseColor: Colors.amber,
-                    glowColor: Colors.amber,
+                  AppButton(
+                    label: AppLocalizations.get(locale, 'goal_complete_back'),
+                    variant: ButtonVariant.primary,
                     onPressed: () {
                       context.go('/dashboard');
                     },

@@ -6,10 +6,11 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/utils/money_utils.dart';
-import '../../../core/widgets/glass_card.dart';
-import '../../../core/widgets/neon_button.dart';
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../data/database.dart';
 
 final avoidedPurchasesProvider = StreamProvider<List<AvoidedPurchase>>((ref) {
@@ -23,38 +24,37 @@ class RegretArchiveScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final avoidedAsync = ref.watch(avoidedPurchasesProvider);
+    final brightness = Theme.of(context).brightness;
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios_rounded, color: AppColors.textPrimary(brightness), size: 20),
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'АРХІВ ЖАЛЮ',
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 18,
-            color: AppColors.cyanAccent,
-            fontWeight: FontWeight.bold,
-          ),
+          t('regret_title'),
+          style: AppTypography.h3(context, color: AppColors.accent),
         ),
       ),
       body: avoidedAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Помилка: $e')),
+        error: (e, _) => Center(child: Text('${t("common_error")}: $e')),
         data: (items) {
           if (items.isEmpty) {
-            return _buildEmptyState(context, ref);
+            return _buildEmptyState(context, ref, brightness, t);
           }
 
           final totalSavedCents = items.fold<int>(0, (sum, item) => sum + item.amount);
 
           return Column(
             children: [
-              _buildSummaryHeader(totalSavedCents),
+              _buildSummaryHeader(context, totalSavedCents, brightness, t),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),
@@ -67,9 +67,10 @@ class RegretArchiveScreen extends ConsumerWidget {
               ),
               Padding(
                 padding: const EdgeInsets.all(20),
-                child: NeonButton(
-                  text: 'ДОДАТИ НЕКУПЛЕНЕ',
-                  onPressed: () => _showAddDialog(context, ref),
+                child: AppButton(
+                  label: t('regret_add_btn'),
+                  onPressed: () => _showAddDialog(context, ref, brightness, t),
+                  variant: ButtonVariant.primary,
                 ),
               ),
             ],
@@ -79,97 +80,94 @@ class RegretArchiveScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref, Brightness brightness, String Function(String) t) {
     return Center(
       padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.auto_delete_outlined, size: 80, color: AppColors.textMuted),
+          Icon(Icons.auto_delete_outlined, size: 80, color: AppColors.textTertiary(brightness)),
           const SizedBox(height: 24),
-          const Text(
-            'ВАШ АРХІВ ПОРОЖНІЙ',
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            t('regret_empty_title'),
+            style: AppTypography.h3(context, color: AppColors.textPrimary(brightness)),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Тут зберігаються речі, які ви хотіли купити, але стрималися. Це ваші врятовані гроші!',
+          Text(
+            t('regret_empty_desc'),
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            style: AppTypography.body(context),
           ),
           const SizedBox(height: 32),
-          NeonButton(
-            text: 'ДОДАТИ ПЕРШИЙ ЗАПИС',
-            onPressed: () => _showAddDialog(context, ref),
+          AppButton(
+            label: t('regret_empty_btn'),
+            onPressed: () => _showAddDialog(context, ref, brightness, t),
+            variant: ButtonVariant.primary,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryHeader(int totalCents) {
+  Widget _buildSummaryHeader(BuildContext context, int totalCents, Brightness brightness, String Function(String) t) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cyanAccent.withOpacity(0.1),
+        color: AppColors.accentMutedBg(brightness),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.cyanAccent.withOpacity(0.3)),
+        border: Border.all(color: AppColors.accent.withOpacity(0.3)),
       ),
       child: Column(
         children: [
-          const Text(
-            'ВСЬОГО ВРЯТОВАНО',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12, letterSpacing: 2),
+          Text(
+            t('regret_total_saved'),
+            style: AppTypography.overline(context),
           ),
           const SizedBox(height: 8),
           Text(
             '${centsToDisplay(totalCents).toStringAsFixed(2)} ₴',
-            style: AppTextStyles.orbitronHeading(
-              fontSize: 32,
-              color: AppColors.cyanAccent,
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppTypography.display(context, color: AppColors.accent),
           ),
         ],
       ),
     );
   }
 
-  void _showAddDialog(BuildContext context, WidgetRef ref) {
+  void _showAddDialog(BuildContext context, WidgetRef ref, Brightness brightness, String Function(String) t) {
     final titleController = TextEditingController();
     final amountController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardBg,
+        backgroundColor: AppColors.surface(brightness),
         title: Text(
-          'ДОДАТИ В АРХІВ',
-          style: AppTextStyles.orbitronHeading(fontSize: 16, color: AppColors.cyanAccent),
+          t('regret_dialog_title'),
+          style: AppTypography.h3(context, color: AppColors.accent),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Що ви не купили?',
-                labelStyle: TextStyle(color: AppColors.textSecondary),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+              style: TextStyle(color: AppColors.textPrimary(brightness)),
+              decoration: InputDecoration(
+                labelText: t('regret_dialog_what'),
+                labelStyle: TextStyle(color: AppColors.textSecondary(brightness)),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border(brightness))),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: amountController,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Ціна (₴)',
-                labelStyle: TextStyle(color: AppColors.textSecondary),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+              style: TextStyle(color: AppColors.textPrimary(brightness)),
+              decoration: InputDecoration(
+                labelText: t('regret_dialog_price'),
+                labelStyle: TextStyle(color: AppColors.textSecondary(brightness)),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border(brightness))),
               ),
             ),
           ],
@@ -177,7 +175,7 @@ class RegretArchiveScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('СКАСУВАТИ', style: TextStyle(color: AppColors.textMuted)),
+            child: Text(t('common_cancel'), style: TextStyle(color: AppColors.textTertiary(brightness))),
           ),
           TextButton(
             onPressed: () async {
@@ -196,7 +194,7 @@ class RegretArchiveScreen extends ConsumerWidget {
                 if (context.mounted) Navigator.pop(context);
               }
             },
-            child: const Text('ЗБЕРЕГТИ', style: TextStyle(color: AppColors.cyanAccent, fontWeight: FontWeight.bold)),
+            child: Text(t('common_save'), style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -211,20 +209,20 @@ class _AvoidedPurchaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: GlassCard(
+      child: SurfaceCard(
         padding: const EdgeInsets.all(16),
-        borderColor: Colors.white12,
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: AppColors.surfaceMuted(brightness),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.block_flipped, color: Colors.redAccent, size: 20),
+              child: const Icon(Icons.block_flipped, color: AppColors.error, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -233,25 +231,18 @@ class _AvoidedPurchaseCard extends StatelessWidget {
                 children: [
                   Text(
                     item.title.toUpperCase(),
-                    style: AppTextStyles.rajdhaniMedium(
-                      fontSize: 16,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: AppTypography.body(context, color: AppColors.textPrimary(brightness)).copyWith(fontWeight: FontWeight.w600),
                   ),
                   Text(
                     DateFormat('dd.MM.yyyy HH:mm').format(item.createdAt),
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    style: AppTypography.caption(context),
                   ),
                 ],
               ),
             ),
             Text(
               '+${centsToDisplay(item.amount).toStringAsFixed(0)} ₴',
-              style: AppTextStyles.orbitronHeading(
-                fontSize: 16,
-                color: AppColors.goldGlow,
-              ),
+              style: AppTypography.amount(context, color: AppColors.warning),
             ),
           ],
         ),

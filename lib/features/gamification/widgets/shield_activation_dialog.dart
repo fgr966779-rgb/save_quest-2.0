@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/providers/l10n.dart';
+import '../../../core/providers/providers.dart';
 
 class ShieldActivationDialog extends StatelessWidget {
   final int daysSaved;
 
-  const ShieldActivationDialog({Key? key, required this.daysSaved}) : super(key: key);
+  const ShieldActivationDialog({super.key, required this.daysSaved});
 
   static void show(BuildContext context, int daysSaved) {
     showGeneralDialog(
@@ -34,71 +38,60 @@ class ShieldActivationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final container = ProviderScope.containerOf(context);
+    final locale = container.read(localeProvider);
+    String t(String key) => AppLocalizations.get(locale, key);
+
+    final brightness = Theme.of(context).brightness;
+
     return Material(
       type: MaterialType.transparency,
       child: Center(
-        child: Container(
-          width: 320,
+        child: SurfaceCard(
+          margin: EdgeInsets.zero,
           padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: AppColors.cardBg,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: AppColors.blueAccent, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.blueAccent.withOpacity(0.5),
-                blurRadius: 20,
-                spreadRadius: -5,
-              )
-            ],
-          ),
+          borderRadius: 24,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.security_rounded, size: 56, color: AppColors.blueAccent)
-                  .animate()
-                  .scale(duration: 400.ms, curve: Curves.easeOutBack)
-                  .shimmer(duration: 1500.ms, color: Colors.white),
+              const Icon(
+                Icons.security_rounded,
+                size: 56,
+                color: AppColors.accent,
+              ),
               const SizedBox(height: 16),
               Text(
-                'Стрік Врятовано!',
-                style: AppTextStyles.orbitronHeading(fontSize: 20).copyWith(color: AppColors.textPrimary),
+                t('shield_title'),
+                style: AppTypography.h2(context),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
-                'Ваш Shield (кріо-токен) автоматично захистив прогрес.',
-                style: AppTextStyles.interBody(fontSize: 14).copyWith(color: AppColors.textSecondary),
+                t('shield_desc'),
+                style: AppTypography.body(context),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
                 decoration: BoxDecoration(
-                  color: AppColors.cardBgLight,
+                  color: AppColors.accentMutedBg(brightness),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  'Використано Shield: $daysSaved шт.',
-                  style: AppTextStyles.rajdhaniMedium(fontSize: 14).copyWith(color: AppColors.blueAccent),
+                  AppLocalizations.format(locale, 'shield_used', {'count': '$daysSaved'}),
+                  style: AppTypography.body(
+                    context,
+                    color: AppColors.accent,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.blueAccent,
-                    side: const BorderSide(color: AppColors.blueAccent, width: 2),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text(
-                    'Супер!',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
+              AppButton(
+                label: t('shield_btn'),
+                variant: ButtonVariant.secondary,
+                onPressed: () => Navigator.of(context).pop(),
               ),
             ],
           ),

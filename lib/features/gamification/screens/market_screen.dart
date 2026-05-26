@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:drift/drift.dart' show Value;
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
-import '../../../core/widgets/neon_button.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/neon_avatar_painter.dart';
+import '../../../core/models/avatar_config.dart';
 import '../../../data/database.dart';
 
 class MarketScreen extends ConsumerStatefulWidget {
@@ -27,11 +28,13 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     final db = ref.read(databaseProvider);
     final profile = await db.getUserProfile();
     if (profile == null) return;
+    final currentLocale = ref.read(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
 
     if (currentConfig.credits < cost) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Недостатньо Кібер-Кредитів!'), backgroundColor: Colors.redAccent),
+          SnackBar(content: Text(t('market_no_credits')), backgroundColor: AppColors.error),
         );
       }
       return;
@@ -50,7 +53,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     if (mounted) {
       HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Придбано: $itemName! Тепер він доступний у конструкторі.'), backgroundColor: AppColors.cyanAccent),
+        SnackBar(content: Text(AppLocalizations.format(currentLocale, 'market_purchased_success', {'name': itemName})), backgroundColor: AppColors.accent),
       );
     }
   }
@@ -58,32 +61,31 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(userProfileProvider);
+    final brightness = Theme.of(context).brightness;
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'ЧОРНИЙ РИНОК',
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 18.0,
-            color: AppColors.goldGlow,
-            fontWeight: FontWeight.bold,
-          ),
+          t('market_title'),
+          style: AppTypography.h3(context, color: AppColors.warning),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary(brightness), size: 20),
           onPressed: () => context.pop(),
         ),
       ),
       body: profileAsync.when(
         data: (profile) {
           final sp = profile?.skillPoints ?? 0;
-          final avatarConfig = profile?.avatarConfig != null 
-              ? AvatarConfig.fromJson(profile!.avatarConfig!) 
+          final avatarConfig = profile?.avatarConfig != null
+              ? AvatarConfig.fromJson(profile!.avatarConfig!)
               : const AvatarConfig();
-          
+
           return Column(
             children: [
               // Balances Header
@@ -92,18 +94,17 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: GlassCard(
+                      child: SurfaceCard(
                         padding: const EdgeInsets.all(12.0),
-                        borderColor: AppColors.goldGlow.withOpacity(0.5),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('SKILL POINTS', style: AppTextStyles.rajdhaniMedium(fontSize: 12.0, color: AppColors.textSecondary)),
+                            Text(t('market_sp'), style: AppTypography.caption(context)),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('$sp', style: AppTextStyles.orbitronHeading(fontSize: 24.0, color: AppColors.goldGlow)),
-                                const Icon(Icons.stars, color: AppColors.goldGlow, size: 24),
+                                Text('$sp', style: AppTypography.metric(context, color: AppColors.warning)),
+                                const Icon(Icons.stars, color: AppColors.warning, size: 24),
                               ],
                             ),
                           ],
@@ -112,18 +113,17 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                     ),
                     const SizedBox(width: 8.0),
                     Expanded(
-                      child: GlassCard(
+                      child: SurfaceCard(
                         padding: const EdgeInsets.all(12.0),
-                        borderColor: AppColors.cyanAccent.withOpacity(0.5),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('КІБЕР-КРЕДИТИ', style: AppTextStyles.rajdhaniMedium(fontSize: 12.0, color: AppColors.textSecondary)),
+                            Text(t('market_cr'), style: AppTypography.caption(context)),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('${avatarConfig.credits}', style: AppTextStyles.orbitronHeading(fontSize: 24.0, color: AppColors.cyanAccent)),
-                                const Icon(Icons.token, color: AppColors.cyanAccent, size: 24),
+                                Text('${avatarConfig.credits}', style: AppTypography.metric(context, color: AppColors.accent)),
+                                const Icon(Icons.token, color: AppColors.accent, size: 24),
                               ],
                             ),
                           ],
@@ -134,37 +134,37 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 ),
               ),
               const SizedBox(height: 16.0),
-              
+
               // Tabs
               Container(
                 height: 45,
                 margin: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   children: [
-                    _buildTab(0, 'БУСТЕРИ (SP)'),
-                    _buildTab(1, 'КОСМЕТИКА (CR)'),
+                    _buildTab(0, t('market_tab_boosters'), brightness),
+                    _buildTab(1, t('market_tab_cosmetics'), brightness),
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 16.0),
 
               // Content
               Expanded(
-                child: _selectedTabIndex == 0 
-                  ? _buildSpItems(sp) 
-                  : _buildCosmeticItems(avatarConfig),
+                child: _selectedTabIndex == 0
+                    ? _buildSpItems(sp, t)
+                    : _buildCosmeticItems(avatarConfig, t),
               ),
             ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text('${t('common_error')}: $e')),
       ),
     );
   }
 
-  Widget _buildTab(int index, String title) {
+  Widget _buildTab(int index, String title, Brightness brightness) {
     final isSelected = _selectedTabIndex == index;
     return Expanded(
       child: GestureDetector(
@@ -176,18 +176,18 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: isSelected ? AppColors.goldGlow : Colors.transparent,
+                color: isSelected ? AppColors.warning : Colors.transparent,
                 width: 3.0,
               ),
             ),
-            color: isSelected ? AppColors.goldGlow.withOpacity(0.1) : Colors.transparent,
+            color: isSelected ? AppColors.warning.withOpacity(0.1) : Colors.transparent,
           ),
           alignment: Alignment.center,
           child: Text(
             title,
-            style: AppTextStyles.rajdhaniMedium(
-              fontSize: 14.0,
-              color: isSelected ? AppColors.goldGlow : AppColors.textSecondary,
+            style: AppTypography.bodySmall(
+              context,
+              color: isSelected ? AppColors.warning : AppColors.textSecondary(brightness),
             ),
           ),
         ),
@@ -195,96 +195,94 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     );
   }
 
-  Widget _buildSpItems(int sp) {
+  Widget _buildSpItems(int sp, String Function(String) t) {
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       children: [
         _buildMarketItem(
-          name: 'ЗАМОРОЖЕННЯ СТРІКУ',
-          description: 'Дозволяє пропустити 1 день без втрати серії.',
+          name: t('market_streak_freeze'),
+          description: t('market_streak_freeze_desc'),
           icon: Icons.ac_unit,
-          color: AppColors.cyanAccent,
+          color: AppColors.accent,
           costText: '2 SP',
           canAfford: sp >= 2,
           onBuy: () {
-            // Logic handled via standard SP purchase (simplified here for brevity since focus is Cosmetics)
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('В розробці: Будуть інтегровані в наступному патчі.')));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t('market_integration_soon'))));
           },
         ),
         const SizedBox(height: 16.0),
         _buildMarketItem(
-          name: 'ЗВИЧАЙНИЙ ЛУТБОКС',
-          description: 'Містить випадкову нагороду.',
+          name: t('market_common_lootbox'),
+          description: t('market_common_lootbox_desc'),
           icon: Icons.inventory_2,
           color: Colors.blueAccent,
           costText: '1 SP',
           canAfford: sp >= 1,
           onBuy: () {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('В розробці')));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t('common_in_dev'))));
           },
         ),
       ],
     );
   }
 
-  Widget _buildCosmeticItems(AvatarConfig config) {
+  Widget _buildCosmeticItems(AvatarConfig config, String Function(String) t) {
+    final brightness = Theme.of(context).brightness);
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       children: [
-        Text('ЕКСКЛЮЗИВНА ОПТИКА', style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: AppColors.textPrimary)),
+        Text(t('market_exclusive_optics'), style: AppTypography.overline(context, color: AppColors.textPrimary(brightness))),
         const SizedBox(height: 12.0),
-        _buildCosmeticItem(config, 'visor_terminator', 'Термінатор', 'Червоне кібер-око', 50, Colors.redAccent, const AvatarConfig(visor: 'cyclops', colorHex: '#FF0000')),
-        _buildCosmeticItem(config, 'visor_hacker', 'Holo-Band', 'Голографічна смуга', 75, AppColors.cyanAccent, const AvatarConfig(visor: 'dual', colorHex: '#00FFFF')),
-        
+        _buildCosmeticItem(config, 'visor_terminator', t('market_terminator'), t('market_terminator_desc'), 50, Colors.redAccent, const AvatarConfig(visor: 'cyclops', colorHex: '#FF0000'), t),
+        _buildCosmeticItem(config, 'visor_hacker', 'Holo-Band', t('market_item_holo_desc'), 75, AppColors.accent, const AvatarConfig(visor: 'dual', colorHex: '#00FFFF'), t),
+
         const SizedBox(height: 24.0),
-        Text('ПРЕМІУМ ФАРБИ', style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: AppColors.textPrimary)),
+        Text(t('market_premium_paints'), style: AppTypography.overline(context, color: AppColors.textPrimary(brightness))),
         const SizedBox(height: 12.0),
-        _buildCosmeticItem(config, 'color_quantum', 'Quantum Purple', 'Абсолютний неон', 100, Colors.purpleAccent, const AvatarConfig(colorHex: '#E040FB')),
-        _buildCosmeticItem(config, 'color_gold', 'Neon Gold', 'Сяйво еліти', 150, AppColors.goldGlow, const AvatarConfig(colorHex: '#FFD700')),
-        
+        _buildCosmeticItem(config, 'color_quantum', 'Quantum Purple', t('market_item_quantum_desc'), 100, Colors.purpleAccent, const AvatarConfig(colorHex: '#E040FB'), t),
+        _buildCosmeticItem(config, 'color_gold', 'Neon Gold', t('market_item_gold_desc'), 150, AppColors.warning, const AvatarConfig(colorHex: '#FFD700'), t),
+
         const SizedBox(height: 24.0),
-        Text('ДЕКАЛІ ТА ШРАМИ', style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: AppColors.textPrimary)),
+        Text(t('market_decals_scars'), style: AppTypography.overline(context, color: AppColors.textPrimary(brightness))),
         const SizedBox(height: 12.0),
-        _buildCosmeticItem(config, 'decal_circuit', 'Circuit Board', 'Електронні доріжки', 80, Colors.greenAccent, const AvatarConfig(decal: 'striped', colorHex: '#00FF00')),
+        _buildCosmeticItem(config, 'decal_circuit', 'Circuit Board', t('market_item_circuit_desc'), 80, AppColors.success, const AvatarConfig(decal: 'striped', colorHex: '#00FF00'), t),
       ],
     );
   }
 
-  Widget _buildCosmeticItem(AvatarConfig currentConfig, String itemId, String name, String description, int cost, Color color, AvatarConfig previewConfig) {
+  Widget _buildCosmeticItem(AvatarConfig currentConfig, String itemId, String name, String description, int cost, Color color, AvatarConfig previewConfig, String Function(String) t) {
+    final brightness = Theme.of(context).brightness);
     final bool isOwned = currentConfig.ownedItems.contains(itemId);
     final bool canAfford = currentConfig.credits >= cost;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12.0),
-      child: GlassCard(
+      child: SurfaceCard(
         padding: const EdgeInsets.all(12.0),
-        borderColor: isOwned ? color.withOpacity(0.5) : AppColors.borderNeon.withOpacity(0.2),
         child: Row(
           children: [
-            NeonAvatarWidget(config: previewConfig, size: 40.0),
+            NeonAvatarWidget(config: previewConfig, size: 40.0, brightness: brightness),
             const SizedBox(width: 12.0),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: AppTextStyles.rajdhaniMedium(fontSize: 16.0, color: Colors.white)),
-                  Text(description, style: const TextStyle(fontSize: 10.0, color: AppColors.textSecondary)),
+                  Text(name, style: AppTypography.h3(context)),
+                  Text(description, style: AppTypography.caption(context)),
                 ],
               ),
             ),
             if (isOwned)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: Colors.green.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
-                child: const Text('ПРИДБАНО', style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold)),
+                decoration: BoxDecoration(color: AppColors.success.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                child: Text(t('market_purchased_badge'), style: AppTypography.overline(context, color: AppColors.success)),
               )
             else
-              NeonButton(
-                text: '$cost CR',
-                baseColor: canAfford ? AppColors.cyanAccent : AppColors.textMuted,
-                glowColor: Colors.transparent,
-                height: 32,
-                width: 80,
+              AppButton(
+                label: '$cost CR',
+                variant: canAfford ? ButtonVariant.secondary : ButtonVariant.ghost,
+                fullWidth: false,
                 onPressed: canAfford ? () => _buyCosmetic(currentConfig, cost, itemId, name) : null,
               ),
           ],
@@ -302,7 +300,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     required bool canAfford,
     required VoidCallback onBuy,
   }) {
-    return GlassCard(
+    return SurfaceCard(
       padding: const EdgeInsets.all(16.0),
       child: Row(
         children: [
@@ -312,18 +310,16 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: color)),
+                Text(name, style: AppTypography.overline(context, color: color)),
                 const SizedBox(height: 4.0),
-                Text(description, style: const TextStyle(fontSize: 11.0, color: AppColors.textSecondary)),
+                Text(description, style: AppTypography.caption(context)),
               ],
             ),
           ),
-          NeonButton(
-            text: costText,
-            baseColor: canAfford ? AppColors.goldGlow : AppColors.textMuted,
-            glowColor: Colors.transparent,
-            height: 36,
-            width: 70,
+          AppButton(
+            label: costText,
+            variant: canAfford ? ButtonVariant.secondary : ButtonVariant.ghost,
+            fullWidth: false,
             onPressed: canAfford ? onBuy : null,
           ),
         ],

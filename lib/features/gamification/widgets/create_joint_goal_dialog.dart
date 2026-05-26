@@ -2,19 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/providers/l10n.dart';
 import '../providers/joint_goals_provider.dart';
 
 class CreateJointGoalDialog extends ConsumerStatefulWidget {
-  const CreateJointGoalDialog({Key? key}) : super(key: key);
+  const CreateJointGoalDialog({super.key});
 
   @override
-  ConsumerState<CreateJointGoalDialog> createState() => _CreateJointGoalDialogState();
+  ConsumerState<CreateJointGoalDialog> createState() =>
+      _CreateJointGoalDialogState();
 }
 
 class _CreateJointGoalDialogState extends ConsumerState<CreateJointGoalDialog> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
-  final List<TextEditingController> _friendControllers = [TextEditingController()];
+  final List<TextEditingController> _friendControllers = [
+    TextEditingController()
+  ];
 
   @override
   void dispose() {
@@ -35,15 +41,13 @@ class _CreateJointGoalDialogState extends ConsumerState<CreateJointGoalDialog> {
         .toList();
 
     if (title.isEmpty || amountText.isEmpty) return;
-    
+
     final targetAmount = (double.tryParse(amountText) ?? 0) * 100; // to kopecks
     if (targetAmount <= 0) return;
 
-    await ref.read(jointGoalsNotifierProvider.notifier).createGoal(
-          title,
-          targetAmount.toInt(),
-          friends,
-        );
+    await ref
+        .read(jointGoalsNotifierProvider.notifier)
+        .createGoal(title, targetAmount.toInt(), friends);
 
     if (mounted) {
       Navigator.of(context).pop();
@@ -52,55 +56,68 @@ class _CreateJointGoalDialogState extends ConsumerState<CreateJointGoalDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
+
+    final brightness = Theme.of(context).brightness;
+
     return Dialog(
-      backgroundColor: AppColors.cardBg,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.magentaAccent, width: 2),
-      ),
-      child: Padding(
+      backgroundColor: Colors.transparent,
+      child: SurfaceCard(
+        margin: EdgeInsets.zero,
         padding: const EdgeInsets.all(20.0),
+        borderRadius: 16,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'НОВА СПІЛЬНА ЦІЛЬ',
-                style: AppTextStyles.orbitronHeading(
-                  fontSize: 18,
-                  color: AppColors.magentaAccent,
-                  fontWeight: FontWeight.bold,
-                ),
+                t('joint_create_title'),
+                style: AppTypography.h2(context, color: AppColors.accent),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
               TextField(
                 controller: _titleController,
-                style: const TextStyle(color: Colors.white),
+                style: AppTypography.body(context),
                 decoration: InputDecoration(
-                  labelText: 'Назва цілі (Напр. ПС5)',
-                  labelStyle: const TextStyle(color: AppColors.textSecondary),
-                  enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderNeon)),
-                  focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.magentaAccent)),
+                  labelText: t('joint_create_name_label'),
+                  labelStyle: AppTypography.bodySmall(context),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(color: AppColors.border(brightness)),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.accent),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: _amountController,
-                style: const TextStyle(color: Colors.white),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: AppTypography.body(context),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: 'Сума (₴)',
-                  labelStyle: const TextStyle(color: AppColors.textSecondary),
-                  enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderNeon)),
-                  focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.magentaAccent)),
+                  labelText: t('joint_create_amount_label'),
+                  labelStyle: AppTypography.bodySmall(context),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(color: AppColors.border(brightness)),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: const BorderSide(color: AppColors.accent),
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
               Text(
-                'Учасники (Віртуальні/Офлайн)',
-                style: AppTextStyles.rajdhaniMedium(fontSize: 16, color: AppColors.cyanAccent),
+                t('joint_create_members'),
+                style: AppTypography.bodySmall(
+                  context,
+                  color: AppColors.accent,
+                ),
               ),
               const SizedBox(height: 8),
               ...List.generate(_friendControllers.length, (index) {
@@ -111,18 +128,28 @@ class _CreateJointGoalDialogState extends ConsumerState<CreateJointGoalDialog> {
                       Expanded(
                         child: TextField(
                           controller: _friendControllers[index],
-                          style: const TextStyle(color: Colors.white),
+                          style: AppTypography.body(context),
                           decoration: InputDecoration(
-                            hintText: 'Ім\'я друга',
-                            hintStyle: const TextStyle(color: AppColors.textMuted),
-                            enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderNeon)),
-                            focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.cyanAccent)),
+                            hintText: t('joint_create_name_hint'),
+                            hintStyle: AppTypography.body(
+                              context,
+                              color: AppColors.textTertiary(brightness),
+                            ),
+                            enabledBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(
+                                color: AppColors.border(brightness),
+                              ),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderSide:
+                                  const BorderSide(color: AppColors.accent),
+                            ),
                           ),
                         ),
                       ),
                       if (index == _friendControllers.length - 1)
                         IconButton(
-                          icon: const Icon(Icons.add_circle, color: AppColors.cyanAccent),
+                          icon: const Icon(Icons.add_circle, color: AppColors.accent),
                           onPressed: () {
                             setState(() {
                               _friendControllers.add(TextEditingController());
@@ -134,15 +161,10 @@ class _CreateJointGoalDialogState extends ConsumerState<CreateJointGoalDialog> {
                 );
               }),
               const SizedBox(height: 24),
-              ElevatedButton(
+              AppButton(
+                label: t('joint_create_btn'),
+                variant: ButtonVariant.primary,
                 onPressed: _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.magentaAccent,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                child: const Text('СТВОРИТИ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ],
           ),

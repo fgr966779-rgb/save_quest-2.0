@@ -199,7 +199,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                         style: const TextStyle(
                           fontFamily: 'Courier', // Standard terminal font
                           fontSize: 14.0,
-                          color: AppColors.cyanAccent, // Hacker green/cyan
+                          color: const Color(0xFF00E5FF), // Terminal cyan
                         ),
                       ),
                     );
@@ -217,7 +217,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                       style: TextStyle(
                         fontFamily: 'Courier',
                         fontSize: 16.0,
-                        color: AppColors.cyanAccent,
+                        color: Color(0xFF00E5FF),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -230,7 +230,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
                           fontSize: 16.0,
                           color: Colors.white,
                         ),
-                        cursorColor: AppColors.cyanAccent,
+                        cursorColor: Color(0xFF00E5FF),
                         decoration: const InputDecoration(
                           border: InputBorder.none,
                           isDense: true,

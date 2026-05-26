@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/widgets/neon_button.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/surface_card.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/providers/l10n.dart';
+import '../../../core/providers/providers.dart';
 import '../providers/joint_goals_provider.dart';
 
 class JointGoalDetailScreen extends ConsumerWidget {
@@ -17,23 +17,23 @@ class JointGoalDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
+
     final jointGoalsAsync = ref.watch(jointGoalsProvider);
+    final brightness = Theme.of(context).brightness;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'ДЕТАЛІ ЦІЛІ',
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 18.0,
-            color: AppColors.magentaAccent,
-            fontWeight: FontWeight.bold,
-          ),
+          t('squad_title'),
+          style: AppTypography.h3(context, color: AppColors.goalB),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary(brightness), size: 20),
           onPressed: () => context.pop(),
         ),
       ),
@@ -41,7 +41,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
         data: (goalsData) {
           final dataIndex = goalsData.indexWhere((d) => d.goal.id == goalId);
           if (dataIndex == -1) {
-            return const Center(child: Text('Ціль не знайдено', style: TextStyle(color: Colors.white)));
+            return Center(child: Text(t('goal_not_found'), style: TextStyle(color: AppColors.textPrimary(brightness))));
           }
 
           final data = goalsData[dataIndex];
@@ -53,14 +53,14 @@ class JointGoalDetailScreen extends ConsumerWidget {
           final double remaining = target - totalContributed > 0 ? target - totalContributed : 0;
           
           final List<Color> memberColors = [
-            AppColors.cyanAccent,
-            AppColors.magentaAccent,
-            AppColors.goldGlow,
-            AppColors.blueAccent,
-            AppColors.fireOrange,
-            Colors.greenAccent,
-            Colors.purpleAccent,
-            Colors.orangeAccent,
+            AppColors.accent,
+            AppColors.goalB,
+            AppColors.warning,
+            AppColors.chartBlue,
+            AppColors.chartOrange,
+            AppColors.success,
+            AppColors.chartPurple,
+            AppColors.chartAmber,
           ];
 
           String getGoalImage(String title) {
@@ -80,13 +80,17 @@ class JointGoalDetailScreen extends ConsumerWidget {
               children: [
                 Text(
                   goal.title.toUpperCase(),
-                  style: AppTextStyles.orbitronHeading(fontSize: 24, color: Colors.white),
+                  style: AppTypography.h2(context, color: AppColors.textPrimary(brightness)),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Зібрано ${(goal.currentAmount / 100).toStringAsFixed(0)} ₴ з ${(goal.targetAmount / 100).toStringAsFixed(0)} ₴',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                  AppLocalizations.format(currentLocale, 'squad_collected', {
+                    'current': '${(goal.currentAmount / 100).toStringAsFixed(0)}',
+                    'target': '${(goal.targetAmount / 100).toStringAsFixed(0)}',
+                    'currency': '₴',
+                  }),
+                  style: AppTypography.body(context),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
@@ -104,7 +108,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
                           sections: [
                             if (remaining > 0)
                               PieChartSectionData(
-                                color: AppColors.cardBgLight,
+                                color: AppColors.surfaceMuted(brightness),
                                 value: remaining,
                                 title: '',
                                 radius: 20,
@@ -124,7 +128,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
                             }).toList(),
                           ],
                         ),
-                      ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
+                      ),
                       // Goal image in the center of donut
                       ClipOval(
                         child: Image.asset(
@@ -140,9 +144,9 @@ class JointGoalDetailScreen extends ConsumerWidget {
                               height: 110,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.magentaAccent.withOpacity(0.3),
+                                color: AppColors.goalB.withOpacity(0.3),
                               ),
-                              child: const Icon(Icons.image_not_supported, color: Colors.white54, size: 40),
+                              child: Icon(Icons.image_not_supported, color: AppColors.textSecondary(brightness), size: 40),
                             );
                           },
                         ),
@@ -152,13 +156,13 @@ class JointGoalDetailScreen extends ConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'СПІЛЬНО',
-                            style: AppTextStyles.interMuted(fontSize: 14).copyWith(letterSpacing: 1.5, color: Colors.white70),
+                            t('joint_detail_together'),
+                            style: AppTypography.caption(context, color: AppColors.textSecondary(brightness)).copyWith(letterSpacing: 1.5),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             '${(target > 0 ? (totalContributed / target * 100) : 0).clamp(0, 100).toStringAsFixed(0)}%',
-                            style: AppTextStyles.orbitronHeading(fontSize: 36, color: Colors.white, fontWeight: FontWeight.bold),
+                            style: AppTypography.display(context, color: AppColors.textPrimary(brightness)),
                           ),
                           const SizedBox(height: 8),
                           Row(
@@ -189,8 +193,8 @@ class JointGoalDetailScreen extends ConsumerWidget {
                 
                 // MEMBERS LIST
                 Text(
-                  'УЧАСНИКИ (${members.length})',
-                  style: AppTextStyles.rajdhaniMedium(fontSize: 18, color: AppColors.textPrimary),
+                  AppLocalizations.format(currentLocale, 'squad_members', {'count': '${members.length}'}),
+                  style: AppTypography.h3(context, color: AppColors.textPrimary(brightness)),
                 ),
                 const SizedBox(height: 12),
                 ...members.asMap().entries.map((entry) {
@@ -198,7 +202,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
                   final m = entry.value;
                   final color = memberColors[idx % memberColors.length];
                   
-                  return GlassCard(
+                  return SurfaceCard(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     child: Row(
@@ -214,31 +218,34 @@ class JointGoalDetailScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 m.memberName,
-                                style: AppTextStyles.rajdhaniBold(fontSize: 18).copyWith(color: m.isCurrentUser ? AppColors.cyanAccent : Colors.white),
+                                style: AppTypography.body(context, color: m.isCurrentUser ? AppColors.accent : AppColors.textPrimary(brightness)).copyWith(fontWeight: FontWeight.w600),
                               ),
                               Text(
-                                'Внесок: ${(m.contributedAmount / 100).toStringAsFixed(0)} ₴',
-                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                AppLocalizations.format(currentLocale, 'joint_detail_contribution', {
+                                  'amount': '${(m.contributedAmount / 100).toStringAsFixed(0)}',
+                                  'currency': '₴',
+                                }),
+                                style: AppTypography.caption(context),
                               ),
                             ],
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.add_circle, color: AppColors.magentaAccent),
-                          tooltip: 'Додати внесок',
+                          icon: Icon(Icons.add_circle, color: AppColors.goalB),
+                          tooltip: t('joint_detail_add_tooltip'),
                           onPressed: () {
                             _showAddContributionDialog(context, ref, goalId, m.id, m.memberName);
                           },
                         )
                       ],
                     ),
-                  ).animate().fadeIn(delay: (idx * 100).ms).slideX();
+                  );
                 }).toList(),
               ],
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.magentaAccent)),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.goalB)),
         error: (e, _) => Center(child: Text('Error: $e')),
       ),
     );
@@ -246,31 +253,39 @@ class JointGoalDetailScreen extends ConsumerWidget {
 
   void _showAddContributionDialog(BuildContext context, WidgetRef ref, String goalId, String memberId, String memberName) {
     final _controller = TextEditingController();
+    final brightness = Theme.of(context).brightness;
     
     showDialog(
       context: context,
       builder: (ctx) {
+        final container = ProviderScope.containerOf(ctx);
+        final locale = container.read(localeProvider);
+        String t(String key) => AppLocalizations.get(locale, key);
+
         return AlertDialog(
-          backgroundColor: AppColors.cardBg,
-          title: Text('Внесок від: $memberName', style: const TextStyle(color: Colors.white)),
+          backgroundColor: AppColors.surface(brightness),
+          title: Text(
+            AppLocalizations.format(locale, 'joint_detail_dialog_title', {'name': memberName}),
+            style: TextStyle(color: AppColors.textPrimary(brightness)),
+          ),
           content: TextField(
             controller: _controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: AppColors.textPrimary(brightness)),
             decoration: InputDecoration(
-              labelText: 'Сума (₴)',
-              labelStyle: const TextStyle(color: AppColors.textSecondary),
-              enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.borderNeon)),
-              focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.magentaAccent)),
+              labelText: t('joint_detail_dialog_amount'),
+              labelStyle: TextStyle(color: AppColors.textSecondary(brightness)),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.border(brightness))),
+              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.goalB)),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('СКАСУВАТИ', style: TextStyle(color: AppColors.textSecondary)),
+              child: Text(t('common_cancel'), style: TextStyle(color: AppColors.textSecondary(brightness))),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.magentaAccent),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.goalB),
               onPressed: () async {
                 final amount = double.tryParse(_controller.text.trim()) ?? 0;
                 if (amount > 0) {
@@ -279,7 +294,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
                   if (ctx.mounted) Navigator.pop(ctx);
                 }
               },
-              child: const Text('ДОДАТИ'),
+              child: Text(t('common_add')),
             ),
           ],
         );

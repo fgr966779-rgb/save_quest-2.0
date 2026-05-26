@@ -1,50 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/banking_provider.dart';
 import '../../../core/providers/events_notifier.dart';
 import '../../../core/providers/savings_notifier.dart';
 import '../../../core/providers/penalty_notifier.dart';
 import '../../../core/utils/money_utils.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/surface_card.dart';
 
 class BankingInsightsCard extends ConsumerWidget {
   const BankingInsightsCard({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.watch(localeProvider);
     final insightsAsync = ref.watch(aiInsightsProvider);
 
     return insightsAsync.when(
       // --- Loading: VAULT-7 is "thinking" ---
-      loading: () => GlassCard(
+      loading: () => SurfaceCard(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        borderColor: AppColors.cyanAccent.withOpacity(0.4),
         child: Row(
           children: [
-            const SizedBox(
+            SizedBox(
               width: 20,
               height: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation(AppColors.cyanAccent),
+                color: AppColors.accent,
               ),
             ),
             const SizedBox(width: 12.0),
             Text(
-              'VAULT-7 аналізує транзакцію...',
-              style: AppTextStyles.rajdhaniMedium(
-                fontSize: 13.0,
-                color: AppColors.cyanAccent,
+              AppLocalizations.get(locale, 'bank_analyzing'),
+              style: AppTypography.bodySmall(
+                context,
+                color: AppColors.accent,
               ),
             ),
           ],
         ),
-      ).animate().fadeIn(),
+      ),
 
       // --- Error or no data: silent ---
       error: (_, __) => const SizedBox.shrink(),
@@ -57,14 +58,12 @@ class BankingInsightsCard extends ConsumerWidget {
           children: insights.map((insight) {
             final isLLM = insight.type == 'cyber_coach';
             final accentColor =
-                isLLM ? AppColors.magentaAccent : (insight.type == 'round_up' ? AppColors.cyanAccent : AppColors.goldGlow);
+                isLLM ? AppColors.goalB : (insight.type == 'round_up' ? AppColors.accent : AppColors.warning);
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 12.0),
-              child: GlassCard(
+              child: SurfaceCard(
                 padding: const EdgeInsets.all(16.0),
-                borderColor: accentColor.withOpacity(0.6),
-                glowColor: accentColor.withOpacity(0.15),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -94,19 +93,17 @@ class BankingInsightsCard extends ConsumerWidget {
                         children: [
                           Text(
                             insight.title,
-                            style: AppTextStyles.orbitronHeading(
-                              fontSize: isLLM ? 11.0 : 13.0,
-                              color: accentColor,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: isLLM
+                                ? AppTypography.overline(context, color: accentColor)
+                                : AppTypography.h3(context, color: accentColor),
                           ),
                           const SizedBox(height: 6.0),
                           Text(
                             insight.description,
-                            style: TextStyle(
-                              fontSize: 12.0,
-                              color: AppColors.textSecondary,
-                              height: 1.4,
+                            style: AppTypography.bodySmall(
+                              context,
+                              color: AppColors.textSecondary(brightness),
+                            ).copyWith(
                               fontStyle: isLLM ? FontStyle.italic : FontStyle.normal,
                             ),
                           ),
@@ -138,7 +135,7 @@ class BankingInsightsCard extends ConsumerWidget {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                              '✅ Переказано ${centsToDisplay(insight.suggestedAmountKopecks)} у Сховище!',
+                                              AppLocalizations.get(locale, 'bank_transferred'),
                                             ),
                                             backgroundColor:
                                                 accentColor.withOpacity(0.85),
@@ -154,32 +151,29 @@ class BankingInsightsCard extends ConsumerWidget {
                                           borderRadius: BorderRadius.circular(8.0)),
                                     ),
                                     child: Text(
-                                      'ВНЕСТИ ${centsToDisplay(insight.suggestedAmountKopecks)}',
-                                      style: AppTextStyles.orbitronHeading(
-                                        fontSize: 11.0,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      '${AppLocalizations.get(locale, 'bank_deposit_btn')} ${centsToDisplay(insight.suggestedAmountKopecks)}',
+                                      style: AppTypography.overline(context),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 8.0),
                                 IconButton(
-                                  icon: const Icon(Icons.close,
-                                      color: AppColors.textMuted, size: 18),
+                                  icon: Icon(Icons.close,
+                                      color: AppColors.textTertiary(brightness), size: 18),
                                   onPressed: () {
                                     HapticFeedback.heavyImpact();
                                     
                                     // Issue a penalty when ignoring VAULT-7
                                     if (isLLM || insight.type == 'spending_alert') {
                                       ref.read(penaltyProvider.notifier).issueFine(
-                                        'Проігноровано пораду VAULT-17', 
+                                        AppLocalizations.get(locale, 'bank_ignored'), 
                                         insight.suggestedAmountKopecks
                                       );
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('⚠️ VAULT-17 запам\'ятав це. Цілісність аватара знижено!'),
-                                            backgroundColor: Colors.redAccent,
+                                          SnackBar(
+                                            content: Text(AppLocalizations.get(locale, 'bank_remembered')),
+                                            backgroundColor: AppColors.error,
                                           ),
                                         );
                                       }
@@ -196,7 +190,7 @@ class BankingInsightsCard extends ConsumerWidget {
                     ),
                   ],
                 ),
-              ).animate().slideX(begin: 0.08, end: 0.0, curve: Curves.easeOut).fadeIn(),
+              ),
             );
           }).toList(),
         );

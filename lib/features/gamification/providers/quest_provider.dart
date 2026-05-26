@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' as drift;
 import '../../../core/providers/providers.dart';
-import '../../../core/widgets/neon_avatar_painter.dart';
+import '../../../core/models/avatar_config.dart';
 import '../models/daily_quest.dart';
 
 class QuestNotifier extends StateNotifier<AsyncValue<List<DailyQuest>>> {

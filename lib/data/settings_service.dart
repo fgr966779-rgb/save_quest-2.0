@@ -19,6 +19,13 @@ class SettingsService {
   static const String _keyActiveBounty = 'active_bounty';
   static const String _keyDailyQuests = 'daily_quests';
   static const String _keyDailyQuestsDate = 'daily_quests_date';
+  static const String _keyThemeMode = 'theme_mode'; // 'system', 'light', 'dark'
+  static const String _keyCloudBackup = 'cloud_backup_enabled';
+  static const String _keyBiometricEnabled = 'biometric_enabled';
+  static const String _keyDailyReminder = 'daily_reminder_enabled';
+  static const String _keyAchievementNotifs = 'achievement_notifs_enabled';
+  static const String _keyReminderHour = 'reminder_hour';
+  static const String _keyReminderMinute = 'reminder_minute';
 
   bool get hasCompletedOnboarding => _box.get(_keyOnboarding, defaultValue: false);
   set hasCompletedOnboarding(bool value) => _box.put(_keyOnboarding, value);
@@ -87,4 +94,32 @@ class SettingsService {
 
   String get dailyQuestsDate => _box.get(_keyDailyQuestsDate, defaultValue: '');
   set dailyQuestsDate(String value) => _box.put(_keyDailyQuestsDate, value);
+
+  /// Theme mode: 'system' (default), 'light', or 'dark'.
+  String get themeMode => _box.get(_keyThemeMode, defaultValue: 'system');
+  set themeMode(String value) => _box.put(_keyThemeMode, value);
+
+  /// Cloud backup enabled (default: false — user must explicitly opt in).
+  bool get isCloudBackupEnabled => _box.get(_keyCloudBackup, defaultValue: false);
+  set isCloudBackupEnabled(bool value) => _box.put(_keyCloudBackup, value);
+
+  /// Biometric authentication enabled (default: false).
+  bool get isBiometricEnabled => _box.get(_keyBiometricEnabled, defaultValue: false);
+  set isBiometricEnabled(bool value) => _box.put(_keyBiometricEnabled, value);
+
+  /// Daily deposit reminder enabled (default: true).
+  bool get isDailyReminderEnabled => _box.get(_keyDailyReminder, defaultValue: true);
+  set isDailyReminderEnabled(bool value) => _box.put(_keyDailyReminder, value);
+
+  /// Achievement notifications enabled (default: true).
+  bool get isAchievementNotifsEnabled => _box.get(_keyAchievementNotifs, defaultValue: true);
+  set isAchievementNotifsEnabled(bool value) => _box.put(_keyAchievementNotifs, value);
+
+  /// Reminder hour (0-23), default 20 (8 PM).
+  int get reminderHour => _box.get(_keyReminderHour, defaultValue: 20);
+  set reminderHour(int value) => _box.put(_keyReminderHour, value);
+
+  /// Reminder minute (0-59), default 0.
+  int get reminderMinute => _box.get(_keyReminderMinute, defaultValue: 0);
+  set reminderMinute(int value) => _box.put(_keyReminderMinute, value);
 }

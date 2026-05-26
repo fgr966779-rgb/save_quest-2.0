@@ -3,44 +3,109 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // === ТЕМНАЯ ТЕМА (Dark Theme) ===
-  static const Color background = Color(0xFF121220);     // Глубокий полночно-синий графит вместо черного
-  static const Color cardBg = Color(0xFF1B1A2A);         // Карточки темной темы
-  static const Color cardBgLight = Color(0xFF24233A);    // Выделения в темной теме
-  
-  // === СВЕТЛАЯ ТЕМА (Light Theme) ===
-  static const Color lightBg = Color(0xFFF8F9FA);        // Чистый белый с серо-голубым оттенком
-  static const Color lightSurface = Color(0xFFFFFFFF);   // Карточки светлой темы
-  static const Color lightSurfaceMuted = Color(0xFFEEF1F6);
+  // ========================================
+  // DESIGN SYSTEM: Clean Minimalism 2025-2026
+  // One accent. Neutral surfaces. Zero noise.
+  // ========================================
 
-  // === АКЦЕНТЫ И ГРАДИЕНТЫ (Cyberpunk/Neon Accents) ===
-  static const Color cyanAccent = Color(0xFF00E5FF);     // Goal A: PlayStation 5
-  static const Color magentaAccent = Color(0xFFFF007F);  // Goal B: Gaming Monitor
-  static const Color purpleGlow = Color(0xFF8B5CF6);     // Пурпурный для смешивания градиентов
-  static const Color goldAccent = Color(0xFFFFC400);     // Стрики и достижения
-  static const Color greenAccent = Color(0xFF39FF14);    // Успех, разблокировки
-  static const Color blueAccent = Color(0xFF0D47A1);
+  // --- LIGHT MODE ---
+  static const Color lightBackground = Color(0xFFF7F8FA);
+  static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightSurfaceMuted = Color(0xFFF0F1F3);
+  static const Color lightBorder = Color(0xFFE5E7EB);
+  static const Color lightBorderStrong = Color(0xFFD1D5DB);
 
-  // === НЕОНОВЫЕ СВЕЧЕНИЯ ===
-  static const Color cyanGlow = Color(0x4D00E5FF);
-  static const Color magentaGlow = Color(0x4DFF007F);
-  static const Color goldGlow = Color(0x4DFFC400);
+  // --- DARK MODE ---
+  static const Color darkBackground = Color(0xFF111113);
+  static const Color darkSurface = Color(0xFF1A1A1E);
+  static const Color darkSurfaceMuted = Color(0xFF242428);
+  static const Color darkBorder = Color(0xFF2A2A2E);
+  static const Color darkBorderStrong = Color(0xFF3A3A3E);
 
-  // === СТРИКИ И ОГОНЬ ===
-  static const Color streakFireRed = Color(0xFFFF3D00);
-  static const Color streakFireYellow = Color(0xFFFFEA00);
-  static const Color fireOrange = Color(0xFFFF5722);
+  // --- ACCENT (Single Color System) ---
+  // A clean, modern indigo-violet that works for both modes
+  static const Color accent = Color(0xFF6366F1);
+  static const Color accentLight = Color(0xFF818CF8);
+  static const Color accentDark = Color(0xFF4F46E5);
+  static const Color accentMuted = Color(0xFFE0E7FF);
+  static const Color accentMutedDark = Color(0xFF312E81);
 
-  // === ТЕКСТОВЫЕ ЦВЕТА ===
-  static const Color textPrimary = Color(0xFFF5F5FA);       // Почти белый для темной темы
-  static const Color textSecondary = Color(0xFF9E9EBA);     // Приглушенный лавандово-серый
-  static const Color textMuted = Color(0xFF5E5E7A);         // Темный сланец
+  // --- GOAL SEMANTIC COLORS (subtle, not neon) ---
+  // Used only for goal differentiation, not as primary identity
+  static const Color goalA = Color(0xFF6366F1); // Indigo (matches accent)
+  static const Color goalB = Color(0xFF10B981); // Emerald green
+  static const Color goalAMuted = Color(0xFFEEF2FF);
+  static const Color goalBMuted = Color(0xFFECFDF5);
+  static const Color goalADark = Color(0xFF3730A3);
+  static const Color goalBDark = Color(0xFF065F46);
 
-  static const Color textLightPrimary = Color(0xFF1E1E2C);  // Глубокий графит для светлой темы
-  static const Color textLightSecondary = Color(0xFF5E6278);// Серый Slate
-  static const Color textLightMuted = Color(0xFF98A2B3);    // Светло-серый
+  // --- GAMIFICATION SEMANTIC ---
+  // Rarity colors for achievements / trophies
+  static const Color legendary = Color(0xFF8B5CF6); // Violet — for legendary tier
+  static const Color legendaryMuted = Color(0xFFF3E8FF);
 
-  // === ГРАНИЦЫ ===
-  static const Color borderNeon = Color(0xFF231E3D);
-  static const Color borderNeonActive = Color(0xFF433C73);
+  // Core skill class colors
+  static const Color skillHacker = Color(0xFF00FF41);   // Matrix Green
+  static const Color skillMagnate = Color(0xFFF59E0B);  // Amber/Gold (same as warning)
+  static const Color skillResilience = Color(0xFFEC4899); // Pink
+
+  // Chart / member distinguishing colors (joint goals, data viz)
+  static const Color chartBlue = Color(0xFF60A5FA);
+  static const Color chartOrange = Color(0xFFFB923C);
+  static const Color chartPurple = Color(0xFFA855F7);
+  static const Color chartAmber = Color(0xFFF97316);
+
+  // --- SEMANTIC ---
+  static const Color success = Color(0xFF10B981);
+  static const Color successMuted = Color(0xFFECFDF5);
+  static const Color successDark = Color(0xFF065F46);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color warningMuted = Color(0xFFFFFBEB);
+  static const Color warningDark = Color(0xFF92400E);
+  static const Color error = Color(0xFFEF4444);
+  static const Color errorMuted = Color(0xFFFEF2F2);
+  static const Color errorDark = Color(0xFF991B1B);
+
+  // --- TEXT (Light) ---
+  static const Color textLightPrimary = Color(0xFF111827);
+  static const Color textLightSecondary = Color(0xFF6B7280);
+  static const Color textLightTertiary = Color(0xFF9CA3AF);
+  static const Color textLightDisabled = Color(0xFFD1D5DB);
+
+  // --- TEXT (Dark) ---
+  static const Color textDarkPrimary = Color(0xFFF3F4F6);
+  static const Color textDarkSecondary = Color(0xFF9CA3AF);
+  static const Color textDarkTertiary = Color(0xFF6B7280);
+  static const Color textDarkDisabled = Color(0xFF4B5563);
+
+  // --- HELPERS: Context-aware colors ---
+  static Color background(Brightness brightness) =>
+      brightness == Brightness.dark ? darkBackground : lightBackground;
+
+  static Color surface(Brightness brightness) =>
+      brightness == Brightness.dark ? darkSurface : lightSurface;
+
+  static Color surfaceMuted(Brightness brightness) =>
+      brightness == Brightness.dark ? darkSurfaceMuted : lightSurfaceMuted;
+
+  static Color border(Brightness brightness) =>
+      brightness == Brightness.dark ? darkBorder : lightBorder;
+
+  static Color borderStrong(Brightness brightness) =>
+      brightness == Brightness.dark ? darkBorderStrong : lightBorderStrong;
+
+  static Color textPrimary(Brightness brightness) =>
+      brightness == Brightness.dark ? textDarkPrimary : textLightPrimary;
+
+  static Color textSecondary(Brightness brightness) =>
+      brightness == Brightness.dark ? textDarkSecondary : textLightSecondary;
+
+  static Color textTertiary(Brightness brightness) =>
+      brightness == Brightness.dark ? textDarkTertiary : textLightTertiary;
+
+  static Color textDisabled(Brightness brightness) =>
+      brightness == Brightness.dark ? textDarkDisabled : textLightDisabled;
+
+  static Color accentMutedBg(Brightness brightness) =>
+      brightness == Brightness.dark ? accentMutedDark : accentMuted;
 }

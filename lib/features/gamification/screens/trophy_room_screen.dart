@@ -7,7 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/providers/l10n.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/surface_card.dart';
 import '../models/achievement_model.dart';
 
 class TrophyRoomScreen extends ConsumerWidget {
@@ -17,6 +17,7 @@ class TrophyRoomScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final unlockedAsync = ref.watch(unlockedAchievementsProvider);
     final currentLocale = ref.watch(localeProvider);
+    final brightness = Theme.of(context).brightness;
     String t(String key) => AppLocalizations.get(currentLocale, key);
 
     return Scaffold(
@@ -30,18 +31,14 @@ class TrophyRoomScreen extends ConsumerWidget {
               // Header
               Text(
                 t('ach_header'),
-                style: AppTextStyles.rajdhaniMedium(
-                  fontSize: 12.0,
-                  color: AppColors.cyanAccent,
+                style: AppTypography.caption(
+                  context,
+                  color: AppColors.accent,
                 ).copyWith(letterSpacing: 2.0),
               ),
               Text(
                 t('ach_title'),
-                style: AppTextStyles.orbitronHeading(
-                  fontSize: 20.0,
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: AppTypography.h2(context),
               ),
               const SizedBox(height: 16.0),
 
@@ -51,20 +48,23 @@ class TrophyRoomScreen extends ConsumerWidget {
                   HapticFeedback.mediumImpact();
                   context.push('/skill-tree');
                 },
-                child: GlassCard(
+                child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  borderColor: AppColors.goldGlow.withOpacity(0.4),
-                  glowColor: AppColors.goldGlow,
+                  decoration: BoxDecoration(
+                    color: AppColors.surface(brightness),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.warning),
+                  ),
                   child: Row(
                     children: [
                       Container(
                         width: 36, height: 36,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.goldGlow.withOpacity(0.15),
-                          border: Border.all(color: AppColors.goldGlow.withOpacity(0.5)),
+                          color: AppColors.warningMuted,
+                          border: Border.all(color: AppColors.warning),
                         ),
-                        child: const Icon(Icons.account_tree_rounded, color: AppColors.goldGlow, size: 18),
+                        child: const Icon(Icons.account_tree_rounded, color: AppColors.warning, size: 18),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -73,16 +73,15 @@ class TrophyRoomScreen extends ConsumerWidget {
                           children: [
                             Text(
                               t('ach_skill_tree'),
-                              style: AppTextStyles.orbitronHeading(
-                                fontSize: 12, color: AppColors.goldGlow, fontWeight: FontWeight.bold),
+                              style: AppTypography.overline(context, color: AppColors.warning),
                             ),
                             const SizedBox(height: 2),
                             Text(t('ach_skill_desc'),
-                                style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                                style: AppTypography.caption(context)),
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right_rounded, color: AppColors.goldGlow),
+                      Icon(Icons.chevron_right_rounded, color: AppColors.warning),
                     ],
                   ),
                 ),
@@ -94,7 +93,7 @@ class TrophyRoomScreen extends ConsumerWidget {
                 child: unlockedAsync.when(
                   loading: () => const Center(child: CircularProgressIndicator()),
                   error: (err, _) => Center(
-                    child: Text('Помилка: $err', style: const TextStyle(color: AppColors.magentaAccent)),
+                    child: Text('${AppLocalizations.get(currentLocale, 'common_error')}: $err', style: AppTypography.body(context, color: AppColors.error)),
                   ),
                   data: (unlockedList) {
                     final Set<String> unlockedIds = unlockedList.map((badge) => badge.id).toSet();
@@ -104,9 +103,8 @@ class TrophyRoomScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Progression summary badge
-                        GlassCard(
+                        SurfaceCard(
                           padding: const EdgeInsets.all(16.0),
-                          borderColor: AppColors.cyanAccent.withOpacity(0.3),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -115,26 +113,21 @@ class TrophyRoomScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     t('ach_unlocked'),
-                                    style: AppTextStyles.orbitronHeading(
-                                      fontSize: 11.0,
-                                      color: AppColors.cyanAccent,
-                                      fontWeight: FontWeight.bold,
+                                    style: AppTypography.overline(
+                                      context,
+                                      color: AppColors.accent,
                                     ),
                                   ),
                                   const SizedBox(height: 2.0),
                                   Text(
                                     t('ach_unlocked_desc'),
-                                    style: const TextStyle(fontSize: 10.0, color: AppColors.textSecondary),
+                                    style: AppTypography.caption(context),
                                   ),
                                 ],
                               ),
                               Text(
                                 '$count / 18',
-                                style: AppTextStyles.orbitronHeading(
-                                  fontSize: 20.0,
-                                  color: AppColors.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: AppTypography.metric(context),
                               ),
                             ],
                           ),
@@ -172,20 +165,21 @@ class TrophyRoomScreen extends ConsumerWidget {
   }
 
   Widget _buildTrophyCard(BuildContext context, Achievement achievement, bool isUnlocked, String Function(String) t) {
-    Color rarityColor = Colors.grey;
+    final brightness = Theme.of(context).brightness;
+    Color rarityColor = AppColors.textTertiary(brightness);
     if (isUnlocked) {
       switch (achievement.rarity) {
         case AchievementRarity.common:
-          rarityColor = Colors.cyanAccent;
+          rarityColor = AppColors.accent;
           break;
         case AchievementRarity.rare:
-          rarityColor = AppColors.magentaAccent;
+          rarityColor = AppColors.goalB;
           break;
         case AchievementRarity.epic:
-          rarityColor = Colors.amberAccent;
+          rarityColor = AppColors.warning;
           break;
         case AchievementRarity.legendary:
-          rarityColor = Colors.purpleAccent;
+          rarityColor = AppColors.legendary;
           break;
       }
     }
@@ -195,23 +189,22 @@ class TrophyRoomScreen extends ConsumerWidget {
         HapticFeedback.lightImpact();
         _showAchievementDetailSheet(context, achievement, isUnlocked, t);
       },
-      child: GlassCard(
+      child: SurfaceCard(
         padding: const EdgeInsets.all(12.0),
-        borderColor: isUnlocked ? rarityColor.withOpacity(0.4) : AppColors.borderNeon.withOpacity(0.15),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Icon / Emoji (with color filter grayscale if locked)
+            // Icon / Emoji (with opacity if locked)
             Opacity(
               opacity: isUnlocked ? 1.0 : 0.25,
               child: Container(
                 width: 60.0,
                 height: 60.0,
                 decoration: BoxDecoration(
-                  color: isUnlocked ? rarityColor.withOpacity(0.1) : AppColors.cardBg,
+                  color: isUnlocked ? rarityColor.withOpacity(0.1) : AppColors.surfaceMuted(brightness),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: isUnlocked ? rarityColor : AppColors.borderNeon.withOpacity(0.2),
+                    color: isUnlocked ? rarityColor : AppColors.border(brightness),
                     width: 1.5,
                   ),
                 ),
@@ -231,10 +224,9 @@ class TrophyRoomScreen extends ConsumerWidget {
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.orbitronHeading(
-                fontSize: 10.0,
-                color: isUnlocked ? AppColors.textPrimary : AppColors.textSecondary,
-                fontWeight: FontWeight.bold,
+              style: AppTypography.overline(
+                context,
+                color: isUnlocked ? AppColors.textPrimary(brightness) : AppColors.textSecondary(brightness),
               ),
             ),
             const SizedBox(height: 4.0),
@@ -243,15 +235,14 @@ class TrophyRoomScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
               decoration: BoxDecoration(
-                color: isUnlocked ? rarityColor.withOpacity(0.15) : AppColors.cardBg.withOpacity(0.4),
+                color: isUnlocked ? rarityColor.withOpacity(0.1) : AppColors.surfaceMuted(brightness),
                 borderRadius: BorderRadius.circular(4.0),
               ),
               child: Text(
                 isUnlocked ? achievement.rarity.name.toUpperCase() : t('ach_locked'),
-                style: AppTextStyles.orbitronHeading(
-                  fontSize: 8.0,
-                  color: isUnlocked ? rarityColor : AppColors.textSecondary,
-                  fontWeight: FontWeight.bold,
+                style: AppTypography.overline(
+                  context,
+                  color: isUnlocked ? rarityColor : AppColors.textSecondary(brightness),
                 ),
               ),
             ),
@@ -262,6 +253,8 @@ class TrophyRoomScreen extends ConsumerWidget {
   }
 
   void _showAchievementDetailSheet(BuildContext context, Achievement achievement, bool isUnlocked, String Function(String) t) {
+    final brightness = Theme.of(context).brightness;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -269,9 +262,9 @@ class TrophyRoomScreen extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.all(24.0),
           decoration: BoxDecoration(
-            color: AppColors.background,
+            color: AppColors.surface(brightness),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
-            border: Border.all(color: AppColors.borderNeon.withOpacity(0.3), width: 1.5),
+            border: Border.all(color: AppColors.border(brightness), width: 1.5),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -282,7 +275,7 @@ class TrophyRoomScreen extends ConsumerWidget {
                   width: 50.0,
                   height: 4.0,
                   decoration: BoxDecoration(
-                    color: AppColors.textSecondary.withOpacity(0.3),
+                    color: AppColors.textSecondary(brightness).withOpacity(0.3),
                     borderRadius: BorderRadius.circular(2.0),
                   ),
                 ),
@@ -293,16 +286,8 @@ class TrophyRoomScreen extends ConsumerWidget {
               Center(
                 child: Text(
                   achievement.icon,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 64.0,
-                    shadows: isUnlocked
-                        ? [
-                            const BoxShadow(
-                              color: AppColors.cyanAccent,
-                              blurRadius: 20.0,
-                            ),
-                          ]
-                        : null,
                   ),
                 ),
               ),
@@ -311,16 +296,15 @@ class TrophyRoomScreen extends ConsumerWidget {
               Text(
                 achievement.titleUa.toUpperCase(),
                 textAlign: TextAlign.center,
-                style: AppTextStyles.orbitronHeading(fontSize: 16.0, color: Colors.white, fontWeight: FontWeight.bold),
+                style: AppTypography.h2(context),
               ),
               const SizedBox(height: 6.0),
               Text(
                 achievement.rarity.name.toUpperCase(),
                 textAlign: TextAlign.center,
-                style: AppTextStyles.orbitronHeading(
-                  fontSize: 10.0,
-                  color: isUnlocked ? AppColors.cyanAccent : AppColors.textSecondary,
-                  fontWeight: FontWeight.bold,
+                style: AppTypography.overline(
+                  context,
+                  color: isUnlocked ? AppColors.accent : AppColors.textSecondary(brightness),
                 ),
               ),
               const SizedBox(height: 16.0),
@@ -329,7 +313,7 @@ class TrophyRoomScreen extends ConsumerWidget {
               Text(
                 achievement.descriptionUa,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.rajdhaniMedium(fontSize: 14.0, color: AppColors.textSecondary),
+                style: AppTypography.body(context),
               ),
               const SizedBox(height: 32.0),
             ],

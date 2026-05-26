@@ -7,8 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/providers/l10n.dart';
-import '../../../core/widgets/glass_card.dart';
-import '../../../core/widgets/neon_button.dart';
+import '../../../core/widgets/surface_card.dart';
 
 class StreakRoomScreen extends ConsumerStatefulWidget {
   const StreakRoomScreen({Key? key}) : super(key: key);
@@ -40,6 +39,7 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
     final userProfileAsync = ref.watch(userProfileProvider);
     final depositsAsync = ref.watch(depositsProvider);
     final currentLocale = ref.watch(localeProvider);
+    final brightness = Theme.of(context).brightness;
     String t(String key) => AppLocalizations.get(currentLocale, key);
 
     return Scaffold(
@@ -53,18 +53,14 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
             // Header
             Text(
               t('streak_header'),
-              style: AppTextStyles.rajdhaniMedium(
-                fontSize: 12.0,
-                color: AppColors.cyanAccent,
+              style: AppTypography.caption(
+                context,
+                color: AppColors.accent,
               ).copyWith(letterSpacing: 2.0),
             ),
             Text(
               t('streak_title'),
-              style: AppTextStyles.orbitronHeading(
-                fontSize: 20.0,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+              style: AppTypography.h2(context),
             ),
             const SizedBox(height: 20.0),
 
@@ -88,6 +84,7 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
                             painter: ReactiveFlamePainter(
                               animationValue: _flameAnimController.value,
                               streakCount: streak,
+                              brightness: brightness,
                             ),
                             child: Center(
                               child: Column(
@@ -95,14 +92,10 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
                                 children: [
                                   Text(
                                     '$streak',
-                                    style: AppTextStyles.orbitronHeading(
-                                      fontSize: 48.0,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ).copyWith(
+                                    style: AppTypography.display(context).copyWith(
                                       shadows: [
                                         BoxShadow(
-                                          color: streak > 0 ? AppColors.magentaAccent : AppColors.textSecondary,
+                                          color: streak > 0 ? AppColors.accent : AppColors.textSecondary(brightness),
                                           blurRadius: 20.0,
                                         ),
                                       ],
@@ -110,10 +103,9 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
                                   ),
                                   Text(
                                     t('streak_days'),
-                                    style: AppTextStyles.rajdhaniMedium(
-                                      fontSize: 12.0,
-                                      color: AppColors.textSecondary,
-                                      fontWeight: FontWeight.bold,
+                                    style: AppTypography.caption(
+                                      context,
+                                      color: AppColors.textSecondary(brightness),
                                     ).copyWith(letterSpacing: 1.5),
                                   ),
                                   const SizedBox(height: 20),
@@ -127,12 +119,11 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
                     const SizedBox(height: 20.0),
 
                     // Cryogenic tokens freeze display
-                    GlassCard(
+                    SurfaceCard(
                       padding: const EdgeInsets.all(16.0),
-                      borderColor: AppColors.cyanAccent.withOpacity(0.3),
                       child: Row(
                         children: [
-                          const Icon(Icons.ac_unit_rounded, color: AppColors.cyanAccent, size: 28.0),
+                          Icon(Icons.ac_unit_rounded, color: AppColors.accent, size: 28.0),
                           const SizedBox(width: 12.0),
                           Expanded(
                             child: Column(
@@ -140,16 +131,18 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
                               children: [
                                 Text(
                                   t('streak_tokens'),
-                                  style: AppTextStyles.orbitronHeading(
-                                    fontSize: 11.0,
-                                    color: AppColors.cyanAccent,
-                                    fontWeight: FontWeight.bold,
+                                  style: AppTypography.overline(
+                                    context,
+                                    color: AppColors.accent,
                                   ),
                                 ),
                                 const SizedBox(height: 2.0),
                                 Text(
                                   t('streak_tokens_desc'),
-                                  style: const TextStyle(fontSize: 10.0, color: AppColors.textSecondary),
+                                  style: AppTypography.caption(
+                                    context,
+                                    color: AppColors.textSecondary(brightness),
+                                  ),
                                 ),
                               ],
                             ),
@@ -157,16 +150,15 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                             decoration: BoxDecoration(
-                              color: AppColors.cyanAccent.withOpacity(0.1),
+                              color: AppColors.accentMutedBg(brightness),
                               borderRadius: BorderRadius.circular(20.0),
-                              border: Border.all(color: AppColors.cyanAccent),
+                              border: Border.all(color: AppColors.accent),
                             ),
                             child: Text(
                               '$tokens ${t('streak_tokens_btn')}',
-                              style: AppTextStyles.orbitronHeading(
-                                fontSize: 12.0,
-                                color: AppColors.cyanAccent,
-                                fontWeight: FontWeight.bold,
+                              style: AppTypography.caption(
+                                context,
+                                color: AppColors.accent,
                               ),
                             ),
                           ),
@@ -182,11 +174,7 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
             // Heatmap calendar Grid (Last 70 Days saving flow)
             Text(
               t('streak_heatmap'),
-              style: AppTextStyles.orbitronHeading(
-                fontSize: 12.0,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+              style: AppTypography.h3(context),
             ),
             const SizedBox(height: 12.0),
             depositsAsync.when(
@@ -198,7 +186,7 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
                     .map((d) => DateUtils.dateOnly(d.createdAt).toString())
                     .toSet();
 
-                return GlassCard(
+                return SurfaceCard(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -220,19 +208,11 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
 
                           return Container(
                             decoration: BoxDecoration(
-                              color: hasSaved ? AppColors.magentaAccent.withOpacity(0.8) : AppColors.cardBg.withOpacity(0.4),
+                              color: hasSaved ? AppColors.accent : AppColors.surfaceMuted(brightness),
                               borderRadius: BorderRadius.circular(4.0),
                               border: Border.all(
-                                color: hasSaved ? AppColors.magentaAccent : AppColors.borderNeon.withOpacity(0.2),
+                                color: hasSaved ? AppColors.accent : AppColors.border(brightness),
                               ),
-                              boxShadow: hasSaved
-                                  ? [
-                                      const BoxShadow(
-                                        color: AppColors.magentaAccent,
-                                        blurRadius: 4.0,
-                                      ),
-                                    ]
-                                  : null,
                             ),
                           );
                         },
@@ -241,13 +221,13 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(t('streak_heatmap_low'), style: const TextStyle(fontSize: 10.0, color: AppColors.textSecondary)),
+                          Text(t('streak_heatmap_low'), style: AppTypography.overline(context)),
                           const SizedBox(width: 4.0),
-                          Container(width: 10, height: 10, color: AppColors.cardBg.withOpacity(0.4)),
+                          Container(width: 10, height: 10, decoration: BoxDecoration(color: AppColors.surfaceMuted(brightness), borderRadius: BorderRadius.circular(2))),
                           const SizedBox(width: 4.0),
-                          Container(width: 10, height: 10, color: AppColors.magentaAccent.withOpacity(0.8)),
+                          Container(width: 10, height: 10, decoration: BoxDecoration(color: AppColors.accent, borderRadius: BorderRadius.circular(2))),
                           const SizedBox(width: 4.0),
-                          Text(t('streak_heatmap_high'), style: const TextStyle(fontSize: 10.0, color: AppColors.textSecondary)),
+                          Text(t('streak_heatmap_high'), style: AppTypography.overline(context)),
                         ],
                       ),
                     ],
@@ -266,8 +246,13 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
 class ReactiveFlamePainter extends CustomPainter {
   final double animationValue;
   final int streakCount;
+  final Brightness brightness;
 
-  ReactiveFlamePainter({required this.animationValue, required this.streakCount});
+  ReactiveFlamePainter({
+    required this.animationValue,
+    required this.streakCount,
+    required this.brightness,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -285,7 +270,7 @@ class ReactiveFlamePainter extends CustomPainter {
       ..style = PaintingStyle.fill
       ..shader = RadialGradient(
         colors: [
-          streakCount > 0 ? AppColors.magentaAccent.withOpacity(0.8) : AppColors.borderNeon.withOpacity(0.6),
+          streakCount > 0 ? AppColors.accent.withOpacity(0.8) : AppColors.border(brightness).withOpacity(0.6),
           Colors.transparent
         ],
       ).createShader(Rect.fromCircle(center: center, radius: baseRadius));

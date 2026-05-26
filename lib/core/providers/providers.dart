@@ -39,9 +39,11 @@ final unlockedSkillsProvider = StreamProvider<List<UnlockedSkill>>((ref) {
 // They are converted to kopecks (×100) when written to the DB in SetupFinishScreen.
 final onboardingGoalATitleProvider = StateProvider<String>((ref) => 'PlayStation 5');
 final onboardingGoalATargetProvider = StateProvider<double>((ref) => 25000.0);
+final onboardingGoalACurrencyProvider = StateProvider<String>((ref) => '₴');
 
 final onboardingGoalBTitleProvider = StateProvider<String>((ref) => 'Ігровий Монітор');
 final onboardingGoalBTargetProvider = StateProvider<double>((ref) => 15000.0);
+final onboardingGoalBCurrencyProvider = StateProvider<String>((ref) => '₴');
 
 final onboardingGoalASplitProvider = StateProvider<double>((ref) => 0.5); // 50% / 50% split default
 

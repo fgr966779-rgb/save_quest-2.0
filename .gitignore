@@ -47,3 +47,12 @@ app.*.map.json
 # Node.js
 node_modules/
 remote_server/node_modules/
+
+# Agent worklog
+worklog.md
+
+# Skill files
+*.skill
+
+# Flutter metadata
+.metadata

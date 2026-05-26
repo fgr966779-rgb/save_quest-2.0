@@ -4,16 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/utils/money_utils.dart';
-import '../../../core/widgets/neon_button.dart';
-import '../../../core/widgets/particle_background.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/surface_card.dart';
 import '../../../core/widgets/split_slider.dart';
 import '../../../data/database.dart';
 
 class SetupFinishScreen extends ConsumerStatefulWidget {
-  const SetupFinishScreen({Key? key}) : super(key: key);
+  const SetupFinishScreen({super.key});
 
   @override
   ConsumerState<SetupFinishScreen> createState() => _SetupFinishScreenState();
@@ -24,9 +24,9 @@ class _SetupFinishScreenState extends ConsumerState<SetupFinishScreen> {
   bool _isSaving = false;
 
   final Map<String, String> _currencySymbols = {
-    'UAH': '₴ (UAH)',
-    'USD': '\$ (USD)',
-    'EUR': '€ (EUR)',
+    'UAH': '₴  UAH',
+    'USD': '\$  USD',
+    'EUR': '€  EUR',
   };
 
   Future<void> _launchVault() async {
@@ -40,9 +40,11 @@ class _SetupFinishScreenState extends ConsumerState<SetupFinishScreen> {
 
       final goalATitle = ref.read(onboardingGoalATitleProvider);
       final goalATarget = ref.read(onboardingGoalATargetProvider);
+      final goalACurrency = ref.read(onboardingGoalACurrencyProvider);
 
       final goalBTitle = ref.read(onboardingGoalBTitleProvider);
       final goalBTarget = ref.read(onboardingGoalBTargetProvider);
+      final goalBCurrency = ref.read(onboardingGoalBCurrencyProvider);
 
       // Save initial Goal A and Goal B
       // Targets are stored in kopecks (minor units).
@@ -52,8 +54,8 @@ class _SetupFinishScreenState extends ConsumerState<SetupFinishScreen> {
           name: goalATitle,
           targetAmount: displayToCents(goalATarget),
           currentAmount: 0,
-          currency: _selectedCurrency,
-          accentColor: '#00E5FF',
+          currency: goalACurrency,
+          accentColor: '#6366F1',
           createdAt: DateTime.now(),
         ),
       );
@@ -64,8 +66,8 @@ class _SetupFinishScreenState extends ConsumerState<SetupFinishScreen> {
           name: goalBTitle,
           targetAmount: displayToCents(goalBTarget),
           currentAmount: 0,
-          currency: _selectedCurrency,
-          accentColor: '#FF007F',
+          currency: goalBCurrency,
+          accentColor: '#10B981',
           createdAt: DateTime.now(),
         ),
       );
@@ -102,12 +104,11 @@ class _SetupFinishScreenState extends ConsumerState<SetupFinishScreen> {
         context.go('/dashboard');
       }
     } catch (e) {
-      // Error handling
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Помилка при ініціалізації: $e'),
-            backgroundColor: AppColors.magentaAccent,
+            content: Text('${AppLocalizations.get(ref.read(localeProvider), 'onb_finish_save_error')}$e'),
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -122,218 +123,195 @@ class _SetupFinishScreenState extends ConsumerState<SetupFinishScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.watch(localeProvider);
     final splitRatioA = ref.watch(onboardingGoalASplitProvider);
     final goalATitle = ref.watch(onboardingGoalATitleProvider);
     final goalBTitle = ref.watch(onboardingGoalBTitleProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          const ParticleBackground(),
-          // Decorative gold top stripe
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 3.0,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.goldAccent, Colors.transparent],
+      backgroundColor: AppColors.background(brightness),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 8),
+              // Back button
+              Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: AppColors.textPrimary(brightness),
+                    size: 20,
+                  ),
+                  onPressed: () => context.go('/onboarding-b'),
                 ),
               ),
-            ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 16.0),
-                  // Back button
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.goldGlow),
-                        onPressed: () => context.go('/onboarding-b'),
+              const SizedBox(height: 16),
+              // Step label
+              Text(
+                AppLocalizations.get(locale, 'onb_step_3_3'),
+                style: AppTypography.caption(
+                  context,
+                  color: AppColors.accent,
+                ),
+              ),
+              const SizedBox(height: 4),
+              // Page title
+              Text(
+                AppLocalizations.get(locale, 'onb_finish_title'),
+                style: AppTypography.h1(
+                  context,
+                  color: AppColors.textPrimary(brightness),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                AppLocalizations.get(locale, 'onb_finish_desc'),
+                style: AppTypography.body(
+                  context,
+                  color: AppColors.textSecondary(brightness),
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Currency selector card
+              SurfaceCard(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.get(locale, 'onb_finish_currency'),
+                      style: AppTypography.h3(
+                        context,
+                        color: AppColors.textPrimary(brightness),
                       ),
-                      const Expanded(child: SizedBox()),
-                    ],
-                  ),
-                  const SizedBox(height: 8.0),
-                  Text(
-                    'ФІНАЛЬНА СИНХРОНІЗАЦІЯ',
-                    style: AppTextStyles.rajdhaniMedium(
-                      fontSize: 14.0,
-                      color: AppColors.goldGlow,
-                    ).copyWith(letterSpacing: 3.0),
-                  ),
-                  const SizedBox(height: 6.0),
-                  Text(
-                    'СИСТЕМНІ НАЛАШТУВАННЯ',
-                    style: AppTextStyles.orbitronHeading(
-                      fontSize: 24.0,
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                  const SizedBox(height: 24.0),
-                  // Currency selector card
-                  GlassCard(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'КЛЮЧОВА ВАЛЮТА',
-                          style: AppTextStyles.orbitronHeading(
-                            fontSize: 14.0,
-                            color: AppColors.goldGlow,
-                          ),
-                        ),
-                        const SizedBox(height: 16.0),
-                        Row(
-                          children: _currencySymbols.keys.map((curr) {
-                            final isSelected = _selectedCurrency == curr;
-                            return Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    _selectedCurrency = curr;
-                                  });
-                                },
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                                  height: 48.0,
-                                  decoration: BoxDecoration(
-                                    gradient: isSelected
-                                        ? LinearGradient(
-                                            colors: [
-                                              AppColors.goldAccent.withOpacity(0.25),
-                                              AppColors.goldAccent.withOpacity(0.08),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          )
-                                        : null,
-                                    color: isSelected ? null : AppColors.cardBgLight,
-                                    borderRadius: BorderRadius.circular(10.0),
-                                    border: Border.all(
-                                      color: isSelected ? AppColors.goldAccent : AppColors.borderNeon,
-                                      width: isSelected ? 2.0 : 1.0,
-                                    ),
-                                    boxShadow: isSelected
-                                        ? [
-                                            BoxShadow(
-                                              color: AppColors.goldAccent.withOpacity(0.3),
-                                              blurRadius: 8.0,
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      _currencySymbols[curr]!,
-                                      style: TextStyle(
-                                        color: isSelected ? AppColors.goldAccent : AppColors.textPrimary,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                        fontSize: 13.0,
-                                      ),
-                                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: _currencySymbols.keys.map((curr) {
+                        final isSelected = _selectedCurrency == curr;
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedCurrency = curr;
+                              });
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.accentMutedBg(brightness)
+                                    : AppColors
+                                        .surfaceMuted(brightness),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.accent
+                                      : AppColors.border(brightness),
+                                  width: isSelected ? 1.5 : 1,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  _currencySymbols[curr]!,
+                                  style: AppTypography.body(
+                                    context,
+                                    color: isSelected
+                                        ? AppColors.accent
+                                        : AppColors.textSecondary(brightness),
                                   ),
                                 ),
                               ),
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16.0),
-                  // Split Slider configuration card
-                  GlassCard(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'БАЛАНС РОЗПОДІЛУ НАКОПИЧЕНЬ',
-                          style: AppTextStyles.orbitronHeading(
-                            fontSize: 14.0,
-                            color: AppColors.goldGlow,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16.0),
-                        SplitSlider(
-                          valueA: splitRatioA,
-                          labelA: goalATitle,
-                          labelB: goalBTitle,
-                          onChanged: (val) {
-                            ref.read(onboardingGoalASplitProvider.notifier).state = val;
-                          },
-                        ),
-                        const SizedBox(height: 12.0),
-                        Text(
-                          'Кожен твій наступний внесок буде автоматично розподілений між цілями за цим балансом. Ти зможеш змінити його у будь-який момент.',
-                          style: TextStyle(
-                            fontSize: 11.0,
-                            color: AppColors.textMuted,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
+                        );
+                      }).toList(),
                     ),
-                  ),
-                  const SizedBox(height: 32.0),
-                  // Progress dots
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildDot(false),
-                      _buildDot(false),
-                      _buildDot(false),
-                      _buildDot(true),
-                    ],
-                  ),
-                  const SizedBox(height: 24.0),
-                  // Launch Vault button
-                  NeonButton(
-                    text: 'ІНІЦІАЛІЗУВАТИ СЕЙФ',
-                    baseColor: AppColors.goldAccent,
-                    glowColor: AppColors.goldAccent,
-                    isLoading: _isSaving,
-                    onPressed: _launchVault,
-                  ),
-                  const SizedBox(height: 12.0),
-                ],
+                  ],
+                ),
               ),
-            ),
+              const SizedBox(height: 16),
+              // Split slider card
+              SurfaceCard(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.get(locale, 'onb_finish_split'),
+                      style: AppTypography.h3(
+                        context,
+                        color: AppColors.textPrimary(brightness),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      AppLocalizations.get(locale, 'onb_finish_split_desc'),
+                      style: AppTypography.bodySmall(
+                        context,
+                        color: AppColors.textTertiary(brightness),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SplitSlider(
+                      valueA: splitRatioA,
+                      labelA: goalATitle,
+                      labelB: goalBTitle,
+                      onChanged: (val) {
+                        ref.read(onboardingGoalASplitProvider.notifier).state =
+                            val;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 40),
+              // Progress dots
+              _buildDotIndicators(brightness),
+              const SizedBox(height: 24),
+              // Launch button
+              AppButton(
+                label: AppLocalizations.get(locale, 'onb_finish_start_btn'),
+                variant: ButtonVariant.primary,
+                isLoading: _isSaving,
+                onPressed: _launchVault,
+              ),
+              const SizedBox(height: 16),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildDot(bool isActive) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      margin: const EdgeInsets.symmetric(horizontal: 4.0),
-      width: isActive ? 24.0 : 8.0,
-      height: 8.0,
+  Widget _buildDotIndicators(Brightness brightness) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildDot(isActive: false, brightness: brightness),
+        const SizedBox(width: 8),
+        _buildDot(isActive: false, brightness: brightness),
+        const SizedBox(width: 8),
+        _buildDot(isActive: false, brightness: brightness),
+        const SizedBox(width: 8),
+        _buildDot(isActive: true, brightness: brightness),
+      ],
+    );
+  }
+
+  Widget _buildDot({required bool isActive, required Brightness brightness}) {
+    return Container(
+      width: isActive ? 24 : 8,
+      height: 8,
       decoration: BoxDecoration(
-        color: isActive ? AppColors.goldAccent : AppColors.textMuted.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(4.0),
-        boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: AppColors.goldAccent.withOpacity(0.6),
-                  blurRadius: 4.0,
-                  spreadRadius: 1.0,
-                ),
-              ]
-            : [],
+        color: isActive ? AppColors.accent : AppColors.border(brightness),
+        borderRadius: BorderRadius.circular(4),
       ),
     );
   }

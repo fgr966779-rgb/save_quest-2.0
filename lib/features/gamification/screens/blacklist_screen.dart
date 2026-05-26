@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
-import '../../../core/widgets/glass_card.dart';
-import '../../../core/widgets/neon_button.dart';
+import '../../../core/widgets/surface_card.dart';
 
 class BlacklistScreen extends ConsumerStatefulWidget {
   const BlacklistScreen({Key? key}) : super(key: key);
@@ -18,9 +18,15 @@ class BlacklistScreen extends ConsumerStatefulWidget {
 class _BlacklistScreenState extends ConsumerState<BlacklistScreen> {
   final TextEditingController _categoryController = TextEditingController();
 
-  final List<String> _commonCategories = [
-    'Фастфуд', 'Ігри', 'Кава', 'Підписки', 'Шопінг', 'Алкоголь'
-  ];
+  late final List<String> _commonCategories;
+
+  @override
+  void initState() {
+    super.initState();
+    _commonCategories = [
+      'blacklist_cat_fastfood', 'blacklist_cat_games', 'blacklist_cat_coffee', 'blacklist_cat_subs', 'blacklist_cat_shopping', 'blacklist_cat_alcohol',
+    ];
+  }
 
   @override
   void dispose() {
@@ -30,10 +36,10 @@ class _BlacklistScreenState extends ConsumerState<BlacklistScreen> {
 
   void _addCategory(String cat) {
     if (cat.trim().isEmpty) return;
-    
+
     final settings = ref.read(settingsServiceProvider);
     final currentList = List<String>.from(settings.blacklistedCategories);
-    
+
     if (!currentList.contains(cat.trim())) {
       HapticFeedback.lightImpact();
       currentList.add(cat.trim());
@@ -47,7 +53,7 @@ class _BlacklistScreenState extends ConsumerState<BlacklistScreen> {
     HapticFeedback.mediumImpact();
     final settings = ref.read(settingsServiceProvider);
     final currentList = List<String>.from(settings.blacklistedCategories);
-    
+
     currentList.remove(cat);
     settings.blacklistedCategories = currentList;
     setState(() {});
@@ -57,57 +63,47 @@ class _BlacklistScreenState extends ConsumerState<BlacklistScreen> {
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsServiceProvider);
     final blacklist = settings.blacklistedCategories;
+    final brightness = Theme.of(context).brightness;
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'АВТО-ШТРАФИ (BLACKLIST)',
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 14.0,
-            color: Colors.redAccent,
-            fontWeight: FontWeight.bold,
-          ),
+          t('blacklist_title'),
+          style: AppTypography.h3(context, color: AppColors.error),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(color: AppColors.textPrimary(brightness)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 64),
+            const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 64),
             const SizedBox(height: 16.0),
             Text(
-              'Якщо система виявить транзакції у вказаних нижче категоріях, буде автоматично нараховано штраф!',
+              t('blacklist_desc'),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14.0,
-                height: 1.5,
-              ),
+              style: AppTypography.body(context),
             ),
             const SizedBox(height: 32.0),
 
             // Active Blacklist Categories
             Text(
-              'АКТИВНИЙ БЛЕКЛІСТ',
-              style: AppTextStyles.orbitronHeading(
-                fontSize: 12.0,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+              t('blacklist_active'),
+              style: AppTypography.caption(context, color: AppColors.textPrimary(brightness)),
             ),
             const SizedBox(height: 12.0),
             if (blacklist.isEmpty)
-              GlassCard(
+              SurfaceCard(
                 padding: const EdgeInsets.all(16.0),
-                borderColor: AppColors.borderNeon.withOpacity(0.5),
-                child: const Text(
-                  'Жодної категорії не додано. Ви у безпеці... поки що.',
-                  style: TextStyle(color: AppColors.textMuted, fontStyle: FontStyle.italic),
+                child: Text(
+                  t('blacklist_empty'),
+                  style: AppTypography.body(context, color: AppColors.textTertiary(brightness)).copyWith(fontStyle: FontStyle.italic),
                   textAlign: TextAlign.center,
                 ),
               )
@@ -117,10 +113,10 @@ class _BlacklistScreenState extends ConsumerState<BlacklistScreen> {
                 runSpacing: 8.0,
                 children: blacklist.map((cat) {
                   return Chip(
-                    label: Text(cat, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    backgroundColor: Colors.redAccent.withOpacity(0.2),
-                    side: const BorderSide(color: Colors.redAccent),
-                    deleteIconColor: Colors.white,
+                    label: Text(cat, style: TextStyle(color: AppColors.textPrimary(brightness), fontWeight: FontWeight.bold)),
+                    backgroundColor: AppColors.error.withOpacity(0.2),
+                    side: const BorderSide(color: AppColors.error),
+                    deleteIconColor: AppColors.textPrimary(brightness),
                     onDeleted: () => _removeCategory(cat),
                   );
                 }).toList(),
@@ -128,25 +124,24 @@ class _BlacklistScreenState extends ConsumerState<BlacklistScreen> {
             const SizedBox(height: 32.0),
 
             // Add Custom Category
-            GlassCard(
+            SurfaceCard(
               padding: const EdgeInsets.all(16.0),
-              borderColor: AppColors.borderNeon,
               child: Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: _categoryController,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(color: AppColors.textPrimary(brightness)),
                       decoration: InputDecoration(
-                        hintText: 'Введіть назву категорії...',
-                        hintStyle: TextStyle(color: AppColors.textMuted),
+                        hintText: t('blacklist_hint'),
+                        hintStyle: TextStyle(color: AppColors.textTertiary(brightness)),
                         border: InputBorder.none,
                       ),
                       onSubmitted: _addCategory,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.add_circle, color: Colors.redAccent),
+                    icon: const Icon(Icons.add_circle, color: AppColors.error),
                     onPressed: () => _addCategory(_categoryController.text),
                   ),
                 ],
@@ -156,22 +151,20 @@ class _BlacklistScreenState extends ConsumerState<BlacklistScreen> {
 
             // Suggestions
             Text(
-              'ЧАСТІ ПОРУШНИКИ:',
-              style: AppTextStyles.orbitronHeading(
-                fontSize: 10.0,
-                color: AppColors.textSecondary,
-              ),
+              t('blacklist_frequent'),
+              style: AppTypography.caption(context),
             ),
             const SizedBox(height: 12.0),
             Wrap(
               spacing: 8.0,
               runSpacing: 8.0,
-              children: _commonCategories.map((cat) {
+              children: _commonCategories.map((key) {
+                final cat = t(key);
                 final isAdded = blacklist.contains(cat);
                 return ActionChip(
                   label: Text(cat),
-                  labelStyle: TextStyle(color: isAdded ? AppColors.textMuted : Colors.black),
-                  backgroundColor: isAdded ? AppColors.cardBg : AppColors.cyanAccent,
+                  labelStyle: TextStyle(color: isAdded ? AppColors.textTertiary(brightness) : Colors.white),
+                  backgroundColor: isAdded ? AppColors.surfaceMuted(brightness) : AppColors.accent,
                   onPressed: isAdded ? null : () => _addCategory(cat),
                 );
               }).toList(),

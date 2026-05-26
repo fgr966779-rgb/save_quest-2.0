@@ -5,9 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/providers.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/utils/money_utils.dart';
-import '../../../core/widgets/neon_progress_bar.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/progress_bar.dart';
+import '../../../core/widgets/surface_card.dart';
 import '../../../data/database.dart';
 
 class GoalDetailScreen extends ConsumerWidget {
@@ -31,26 +32,29 @@ class GoalDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.watch(localeProvider);
+
     // Determine target ID
     final id = goalId == 0 ? 'goal_a' : (goalId == 1 ? 'goal_b' : goalStrId);
     final isA = id == 'goal_a';
-    final accentColor = isA ? AppColors.cyanAccent : AppColors.magentaAccent;
+    final accentColor = isA ? AppColors.goalA : AppColors.goalB;
 
     final goalsAsync = ref.watch(goalsProvider);
     final depositsAsync = ref.watch(depositsProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       body: SafeArea(
         child: goalsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: Colors.red))),
+          error: (e, _) => Center(child: Text('${AppLocalizations.get(locale, 'common_error')}: $e', style: const TextStyle(color: Colors.red))),
           data: (goals) {
             final goal = goals.firstWhere(
               (g) => g.id == id,
               orElse: () => Goal(
                 id: id,
-                name: isA ? 'Ціль А' : 'Ціль Б',
+                name: isA ? AppLocalizations.get(locale, 'dash_goal_a') : AppLocalizations.get(locale, 'dash_goal_b'),
                 targetAmount: 1000000, // 10 000.00 UAH in kopecks
                 currentAmount: 0,
                 currency: 'UAH',
@@ -68,7 +72,7 @@ class GoalDetailScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Top Custom Navigation Appbar
-                _buildHeader(context, goal, accentColor),
+                _buildHeader(context, locale, goal, accentColor),
 
                 Expanded(
                   child: SingleChildScrollView(
@@ -76,31 +80,30 @@ class GoalDetailScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Glassmorphic main details
-                        _buildMainMetrics(goal, progressRatio, progressPercent, accentColor),
+                        // Main details card
+                        _buildMainMetrics(context, locale, goal, progressRatio, progressPercent, accentColor),
                         const SizedBox(height: 20.0),
 
                         // Future Projections Panel
-                        _buildProjections(goal, depositsAsync, accentColor),
+                        _buildProjections(context, locale, goal, depositsAsync, accentColor),
                         const SizedBox(height: 16.0),
 
                         // Price Analysis entry point
-                        _buildPriceAnalysisLink(context, goal, accentColor),
+                        _buildPriceAnalysisLink(context, locale, goal, accentColor),
                         const SizedBox(height: 24.0),
 
                         // Section header
                         Text(
-                          'ІСТОРІЯ ТРАНЗАКЦІЙ ЦІЛІ',
-                          style: AppTextStyles.orbitronHeading(
-                            fontSize: 13.0,
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ).copyWith(letterSpacing: 1.0),
+                          AppLocalizations.get(locale, 'goal_transaction_history'),
+                          style: AppTypography.overline(
+                            context,
+                            color: AppColors.textSecondary(brightness),
+                          ),
                         ),
                         const SizedBox(height: 12.0),
 
                         // Goal Transaction history list
-                        _buildTransactionHistory(context, ref, id, depositsAsync, goal.currency, accentColor),
+                        _buildTransactionHistory(context, ref, locale, id, depositsAsync, goal.currency, accentColor),
                       ],
                     ),
                   ),
@@ -113,13 +116,15 @@ class GoalDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, Goal goal, Color accentColor) {
+  Widget _buildHeader(BuildContext context, String locale, Goal goal, Color accentColor) {
+    final brightness = Theme.of(context).brightness;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary(brightness)),
             onPressed: () => context.pop(),
           ),
           const SizedBox(width: 8.0),
@@ -128,14 +133,17 @@ class GoalDetailScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ДЕТАЛІ КІБЕР-ЦІЛІ',
-                  style: AppTextStyles.rajdhaniMedium(fontSize: 11, color: accentColor).copyWith(letterSpacing: 2),
+                  AppLocalizations.get(locale, 'goal_details'),
+                  style: AppTypography.overline(
+                    context,
+                    color: accentColor,
+                  ),
                 ),
                 Text(
                   goal.name.toUpperCase(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.orbitronHeading(fontSize: 18, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                  style: AppTypography.h2(context),
                 ),
               ],
             ),
@@ -145,13 +153,12 @@ class GoalDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMainMetrics(Goal goal, double progressRatio, int progressPercent, Color accentColor) {
+  Widget _buildMainMetrics(BuildContext context, String locale, Goal goal, double progressRatio, int progressPercent, Color accentColor) {
+    final brightness = Theme.of(context).brightness;
     final int remaining = (goal.targetAmount - goal.currentAmount).clamp(0, 999999999);
 
-    return GlassCard(
+    return SurfaceCard(
       padding: const EdgeInsets.all(20.0),
-      borderColor: accentColor.withOpacity(0.3),
-      glowColor: accentColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -159,12 +166,12 @@ class GoalDetailScreen extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'СТАТУС НАКОПИЧЕННЯ',
-                style: AppTextStyles.orbitronHeading(fontSize: 12, color: accentColor, fontWeight: FontWeight.bold),
+                AppLocalizations.get(locale, 'goal_accumulation_status'),
+                style: AppTypography.overline(context, color: accentColor),
               ),
               Text(
                 '$progressPercent%',
-                style: AppTextStyles.orbitronHeading(fontSize: 20, color: accentColor, fontWeight: FontWeight.bold),
+                style: AppTypography.metric(context, color: accentColor),
               ),
             ],
           ),
@@ -172,17 +179,16 @@ class GoalDetailScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMetricColumn('НАКОПИЧЕНО', '${formatAmount(goal.currentAmount)} ${goal.currency}'),
-              _buildMetricColumn('ЗАЛИШИЛОСЬ', '${formatAmount(remaining)} ${goal.currency}'),
+              _buildMetricColumn(context, AppLocalizations.get(locale, 'goal_accumulated'), '${formatAmount(goal.currentAmount)} ${goal.currency}'),
+              _buildMetricColumn(context, AppLocalizations.get(locale, 'goal_remaining'), '${formatAmount(remaining)} ${goal.currency}'),
             ],
           ),
           const SizedBox(height: 16.0),
-          _buildMetricColumn('ФІНАНСОВА МІШЕНЬ', '${formatAmount(goal.targetAmount)} ${goal.currency}'),
+          _buildMetricColumn(context, AppLocalizations.get(locale, 'goal_target'), '${formatAmount(goal.targetAmount)} ${goal.currency}'),
           const SizedBox(height: 20.0),
-          NeonProgressBar(
+          ProgressBar(
             progress: progressRatio,
-            activeColor: accentColor,
-            glowColor: accentColor,
+            color: accentColor,
             height: 8.0,
           ),
         ],
@@ -190,24 +196,31 @@ class GoalDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMetricColumn(String label, String value) {
+  Widget _buildMetricColumn(BuildContext context, String label, String value) {
+    final brightness = Theme.of(context).brightness;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+          style: AppTypography.caption(
+            context,
+            color: AppColors.textSecondary(brightness),
+          ),
         ),
         const SizedBox(height: 4.0),
         Text(
           value,
-          style: AppTextStyles.orbitronHeading(fontSize: 17, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+          style: AppTypography.h3(context),
         ),
       ],
     );
   }
 
-  Widget _buildProjections(Goal goal, AsyncValue<List<Deposit>> depositsAsync, Color accentColor) {
+  Widget _buildProjections(BuildContext context, String locale, Goal goal, AsyncValue<List<Deposit>> depositsAsync, Color accentColor) {
+    final brightness = Theme.of(context).brightness;
+
     return depositsAsync.when(
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
@@ -215,7 +228,7 @@ class GoalDetailScreen extends ConsumerWidget {
         final id = goal.id;
         final filtered = deposits.where((d) => id == 'goal_a' ? d.goalAAmount > 0 : d.goalBAmount > 0).toList();
 
-        String forecastText = 'Потрібно більше транзакцій для аналізу прогнозу';
+        String forecastText = AppLocalizations.get(locale, 'goal_forecast_need_more');
         if (filtered.isNotEmpty) {
           // Calculate average deposit per day (in kopecks)
           int totalGoalDeposits = 0;
@@ -229,15 +242,14 @@ class GoalDetailScreen extends ConsumerWidget {
           if (avgPerDay > 0) {
             final int remaining = (goal.targetAmount - goal.currentAmount).clamp(0, 999999999);
             final remainingDays = (remaining / avgPerDay).ceil();
-            forecastText = 'За поточного темпу (${formatAmount((avgPerDay).round())} ${goal.currency}/день) ціль буде досягнуто через ~$remainingDays дн.';
+            forecastText = '${AppLocalizations.get(locale, 'goal_forecast_pace')} ~$remainingDays ${AppLocalizations.get(locale, 'common_days_abbr')}';
           } else {
-            forecastText = 'Внесіть перший вклад сьогодні для старту прогнозу!';
+            forecastText = AppLocalizations.get(locale, 'goal_forecast_first');
           }
         }
 
-        return GlassCard(
+        return SurfaceCard(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-          borderColor: AppColors.borderNeon.withOpacity(0.2),
           child: Row(
             children: [
               Icon(Icons.query_stats_rounded, color: accentColor, size: 24.0),
@@ -246,18 +258,17 @@ class GoalDetailScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'АНАЛІТИЧНИЙ ПРОГНОЗ ПОТОКУ',
-                      style: TextStyle(fontSize: 9.0, color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+                    Text(
+                      AppLocalizations.get(locale, 'goal_analytic_projection'),
+                      style: AppTypography.caption(
+                        context,
+                        color: AppColors.textSecondary(brightness),
+                      ),
                     ),
                     const SizedBox(height: 3.0),
                     Text(
                       forecastText,
-                      style: const TextStyle(
-                        fontSize: 12.0,
-                        height: 1.4,
-                        color: AppColors.textPrimary,
-                      ),
+                      style: AppTypography.bodySmall(context),
                     ),
                   ],
                 ),
@@ -272,25 +283,31 @@ class GoalDetailScreen extends ConsumerWidget {
   Widget _buildTransactionHistory(
     BuildContext context,
     WidgetRef ref,
+    String locale,
     String id,
     AsyncValue<List<Deposit>> depositsAsync,
     String currency,
     Color accentColor,
   ) {
+    final brightness = Theme.of(context).brightness;
+
     return depositsAsync.when(
       loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Text('Помилка: $e'),
+      error: (e, _) => Text('${AppLocalizations.get(locale, 'common_error')}: $e'),
       data: (deposits) {
         final filtered = deposits.where((d) => id == 'goal_a' ? d.goalAAmount > 0 : d.goalBAmount > 0).toList();
 
         if (filtered.isEmpty) {
-          return GlassCard(
+          return SurfaceCard(
             padding: const EdgeInsets.all(24.0),
             child: Center(
               child: Text(
-                'Жодних транзакцій за цією ціллю ще не було проведено.',
+                AppLocalizations.get(locale, 'goal_no_transactions'),
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textMuted, fontSize: 13.0),
+                style: AppTypography.bodySmall(
+                  context,
+                  color: AppColors.textTertiary(brightness),
+                ),
               ),
             ),
           );
@@ -311,9 +328,9 @@ class GoalDetailScreen extends ConsumerWidget {
               margin: const EdgeInsets.only(bottom: 12.0),
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
               decoration: BoxDecoration(
-                color: AppColors.cardBgLight,
+                color: AppColors.surface(brightness),
                 borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(color: AppColors.borderNeon.withOpacity(0.4), width: 1.0),
+                border: Border.all(color: AppColors.border(brightness)),
               ),
               child: Row(
                 children: [
@@ -333,19 +350,15 @@ class GoalDetailScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          dep.note ?? 'Вклад у Скарбницю',
-                          style: const TextStyle(
-                            fontSize: 13.0,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
+                          dep.note ?? AppLocalizations.get(locale, 'goal_deposit_note'),
+                          style: AppTypography.bodySmall(context),
                         ),
                         const SizedBox(height: 3.0),
                         Text(
                           _formatDate(dep.createdAt),
-                          style: TextStyle(
-                            fontSize: 10.0,
-                            color: AppColors.textMuted,
+                          style: AppTypography.caption(
+                            context,
+                            color: AppColors.textTertiary(brightness),
                           ),
                         ),
                       ],
@@ -353,16 +366,12 @@ class GoalDetailScreen extends ConsumerWidget {
                   ),
                   Text(
                     '+${formatAmount(amount)} $currency',
-                    style: AppTextStyles.orbitronHeading(
-                      fontSize: 14.0,
-                      color: accentColor,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: AppTypography.amount(context, color: accentColor),
                   ),
                   if (isDeletable) ...[
                     const SizedBox(width: 8.0),
                     IconButton(
-                      icon: const Icon(Icons.delete_sweep_rounded, color: AppColors.magentaAccent, size: 20.0),
+                      icon: Icon(Icons.delete_sweep_rounded, color: AppColors.error, size: 20.0),
                       onPressed: () => _confirmDelete(context, ref, dep, amount, id),
                     ),
                   ],
@@ -376,7 +385,7 @@ class GoalDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildPriceAnalysisLink(
-      BuildContext context, Goal goal, Color accentColor) {
+      BuildContext context, String locale, Goal goal, Color accentColor) {
     return InkWell(
       borderRadius: BorderRadius.circular(16.0),
       onTap: () => context.push(
@@ -387,10 +396,9 @@ class GoalDetailScreen extends ConsumerWidget {
           'currency': goal.currency,
         },
       ),
-      child: GlassCard(
+      child: SurfaceCard(
         padding:
             const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-        borderColor: accentColor.withOpacity(0.3),
         child: Row(
           children: [
             Icon(Icons.radar_rounded, color: accentColor, size: 24.0),
@@ -399,23 +407,17 @@ class GoalDetailScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'СКАНЕР РИНКОВИХ ЦІН',
-                    style: TextStyle(
-                      fontSize: 9.0,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
+                  Text(
+                    AppLocalizations.get(locale, 'goal_price_scanner'),
+                    style: AppTypography.caption(
+                      context,
+                      color: AppColors.textSecondary(Theme.of(context).brightness),
                     ),
                   ),
                   const SizedBox(height: 3.0),
                   Text(
-                    'Перевірити актуальні ціни на «${goal.name}» в магазинах',
-                    style: const TextStyle(
-                      fontSize: 12.0,
-                      height: 1.4,
-                      color: AppColors.textPrimary,
-                    ),
+                    '${AppLocalizations.get(locale, 'goal_price_check')}: «${goal.name}»',
+                    style: AppTypography.bodySmall(context),
                   ),
                 ],
               ),
@@ -439,30 +441,33 @@ class GoalDetailScreen extends ConsumerWidget {
     int targetAmount,
     String targetGoalId,
   ) async {
+    final brightness = Theme.of(context).brightness;
+    final locale = ref.watch(localeProvider);
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppColors.surface(brightness),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.0),
-            side: const BorderSide(color: AppColors.magentaAccent, width: 1.5),
+            side: BorderSide(color: AppColors.error, width: 1.5),
           ),
           title: Text(
-            'РЕВЕРСІЯ ТРАНЗАКЦІЇ',
-            style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: AppColors.magentaAccent),
+            AppLocalizations.get(locale, 'goal_reversal_title'),
+            style: AppTypography.h3(context, color: AppColors.error),
           ),
           content: Text(
-            'Ви дійсно бажаєте анулювати цей внесок на суму ${formatAmount(targetAmount)}? Це зменшить ваші накопичення за цією ціллю.',
-            style: const TextStyle(color: AppColors.textPrimary, fontSize: 13.0, height: 1.4),
+            AppLocalizations.get(locale, 'goal_reversal_confirm'),
+            style: AppTypography.bodySmall(context),
           ),
           actions: [
             TextButton(
-              child: const Text('СКАСУВАТИ', style: TextStyle(color: AppColors.textSecondary)),
+              child: Text(AppLocalizations.get(locale, 'common_cancel'), style: AppTypography.body(context, color: AppColors.textSecondary(brightness))),
               onPressed: () => Navigator.pop(context),
             ),
             TextButton(
-              child: const Text('АНУЛЮВАТИ', style: TextStyle(color: AppColors.magentaAccent, fontWeight: FontWeight.bold)),
+              child: Text(AppLocalizations.get(locale, 'common_delete'), style: AppTypography.body(context, color: AppColors.error).copyWith(fontWeight: FontWeight.bold)),
               onPressed: () async {
                 Navigator.pop(context);
                 final db = ref.read(databaseProvider);
@@ -474,9 +479,9 @@ class GoalDetailScreen extends ConsumerWidget {
                 );
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Вклад успішно анульовано!'),
-                      backgroundColor: AppColors.magentaAccent,
+                    SnackBar(
+                      content: Text(AppLocalizations.get(locale, 'goal_reversal_success')),
+                      backgroundColor: AppColors.error,
                     ),
                   );
                 }

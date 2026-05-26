@@ -7,41 +7,54 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/providers/savings_notifier.dart';
+import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
+import '../../../core/providers/savings_notifier.dart';
 import '../../../core/utils/money_utils.dart';
 import '../../../core/widgets/amount_input_pad.dart';
-import '../../../core/widgets/glass_card.dart';
-import '../../../core/widgets/neon_button.dart';
-import '../../../core/widgets/neon_progress_bar.dart';
-import '../../../core/widgets/particle_background.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/progress_bar.dart';
 import '../../../core/widgets/split_slider.dart';
+import '../../../core/widgets/surface_card.dart';
 import '../../../data/database.dart';
+import '../../../core/services/milestone_service.dart';
+import '../../../core/widgets/milestone_dialog.dart';
+import '../../../core/services/sound_service.dart';
 
+// ---------------------------------------------------------------------------
+// State machine
+// ---------------------------------------------------------------------------
 enum DepositStep { input, split, confirm, undoWindow, success }
 
+// ---------------------------------------------------------------------------
+// Screen
+// ---------------------------------------------------------------------------
 class DepositScreen extends ConsumerStatefulWidget {
-  const DepositScreen({Key? key}) : super(key: key);
+  const DepositScreen({super.key});
 
   @override
   ConsumerState<DepositScreen> createState() => _DepositScreenState();
 }
 
-class _DepositScreenState extends ConsumerState<DepositScreen> with SingleTickerProviderStateMixin {
+class _DepositScreenState extends ConsumerState<DepositScreen>
+    with SingleTickerProviderStateMixin {
+  // ── State ──────────────────────────────────────────────────────────────
   DepositStep _currentStep = DepositStep.input;
   String _amountText = '';
-  double _splitRatio = 50.0; // Goal A allocation % (0 to 100)
-
-  // Success animations
-  late AnimationController _successAnimController;
-  late List<CelebrationConfetti> _confettiParticles;
+  double _splitRatio = 50.0; // Goal A allocation %
 
   DepositResult? _depositResult;
+  Map<String, int> _progressBeforeDeposit = {};
 
-  // Undo window
+  // ── Undo window ────────────────────────────────────────────────────────
   Timer? _undoTimer;
   int _undoCountdown = 5;
 
+  // ── Success animation ──────────────────────────────────────────────────
+  late final AnimationController _successAnimController;
+  late final List<CelebrationConfetti> _confettiParticles;
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
@@ -49,21 +62,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen> with SingleTicker
       vsync: this,
       duration: const Duration(seconds: 3),
     );
-
-    // Prepare success particles
-    final random = Random();
-    _confettiParticles = List.generate(60, (index) {
-      return CelebrationConfetti(
-        x: 0.5,
-        y: 0.7,
-        vx: (random.nextDouble() - 0.5) * 4.0,
-        vy: -random.nextDouble() * 3.5 - 2.5,
-        color: index % 2 == 0 ? AppColors.cyanAccent : AppColors.magentaAccent,
-        size: random.nextDouble() * 5.0 + 3.0,
-        rotation: random.nextDouble() * 2 * pi,
-        rotationSpeed: (random.nextDouble() - 0.5) * 0.1,
-      );
-    });
+    _confettiParticles = _generateConfetti();
   }
 
   @override
@@ -73,6 +72,30 @@ class _DepositScreenState extends ConsumerState<DepositScreen> with SingleTicker
     super.dispose();
   }
 
+  // ── Confetti helpers ───────────────────────────────────────────────────
+  List<CelebrationConfetti> _generateConfetti() {
+    final random = Random();
+    const colors = [
+      AppColors.accent,
+      AppColors.goalB,
+      AppColors.accentLight,
+      AppColors.success,
+    ];
+    return List.generate(40, (i) {
+      return CelebrationConfetti(
+        x: 0.5,
+        y: 0.7,
+        vx: (random.nextDouble() - 0.5) * 3.0,
+        vy: -random.nextDouble() * 3.0 - 2.0,
+        color: colors[i % colors.length],
+        size: random.nextDouble() * 4.0 + 2.0,
+        rotation: random.nextDouble() * 2 * pi,
+        rotationSpeed: (random.nextDouble() - 0.5) * 0.1,
+      );
+    });
+  }
+
+  // ── Input logic (unchanged) ────────────────────────────────────────────
   void _onKeyPress(String val) {
     HapticFeedback.lightImpact();
     setState(() {
@@ -84,7 +107,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen> with SingleTicker
         }
       } else if (val == '🎲') {
         final random = Random();
-        final amount = 50 + random.nextInt(451); // 50 to 500
+        final amount = 50 + random.nextInt(451);
         _amountText = amount.toString();
       } else if (val == '=') {
         _amountText = _evaluateMathExpression(_amountText);
@@ -133,7 +156,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen> with SingleTicker
         return result.toInt().toString();
       }
       return result.toStringAsFixed(2);
-    } catch (e) {
+    } catch (_) {
       return expr;
     }
   }
@@ -147,459 +170,12 @@ class _DepositScreenState extends ConsumerState<DepositScreen> with SingleTicker
     return double.tryParse(evalStr) ?? 0.0;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final goalsAsync = ref.watch(goalsProvider);
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          const Positioned.fill(child: ParticleBackground()),
-
-          if (_currentStep == DepositStep.success)
-            Positioned.fill(
-              child: AnimatedBuilder(
-                animation: _successAnimController,
-                builder: (context, child) {
-                  for (var particle in _confettiParticles) {
-                    particle.update();
-                  }
-                  return CustomPaint(
-                    painter: ConfettiPainter(particles: _confettiParticles),
-                  );
-                },
-              ),
-            ),
-
-          SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                _buildHeader(context),
-
-                Expanded(
-                  child: goalsAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, _) => Center(
-                      child: Text(
-                        'ПОМИЛКА ЗАВАНТАЖЕННЯ: $err',
-                        style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: AppColors.magentaAccent),
-                      ),
-                    ),
-                    data: (goals) {
-                      if (goals.length < 2) return const SizedBox.shrink();
-                      final goalA = goals.firstWhere((g) => g.id == 'goal_a');
-                      final goalB = goals.firstWhere((g) => g.id == 'goal_b');
-
-                      switch (_currentStep) {
-                        case DepositStep.input:
-                          return _buildInputStep(goalA.currency);
-                        case DepositStep.split:
-                          return _buildSplitStep(goalA, goalB);
-                        case DepositStep.confirm:
-                          return _buildConfirmStep(goalA, goalB);
-                        case DepositStep.undoWindow:
-                          return _buildUndoWindowStep();
-                        case DepositStep.success:
-                          return _buildSuccessStep(goalA, goalB);
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    String stepTitle = 'ВНЕСОК У СЕЙФ';
-    if (_currentStep == DepositStep.split) stepTitle = 'РОЗПОДІЛ КОШТІВ';
-    if (_currentStep == DepositStep.confirm) stepTitle = 'ПІДТВЕРДЖЕННЯ';
-    if (_currentStep == DepositStep.undoWindow) stepTitle = 'ОЧІКУВАННЯ';
-    if (_currentStep == DepositStep.success) stepTitle = 'ТРАНЗАКЦІЯ УСПІШНА';
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (_currentStep != DepositStep.success && _currentStep != DepositStep.undoWindow)
-            IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary, size: 20),
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                if (_currentStep == DepositStep.input) {
-                  context.pop();
-                } else if (_currentStep == DepositStep.split) {
-                  setState(() => _currentStep = DepositStep.input);
-                } else if (_currentStep == DepositStep.confirm) {
-                  setState(() => _currentStep = DepositStep.split);
-                }
-              },
-            )
-          else
-            const SizedBox(width: 48),
-          Text(
-            stepTitle,
-            style: AppTextStyles.orbitronHeading(
-              fontSize: 16.0,
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(width: 48),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInputStep(String currency) {
-    return Column(
-      children: [
-        const Spacer(),
-        // Massive Typography Display
-        Text(
-          'ВВЕДІТЬ СУМУ',
-          style: AppTextStyles.rajdhaniMedium(
-            fontSize: 12.0,
-            color: AppColors.cyanAccent,
-          ).copyWith(letterSpacing: 2.0),
-        ),
-        const SizedBox(height: 10.0),
-        // Amount display wrapped in GlassCard with animated glow
-        GlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          glowColor: _enteredAmount > 0 ? AppColors.cyanAccent : null,
-          glowSigma: _enteredAmount > 0 ? 18.0 : 0.0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8.0),
-                  boxShadow: _enteredAmount > 0
-                      ? [
-                          BoxShadow(
-                            color: AppColors.cyanAccent.withOpacity(0.4),
-                            blurRadius: 20.0,
-                            spreadRadius: 2.0,
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Text(
-                  _amountText.isEmpty ? '0' : _amountText,
-                  style: AppTextStyles.orbitronHeading(
-                    fontSize: 54.0,
-                    color: _enteredAmount > 0 ? AppColors.textPrimary : AppColors.textSecondary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8.0),
-              Text(
-                currency,
-                style: AppTextStyles.orbitronHeading(
-                  fontSize: 24.0,
-                  color: AppColors.cyanAccent,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const Spacer(),
-        // Custom Numeric Input Pad
-        AmountInputPad(onKeyPressed: _onKeyPress),
-        const SizedBox(height: 20.0),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: NeonButton(
-            text: 'ПРОДОВЖИТИ',
-            baseColor: AppColors.cyanAccent,
-            glowColor: AppColors.cyanAccent,
-            onPressed: _enteredAmount > 0
-                ? () {
-                    HapticFeedback.mediumImpact();
-                    setState(() => _currentStep = DepositStep.split);
-                  }
-                : null,
-          ),
-        ),
-        const SizedBox(height: 16.0),
-      ],
-    );
-  }
-
-  Widget _buildSplitStep(Goal goalA, Goal goalB) {
-    final double amountA = _enteredAmount * (_splitRatio / 100.0);
-    final double amountB = _enteredAmount * ((100.0 - _splitRatio) / 100.0);
-    // Convert to cents for display formatting
-    final int amountACents = displayToCents(amountA);
-    final int amountBCents = displayToCents(amountB);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'НАЛАШТУВАННЯ РОЗПОДІЛУ',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8.0),
-          Text(
-            'Перетягніть повзунок для розподілу ${formatAmount(displayToCents(_enteredAmount))} ${goalA.currency} між вашими цілями',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12.0, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 48.0),
-
-          // Goal A Card Allocation
-          GlassCard(
-            padding: const EdgeInsets.all(16.0),
-            borderColor: AppColors.cyanAccent.withOpacity(0.3),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        goalA.name.toUpperCase(),
-                        style: AppTextStyles.orbitronHeading(fontSize: 12.0, color: AppColors.cyanAccent, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4.0),
-                      Text(
-                        'Ціль: ${formatAmount(goalA.targetAmount)} ${goalA.currency}',
-                        style: const TextStyle(fontSize: 11.0, color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  '+${formatAmount(amountACents)} ${goalA.currency}',
-                  style: AppTextStyles.orbitronHeading(fontSize: 18.0, color: AppColors.cyanAccent, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24.0),
-
-          SplitSlider(
-            valueA: _splitRatio / 100.0,
-            labelA: goalA.name,
-            labelB: goalB.name,
-            onChanged: (val) {
-              setState(() {
-                _splitRatio = val * 100.0;
-              });
-            },
-          ),
-          const SizedBox(height: 24.0),
-
-          // Goal B Card Allocation
-          GlassCard(
-            padding: const EdgeInsets.all(16.0),
-            borderColor: AppColors.magentaAccent.withOpacity(0.3),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        goalB.name.toUpperCase(),
-                        style: AppTextStyles.orbitronHeading(fontSize: 12.0, color: AppColors.magentaAccent, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4.0),
-                      Text(
-                        'Ціль: ${formatAmount(goalB.targetAmount)} ${goalB.currency}',
-                        style: const TextStyle(fontSize: 11.0, color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  '+${formatAmount(amountBCents)} ${goalB.currency}',
-                  style: AppTextStyles.orbitronHeading(fontSize: 18.0, color: AppColors.magentaAccent, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-
-          const Spacer(),
-          NeonButton(
-            text: 'ВСТАНОВИТИ РОЗПОДІЛ',
-            baseColor: AppColors.magentaAccent,
-            glowColor: AppColors.magentaAccent,
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              setState(() => _currentStep = DepositStep.confirm);
-            },
-          ),
-          const SizedBox(height: 16.0),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildConfirmStep(Goal goalA, Goal goalB) {
-    final double amountA = _enteredAmount * (_splitRatio / 100.0);
-    final double amountB = _enteredAmount * ((100.0 - _splitRatio) / 100.0);
-    final int amountACents = displayToCents(amountA);
-    final int amountBCents = displayToCents(amountB);
-
-    // Progress ratios — all in kopecks
-    final double currentProgressA = goalA.targetAmount > 0 ? (goalA.currentAmount / goalA.targetAmount) : 0.0;
-    final double projectedProgressA = goalA.targetAmount > 0
-        ? ((goalA.currentAmount + amountACents) / goalA.targetAmount).clamp(0.0, 1.0)
-        : 0.0;
-
-    final double currentProgressB = goalB.targetAmount > 0 ? (goalB.currentAmount / goalB.targetAmount) : 0.0;
-    final double projectedProgressB = goalB.targetAmount > 0
-        ? ((goalB.currentAmount + amountBCents) / goalB.targetAmount).clamp(0.0, 1.0)
-        : 0.0;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 16.0),
-          Text(
-            'ПРОЕКЦІЯ ВПЛИВУ НА БАЛАНС',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.orbitronHeading(fontSize: 13.0, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24.0),
-
-          GlassCard(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      goalA.name.toUpperCase(),
-                      style: AppTextStyles.orbitronHeading(fontSize: 12.0, color: AppColors.cyanAccent, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '+${formatAmount(amountACents)} ${goalA.currency}',
-                      style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: AppColors.cyanAccent, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Text(
-                  'Поточний прогрес: ${(currentProgressA * 100).toInt()}%',
-                  style: const TextStyle(fontSize: 10.0, color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 6.0),
-                NeonProgressBar(
-                  progress: currentProgressA,
-                  activeColor: AppColors.cyanAccent.withOpacity(0.5),
-                  glowColor: AppColors.cyanAccent.withOpacity(0.2),
-                ),
-                const SizedBox(height: 12.0),
-                Text(
-                  'Проектований прогрес: ${(projectedProgressA * 100).toInt()}%',
-                  style: const TextStyle(fontSize: 10.0, color: AppColors.cyanAccent, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6.0),
-                NeonProgressBar(
-                  progress: projectedProgressA,
-                  activeColor: AppColors.cyanAccent,
-                  glowColor: AppColors.cyanAccent,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24.0),
-
-          GlassCard(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      goalB.name.toUpperCase(),
-                      style: AppTextStyles.orbitronHeading(fontSize: 12.0, color: AppColors.magentaAccent, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '+${formatAmount(amountBCents)} ${goalB.currency}',
-                      style: AppTextStyles.orbitronHeading(fontSize: 14.0, color: AppColors.magentaAccent, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Text(
-                  'Поточний прогрес: ${(currentProgressB * 100).toInt()}%',
-                  style: const TextStyle(fontSize: 10.0, color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 6.0),
-                NeonProgressBar(
-                  progress: currentProgressB,
-                  activeColor: AppColors.magentaAccent.withOpacity(0.5),
-                  glowColor: AppColors.magentaAccent.withOpacity(0.2),
-                ),
-                const SizedBox(height: 12.0),
-                Text(
-                  'Проектований прогрес: ${(projectedProgressB * 100).toInt()}%',
-                  style: AppTextStyles.orbitronHeading(fontSize: 10.0, color: AppColors.magentaAccent, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 6.0),
-                NeonProgressBar(
-                  progress: projectedProgressB,
-                  activeColor: AppColors.magentaAccent,
-                  glowColor: AppColors.magentaAccent,
-                ),
-              ],
-            ),
-          ),
-
-          const Spacer(),
-          NeonButton(
-            text: 'ЗАТВЕРДИТИ ТРАНЗАКЦІЮ',
-            baseColor: Colors.greenAccent,
-            glowColor: Colors.greenAccent,
-            onPressed: () {
-              HapticFeedback.heavyImpact();
-              setState(() => _currentStep = DepositStep.undoWindow);
-              _startUndoTimer();
-            },
-          ),
-          const SizedBox(height: 16.0),
-        ],
-      ),
-    );
-  }
-
+  // ── Undo timer / commit ────────────────────────────────────────────────
   void _startUndoTimer() {
     _undoCountdown = 5;
     _undoTimer?.cancel();
     _undoTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      setState(() {
-        _undoCountdown--;
-      });
+      setState(() => _undoCountdown--);
       if (_undoCountdown <= 0) {
         timer.cancel();
         await _commitDeposit();
@@ -610,12 +186,24 @@ class _DepositScreenState extends ConsumerState<DepositScreen> with SingleTicker
   Future<void> _commitDeposit() async {
     final activeEvent = ref.read(eventsProvider);
 
-    final result = await ref.read(savingsNotifierProvider.notifier).createDeposit(
-      amount: _enteredAmount,
-      goalAPercent: _splitRatio,
-      note: 'Ручний депозит з терміналу',
-      activeEvent: activeEvent,
-    );
+    // Save current goal progress before deposit (for milestone tracking)
+    final db = ref.read(databaseProvider);
+    final goalsBefore = await db.getAllGoals();
+    _progressBeforeDeposit = {};
+    for (final g in goalsBefore) {
+      _progressBeforeDeposit[g.id] = MilestoneService.calculateProgress(
+        g.currentAmount, g.targetAmount,
+      );
+    }
+
+    final result = await ref
+        .read(savingsNotifierProvider.notifier)
+        .createDeposit(
+          amount: _enteredAmount,
+          goalAPercent: _splitRatio,
+          note: AppLocalizations.get(ref.read(localeProvider), 'dep_note_manual'),
+          activeEvent: activeEvent,
+        );
 
     if (result != null && mounted) {
       setState(() {
@@ -623,198 +211,854 @@ class _DepositScreenState extends ConsumerState<DepositScreen> with SingleTicker
         _currentStep = DepositStep.success;
       });
       _successAnimController.forward(from: 0.0);
+
+      // Play deposit sound
+      SoundService().playDeposit();
+      HapticFeedback.heavyImpact();
+
+      // Check for milestone achievements after deposit
+      _checkMilestones(goalsBefore, db);
     } else if (mounted) {
-      // If error, go back to confirm step
       setState(() => _currentStep = DepositStep.confirm);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Помилка при збереженні транзакції')),
+        SnackBar(
+          content: Text(AppLocalizations.get(ref.read(localeProvider), 'dep_save_error')),
+        ),
       );
     }
   }
 
-  Widget _buildUndoWindowStep() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'ОБРОБКА ТРАНЗАКЦІЇ...',
-          style: AppTextStyles.orbitronHeading(fontSize: 16.0, color: AppColors.cyanAccent),
-        ),
-        const SizedBox(height: 32.0),
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: 120,
-              height: 120,
-              child: CircularProgressIndicator(
-                value: _undoCountdown / 5.0,
-                color: AppColors.cyanAccent,
-                strokeWidth: 8.0,
-              ),
-            ),
-            Text(
-              '$_undoCountdown',
-              style: AppTextStyles.orbitronHeading(fontSize: 48.0, color: AppColors.textPrimary),
-            ),
-          ],
-        ),
-        const SizedBox(height: 48.0),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40.0),
-          child: NeonButton(
-            text: 'СКАСУВАТИ (UNDO)',
-            baseColor: Colors.redAccent,
-            glowColor: Colors.redAccent,
-            icon: const Icon(Icons.undo, color: Colors.black),
-            onPressed: () {
-              HapticFeedback.mediumImpact();
-              _undoTimer?.cancel();
-              setState(() => _currentStep = DepositStep.confirm);
-            },
-          ),
-        ),
-      ],
-    );
+  // ── Milestone check ────────────────────────────────────────────────────
+  Future<void> _checkMilestones(List<Goal> goalsBefore, AppDatabase db) async {
+    final milestoneService = MilestoneService();
+    final goalsAfter = await db.getAllGoals();
+
+    for (final goalAfter in goalsAfter) {
+      final beforePct = _progressBeforeDeposit[goalAfter.id] ?? 0;
+      final afterPct = MilestoneService.calculateProgress(
+        goalAfter.currentAmount, goalAfter.targetAmount,
+      );
+
+      final newMilestones = milestoneService.checkNewMilestones(
+        goalId: goalAfter.id,
+        previousPercent: beforePct,
+        currentPercent: afterPct,
+      );
+
+      for (final pct in newMilestones) {
+        if (!mounted) return;
+        await Future.delayed(const Duration(milliseconds: 600));
+        if (!mounted) return;
+
+        await MilestoneDialog.show(
+          context,
+          goalName: goalAfter.name,
+          percent: pct,
+        );
+
+        await milestoneService.markCelebrated(goalAfter.id, pct);
+      }
+    }
   }
 
-  Widget _buildSuccessStep(Goal goalA, Goal goalB) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.center,
+  // ── Navigation ─────────────────────────────────────────────────────────
+  void _onBack() {
+    HapticFeedback.lightImpact();
+    switch (_currentStep) {
+      case DepositStep.input:
+        context.pop();
+      case DepositStep.split:
+        setState(() => _currentStep = DepositStep.input);
+      case DepositStep.confirm:
+        setState(() => _currentStep = DepositStep.split);
+      default:
+        break;
+    }
+  }
+
+  String _stepTitle(String locale) {
+    return switch (_currentStep) {
+      DepositStep.input => AppLocalizations.get(locale, 'dep_step_vault'),
+      DepositStep.split => AppLocalizations.get(locale, 'dep_step_split'),
+      DepositStep.confirm => AppLocalizations.get(locale, 'dep_step_confirm'),
+      _ => '',
+    };
+  }
+
+  bool get _showHeader =>
+      _currentStep == DepositStep.input ||
+      _currentStep == DepositStep.split ||
+      _currentStep == DepositStep.confirm;
+
+  // =========================================================================
+  // BUILD
+  // =========================================================================
+  @override
+  Widget build(BuildContext context) {
+    final goalsAsync = ref.watch(goalsProvider);
+    final locale = ref.watch(localeProvider);
+
+    return Scaffold(
+      body: Stack(
         children: [
-          const Spacer(),
-          // Success animated checkmark — enlarged to 120x120
-          Center(
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.greenAccent, width: 2.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.greenAccent.withOpacity(0.3),
-                    blurRadius: 30.0,
-                    spreadRadius: 4.0,
-                  ),
-                ],
-              ),
-              child: Icon(Icons.check_circle_outline_rounded, color: Colors.greenAccent, size: 72),
-            ),
-          ),
-          const SizedBox(height: 32.0),
-
-          Text(
-            'ЗАБЕЗПЕЧЕНО ТРАНЗАКЦІЮ!',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.orbitronHeading(
-              fontSize: 20.0,
-              color: Colors.greenAccent,
-              fontWeight: FontWeight.bold,
-            ).copyWith(shadows: [
-              Shadow(color: Colors.greenAccent, blurRadius: 10.0),
-            ]),
-          ),
-          const SizedBox(height: 12.0),
-          Text(
-            'Сума ${formatAmount(displayToCents(_enteredAmount))} ${goalA.currency} успішно розподілена у ваші фонди.',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.rajdhaniMedium(fontSize: 14.0, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 24.0),
-
-          // Rewards summary card
-          GlassCard(
-            padding: const EdgeInsets.all(16.0),
-            borderColor: _depositResult?.isCritical == true ? Colors.redAccent.withOpacity(0.5) : Colors.transparent,
-            child: Row(
+          // ── Main content ──
+          SafeArea(
+            child: Column(
               children: [
-                Icon(
-                  _depositResult?.isCritical == true ? Icons.local_fire_department : Icons.flash_on, 
-                  color: _depositResult?.isCritical == true ? Colors.redAccent : Colors.amberAccent, 
-                  size: 30
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _depositResult?.isCritical == true ? 'КРИТИЧНИЙ ВНЕСОК!' : 'НАГОРОДА ВІДСІКУ',
-                        style: AppTextStyles.orbitronHeading(
-                          fontSize: 12.0,
-                          color: _depositResult?.isCritical == true ? Colors.redAccent : Colors.amberAccent,
-                          fontWeight: FontWeight.bold,
+                // ── Header (input / split / confirm only) ──
+                if (_showHeader)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: _onBack,
+                          tooltip: AppLocalizations.get(locale, 'common_back'),
                         ),
-                      ),
-                      const SizedBox(height: 3.0),
-                      Text(
-                        '+${_depositResult?.xpGained ?? 100} XP нараховано до вашого рангу!',
-                        style: const TextStyle(fontSize: 11.0, color: AppColors.textPrimary),
-                      ),
-                      if (_depositResult?.isCritical == true)
-                        Text(
-                          '+${_depositResult?.bonusXp} БОНУС КРИТА!',
-                          style: const TextStyle(fontSize: 11.0, color: Colors.redAccent, fontWeight: FontWeight.bold),
-                        ),
-                      if (_depositResult?.earnedLootbox != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4.0),
+                        Expanded(
                           child: Text(
-                            '🎁 ВИ ОТРИМАЛИ ${_depositResult!.earnedLootbox!.rarity.toUpperCase()} ЛУТБОКС!',
-                            style: const TextStyle(fontSize: 11.0, color: Colors.purpleAccent, fontWeight: FontWeight.bold),
+                            _stepTitle(locale),
+                            style: AppTypography.h3(context),
                           ),
                         ),
-                    ],
+                        const SizedBox(width: 48),
+                      ],
+                    ),
+                  ),
+
+                // ── Step content ──
+                Expanded(
+                  child: goalsAsync.when(
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                    error: (err, _) => Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Text(
+                          '${AppLocalizations.get(locale, 'dep_load_error')}$err',
+                          style: AppTypography.body(
+                            context,
+                            color: AppColors.error,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                    data: (goals) {
+                      if (goals.length < 2) return const SizedBox.shrink();
+                      final goalA =
+                          goals.firstWhere((g) => g.id == 'goal_a');
+                      final goalB =
+                          goals.firstWhere((g) => g.id == 'goal_b');
+
+                      return switch (_currentStep) {
+                        DepositStep.input =>
+                          _buildInputStep(context, locale, goalA.currency),
+                        DepositStep.split =>
+                          _buildSplitStep(context, locale, goalA, goalB),
+                        DepositStep.confirm =>
+                          _buildConfirmStep(context, locale, goalA, goalB),
+                        DepositStep.undoWindow =>
+                          _buildUndoWindowStep(context, locale),
+                        DepositStep.success =>
+                          _buildSuccessStep(context, locale, goalA, goalB),
+                      };
+                    },
                   ),
                 ),
               ],
             ),
           ),
+
+          // ── Confetti overlay (success) ──
+          if (_currentStep == DepositStep.success)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: AnimatedBuilder(
+                  animation: _successAnimController,
+                  builder: (context, _) {
+                    for (var p in _confettiParticles) p.update();
+                    return CustomPaint(
+                      painter: ConfettiPainter(
+                        particles: _confettiParticles,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================================
+  // STEP: INPUT
+  // =========================================================================
+  Widget _buildInputStep(BuildContext context, String locale, String currency) {
+    final brightness = Theme.of(context).brightness;
+    final hasAmount = _enteredAmount > 0;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Column(
+        children: [
+          const Spacer(flex: 2),
+
+          // ── Label ──
+          Text(
+            AppLocalizations.get(locale, 'dep_enter_amount'),
+            style: AppTypography.caption(context),
+          ),
+          const SizedBox(height: 12),
+
+          // ── Amount display ──
+          SurfaceCard(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 20,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      _amountText.isEmpty ? '0' : _amountText,
+                      style: AppTypography.display(
+                        context,
+                        color: hasAmount
+                            ? AppColors.textPrimary(brightness)
+                            : AppColors.textTertiary(brightness),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  currency,
+                  style: AppTypography.amount(
+                    context,
+                    color: AppColors.textSecondary(brightness),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Spacer(flex: 3),
+
+          // ── Keypad ──
+          AmountInputPad(onKeyPressed: _onKeyPress),
+          const SizedBox(height: 20),
+
+          // ── Continue button ──
+          AppButton(
+            label: AppLocalizations.get(locale, 'dep_continue_btn'),
+            onPressed: hasAmount
+                ? () {
+                    HapticFeedback.mediumImpact();
+                    setState(() => _currentStep = DepositStep.split);
+                  }
+                : null,
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================================
+  // STEP: SPLIT
+  // =========================================================================
+  Widget _buildSplitStep(BuildContext context, String locale, Goal goalA, Goal goalB) {
+    final double amountA = _enteredAmount * (_splitRatio / 100.0);
+    final double amountB = _enteredAmount * ((100.0 - _splitRatio) / 100.0);
+    final int amountACents = displayToCents(amountA);
+    final int amountBCents = displayToCents(amountB);
+    final totalCents = displayToCents(_enteredAmount);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           const Spacer(),
 
-          // Check if either of the goals is complete
-          Consumer(
-            builder: (context, ref, child) {
-              final goals = ref.read(goalsProvider).value ?? [];
-              final finishedA = goals.any((g) => g.id == 'goal_a' && g.currentAmount >= g.targetAmount);
-              final finishedB = goals.any((g) => g.id == 'goal_b' && g.currentAmount >= g.targetAmount);
+          // ── Title ──
+          Text(
+            AppLocalizations.get(locale, 'dep_split_title'),
+            textAlign: TextAlign.center,
+            style: AppTypography.h2(context),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${AppLocalizations.get(locale, 'dep_split_instruction')}'
+            '${formatAmount(totalCents)} ${goalA.currency}',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall(context),
+          ),
+          const SizedBox(height: 32),
 
-              return NeonButton(
-                text: (finishedA || finishedB) ? 'ВІДКРИТИ ЗОЛОТИЙ СЕЙФ' : 'ПОВЕРНУТИСЬ В СЕЙФ',
-                baseColor: (finishedA || finishedB) ? Colors.amberAccent : AppColors.cyanAccent,
-                glowColor: (finishedA || finishedB) ? Colors.amberAccent : AppColors.cyanAccent,
+          // ── Goal A allocation card ──
+          SurfaceCard(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.goalA,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        goalA.name,
+                        style: AppTypography.h3(context),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${AppLocalizations.get(locale, 'dep_goal_label')}${formatAmount(goalA.targetAmount)} '
+                        '${goalA.currency}',
+                        style: AppTypography.bodySmall(context),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '+${formatAmount(amountACents)} ${goalA.currency}',
+                  style: AppTypography.amount(
+                    context,
+                    color: AppColors.goalA,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // ── Split slider ──
+          SplitSlider(
+            valueA: _splitRatio / 100.0,
+            labelA: goalA.name,
+            labelB: goalB.name,
+            onChanged: (val) =>
+                setState(() => _splitRatio = val * 100.0),
+          ),
+          const SizedBox(height: 24),
+
+          // ── Goal B allocation card ──
+          SurfaceCard(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.goalB,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        goalB.name,
+                        style: AppTypography.h3(context),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${AppLocalizations.get(locale, 'dep_goal_label')}${formatAmount(goalB.targetAmount)} '
+                        '${goalB.currency}',
+                        style: AppTypography.bodySmall(context),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '+${formatAmount(amountBCents)} ${goalB.currency}',
+                  style: AppTypography.amount(
+                    context,
+                    color: AppColors.goalB,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Spacer(),
+
+          // ── Confirm split ──
+          AppButton(
+            label: AppLocalizations.get(locale, 'dep_set_split'),
+            onPressed: () {
+              HapticFeedback.mediumImpact();
+              setState(() => _currentStep = DepositStep.confirm);
+            },
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================================
+  // STEP: CONFIRM
+  // =========================================================================
+  Widget _buildConfirmStep(BuildContext context, String locale, Goal goalA, Goal goalB) {
+    final double amountA = _enteredAmount * (_splitRatio / 100.0);
+    final double amountB = _enteredAmount * ((100.0 - _splitRatio) / 100.0);
+    final int amountACents = displayToCents(amountA);
+    final int amountBCents = displayToCents(amountB);
+
+    // Progress ratios (all in kopecks)
+    final currentProgressA = goalA.targetAmount > 0
+        ? goalA.currentAmount / goalA.targetAmount
+        : 0.0;
+    final projectedProgressA = goalA.targetAmount > 0
+        ? ((goalA.currentAmount + amountACents) / goalA.targetAmount)
+            .clamp(0.0, 1.0)
+        : 0.0;
+
+    final currentProgressB = goalB.targetAmount > 0
+        ? goalB.currentAmount / goalB.targetAmount
+        : 0.0;
+    final projectedProgressB = goalB.targetAmount > 0
+        ? ((goalB.currentAmount + amountBCents) / goalB.targetAmount)
+            .clamp(0.0, 1.0)
+        : 0.0;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── Title ──
+          Text(
+            AppLocalizations.get(locale, 'dep_confirm_title'),
+            textAlign: TextAlign.center,
+            style: AppTypography.h2(context),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            AppLocalizations.get(locale, 'dep_confirm_subtitle'),
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall(context),
+          ),
+          const SizedBox(height: 24),
+
+          // ── Goal A card ──
+          SurfaceCard(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        goalA.name,
+                        style: AppTypography.h3(context),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '+${formatAmount(amountACents)} ${goalA.currency}',
+                      style: AppTypography.amount(
+                        context,
+                        color: AppColors.goalA,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ProgressBar(
+                  progress: currentProgressA,
+                  color: AppColors.goalA.withOpacity(0.4),
+                  label: AppLocalizations.get(locale, 'dep_progress_current'),
+                  trailingText: '${(currentProgressA * 100).toInt()}%',
+                ),
+                const SizedBox(height: 12),
+                ProgressBar(
+                  progress: projectedProgressA,
+                  color: AppColors.goalA,
+                  label: AppLocalizations.get(locale, 'dep_progress_after'),
+                  trailingText: '${(projectedProgressA * 100).toInt()}%',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // ── Goal B card ──
+          SurfaceCard(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        goalB.name,
+                        style: AppTypography.h3(context),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '+${formatAmount(amountBCents)} ${goalB.currency}',
+                      style: AppTypography.amount(
+                        context,
+                        color: AppColors.goalB,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ProgressBar(
+                  progress: currentProgressB,
+                  color: AppColors.goalB.withOpacity(0.4),
+                  label: AppLocalizations.get(locale, 'dep_progress_current'),
+                  trailingText: '${(currentProgressB * 100).toInt()}%',
+                ),
+                const SizedBox(height: 12),
+                ProgressBar(
+                  progress: projectedProgressB,
+                  color: AppColors.goalB,
+                  label: AppLocalizations.get(locale, 'dep_progress_after'),
+                  trailingText: '${(projectedProgressB * 100).toInt()}%',
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          // ── Submit button ──
+          AppButton(
+            label: AppLocalizations.get(locale, 'dep_confirm_btn'),
+            onPressed: () {
+              HapticFeedback.heavyImpact();
+              setState(() => _currentStep = DepositStep.undoWindow);
+              _startUndoTimer();
+            },
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================================
+  // STEP: UNDO WINDOW
+  // =========================================================================
+  Widget _buildUndoWindowStep(BuildContext context, String locale) {
+    final brightness = Theme.of(context).brightness;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ── Title ──
+            Text(
+              AppLocalizations.get(locale, 'dep_undo_title'),
+              style: AppTypography.h2(context),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              AppLocalizations.get(locale, 'dep_undo_subtitle'),
+              style: AppTypography.body(context),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+
+            // ── Countdown ring ──
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 1.0, end: 0.0),
+              duration: const Duration(seconds: 5),
+              curve: Curves.linear,
+              builder: (context, value, _) {
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 120,
+                      height: 120,
+                      child: CircularProgressIndicator(
+                        value: value,
+                        strokeWidth: 6,
+                        backgroundColor:
+                            AppColors.surfaceMuted(brightness),
+                        color: AppColors.accent,
+                      ),
+                    ),
+                    Text(
+                      '${(value * 5).ceil()}',
+                      style: AppTypography.display(context),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 48),
+
+            // ── Cancel button ──
+            AppButton(
+              label: AppLocalizations.get(locale, 'dep_undo_btn'),
+              variant: ButtonVariant.secondary,
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                _undoTimer?.cancel();
+                setState(() => _currentStep = DepositStep.confirm);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =========================================================================
+  // STEP: SUCCESS
+  // =========================================================================
+  Widget _buildSuccessStep(BuildContext context, String locale, Goal goalA, Goal goalB) {
+    final totalCents = displayToCents(_enteredAmount);
+    final result = _depositResult;
+
+    return Consumer(
+      builder: (context, ref, _) {
+        final goalsAsync = ref.watch(goalsProvider);
+        final goals = goalsAsync.value ?? [];
+        final finishedA = goals.any(
+          (g) => g.id == 'goal_a' && g.currentAmount >= g.targetAmount,
+        );
+        final finishedB = goals.any(
+          (g) => g.id == 'goal_b' && g.currentAmount >= g.targetAmount,
+        );
+        final anyFinished = finishedA || finishedB;
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Spacer(flex: 2),
+
+              // ── Success icon with scale-in animation ──
+              Center(
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOutBack,
+                  builder: (context, scale, child) {
+                    return Transform.scale(scale: scale, child: child);
+                  },
+                  child: Container(
+                    width: 88,
+                    height: 88,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.success.withOpacity(0.1),
+                    ),
+                    child: const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.success,
+                      size: 56,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // ── Title ──
+              Text(
+                AppLocalizations.get(locale, 'dep_success_title'),
+                textAlign: TextAlign.center,
+                style: AppTypography.h2(
+                  context,
+                  color: AppColors.success,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // ── Amount ──
+              Text(
+                '${formatAmount(totalCents)} ${goalA.currency} '
+                '${AppLocalizations.get(locale, 'dep_success_desc')}',
+                textAlign: TextAlign.center,
+                style: AppTypography.body(context),
+              ),
+              const SizedBox(height: 28),
+
+              // ── Rewards summary ──
+              SurfaceCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          result?.isCritical == true
+                              ? Icons.local_fire_department_rounded
+                              : Icons.bolt_rounded,
+                          color: result?.isCritical == true
+                              ? AppColors.error
+                              : AppColors.warning,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          result?.isCritical == true
+                              ? AppLocalizations.get(locale, 'dep_reward_critical')
+                              : AppLocalizations.get(locale, 'dep_reward_vault'),
+                          style: AppTypography.h3(
+                            context,
+                            color: result?.isCritical == true
+                                ? AppColors.error
+                                : AppColors.warning,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    _rewardRow(
+                      context,
+                      label: AppLocalizations.get(locale, 'dep_reward_xp'),
+                      value: '+${result?.xpGained ?? 100}',
+                    ),
+                    if (result?.streakCount != null &&
+                        result!.streakCount > 1) ...[
+                      const SizedBox(height: 6),
+                      _rewardRow(
+                        context,
+                        label: AppLocalizations.get(locale, 'dep_reward_streak'),
+                        value: '${result.streakCount}${AppLocalizations.get(locale, 'daily_bonus_days')}',
+                      ),
+                    ],
+                    if (result?.isCritical == true) ...[
+                      const SizedBox(height: 6),
+                      _rewardRow(
+                        context,
+                        label: AppLocalizations.get(locale, 'dep_reward_crit_bonus'),
+                        value: '+${result?.bonusXp ?? 0} XP',
+                        valueColor: AppColors.error,
+                      ),
+                    ],
+                    if (result?.earnedLootbox != null) ...[
+                      const SizedBox(height: 6),
+                      _rewardRow(
+                        context,
+                        label: AppLocalizations.get(locale, 'dep_reward_lootbox'),
+                        value: '${result!.earnedLootbox!.rarity}',
+                        valueColor: AppColors.accent,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const Spacer(flex: 3),
+
+              // ── Return button ──
+              AppButton(
+                label: anyFinished
+                    ? AppLocalizations.get(locale, 'dep_open_vault')
+                    : AppLocalizations.get(locale, 'dep_return_btn'),
                 onPressed: () {
                   HapticFeedback.mediumImpact();
                   if (finishedA) {
                     context.go('/goal-complete', extra: {
-                      'goalName': goals.firstWhere((g) => g.id == 'goal_a').name,
-                      'targetAmount': goals.firstWhere((g) => g.id == 'goal_a').targetAmount, // int (kopecks)
+                      'goalName': goals
+                          .firstWhere((g) => g.id == 'goal_a')
+                          .name,
+                      'targetAmount': goals
+                          .firstWhere((g) => g.id == 'goal_a')
+                          .targetAmount,
                       'currency': goalA.currency,
                     });
                   } else if (finishedB) {
                     context.go('/goal-complete', extra: {
-                      'goalName': goals.firstWhere((g) => g.id == 'goal_b').name,
-                      'targetAmount': goals.firstWhere((g) => g.id == 'goal_b').targetAmount, // int (kopecks)
+                      'goalName': goals
+                          .firstWhere((g) => g.id == 'goal_b')
+                          .name,
+                      'targetAmount': goals
+                          .firstWhere((g) => g.id == 'goal_b')
+                          .targetAmount,
                       'currency': goalB.currency,
                     });
                   } else {
                     context.go('/dashboard');
                   }
                 },
-              );
-            },
+              ),
+              const SizedBox(height: 8),
+            ],
           ),
-          const SizedBox(height: 16.0),
-        ],
-      ),
+        );
+      },
+    );
+  }
+
+  /// Helper: a single row inside the rewards SurfaceCard.
+  Widget _rewardRow(
+    BuildContext context, {
+    required String label,
+    required String value,
+    Color? valueColor,
+  }) {
+    final brightness = Theme.of(context).brightness;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: AppTypography.bodySmall(context)),
+        Text(
+          value,
+          style: AppTypography.bodySmall(
+            context,
+            color: valueColor ?? AppColors.textPrimary(brightness),
+          ),
+        ),
+      ],
     );
   }
 }
 
+// ===========================================================================
+// Confetti celebration (simplified)
+// ===========================================================================
 class CelebrationConfetti {
   double x;
   double y;
@@ -839,7 +1083,7 @@ class CelebrationConfetti {
   void update() {
     x += vx * 0.01;
     y += vy * 0.01;
-    vy += 0.08; // Gravity effect
+    vy += 0.08;
     rotation += rotationSpeed;
   }
 }
@@ -853,26 +1097,31 @@ class ConfettiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
 
-    for (var particle in particles) {
-      if (particle.y > 1.0 || particle.y < 0.0) continue;
+    for (final p in particles) {
+      if (p.y > 1.2 || p.y < -0.2) continue;
 
-      paint.color = particle.color;
-      final px = particle.x * size.width;
-      final py = particle.y * size.height;
+      paint.color = p.color.withOpacity(0.85);
+      final px = p.x * size.width;
+      final py = p.y * size.height;
 
       canvas.save();
       canvas.translate(px, py);
-      canvas.rotate(particle.rotation);
-
-      canvas.drawRect(
-        Rect.fromCenter(center: Offset.zero, width: particle.size, height: particle.size * 1.6),
+      canvas.rotate(p.rotation);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: p.size,
+            height: p.size * 1.6,
+          ),
+          const Radius.circular(1),
+        ),
         paint,
       );
-
       canvas.restore();
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant ConfettiPainter oldDelegate) => true;
 }

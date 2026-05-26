@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/widgets/neon_button.dart';
-import '../../../core/widgets/glass_card.dart';
+import '../../../core/providers/l10n.dart';
+import '../../../core/providers/providers.dart';
+import '../../../core/widgets/surface_card.dart';
 import '../providers/joint_goals_provider.dart';
 import '../widgets/create_joint_goal_dialog.dart';
 
@@ -16,22 +16,21 @@ class SquadsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final jointGoalsAsync = ref.watch(jointGoalsProvider);
+    final brightness = Theme.of(context).brightness;
+    final currentLocale = ref.watch(localeProvider);
+    String t(String key) => AppLocalizations.get(currentLocale, key);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background(brightness),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
-          'АЛЬЯНС / СПІЛЬНІ ЦІЛІ',
-          style: AppTextStyles.orbitronHeading(
-            fontSize: 18.0,
-            color: AppColors.magentaAccent,
-            fontWeight: FontWeight.bold,
-          ),
+          t('squad_title'),
+          style: AppTypography.h3(context, color: AppColors.goalB),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary, size: 20),
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary(brightness), size: 20),
           onPressed: () => context.pop(),
         ),
       ),
@@ -42,9 +41,9 @@ class SquadsScreen extends ConsumerWidget {
             builder: (_) => const CreateJointGoalDialog(),
           );
         },
-        backgroundColor: AppColors.magentaAccent,
+        backgroundColor: AppColors.goalB,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Нова спільна ціль', style: TextStyle(fontWeight: FontWeight.bold)),
+        label: Text(t('squad_new_btn'), style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: jointGoalsAsync.when(
         data: (goalsData) {
@@ -55,20 +54,18 @@ class SquadsScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.group_add, size: 80, color: AppColors.magentaAccent)
-                        .animate(onPlay: (c) => c.repeat(reverse: true))
-                        .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 1.seconds),
+                    Icon(Icons.group_add, size: 80, color: AppColors.goalB),
                     const SizedBox(height: 24.0),
-                    const Text(
-                      'НЕМАЄ СПІЛЬНИХ ЦІЛЕЙ',
+                    Text(
+                      t('squad_empty_title'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 18.0, fontWeight: FontWeight.bold),
+                      style: AppTypography.h3(context),
                     ),
                     const SizedBox(height: 12.0),
-                    const Text(
-                      'Створіть спільну ціль з друзями (або віртуальними друзями) для спільного накопичення!',
+                    Text(
+                      t('squads_empty_desc'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 14.0),
+                      style: AppTypography.body(context),
                     ),
                   ],
                 ),
@@ -89,9 +86,9 @@ class SquadsScreen extends ConsumerWidget {
                 onTap: () {
                   context.push('/joint-goal/${goal.id}');
                 },
-                child: GlassCard(
+                child: SurfaceCard(
+                  margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(16.0),
-                  borderColor: AppColors.magentaAccent.withOpacity(0.5),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -100,44 +97,46 @@ class SquadsScreen extends ConsumerWidget {
                         children: [
                           Text(
                             goal.title.toUpperCase(),
-                            style: AppTextStyles.orbitronHeading(fontSize: 18.0, color: Colors.white),
+                            style: AppTypography.h3(context),
                           ),
-                          Icon(Icons.chevron_right, color: AppColors.magentaAccent),
+                          Icon(Icons.chevron_right, color: AppColors.goalB),
                         ],
                       ),
                       const SizedBox(height: 12.0),
                       Text(
-                        'Зібрано: ${(goal.currentAmount / 100).toStringAsFixed(0)} / ${(goal.targetAmount / 100).toStringAsFixed(0)} ₴',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        AppLocalizations.format(currentLocale, 'squad_collected', {
+                          'amount': '${(goal.currentAmount / 100).toStringAsFixed(0)} / ${(goal.targetAmount / 100).toStringAsFixed(0)} ₴',
+                        }),
+                        style: AppTypography.body(context),
                       ),
                       const SizedBox(height: 8.0),
                       LinearProgressIndicator(
                         value: progress,
-                        backgroundColor: AppColors.borderNeon,
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.magentaAccent),
+                        backgroundColor: AppColors.border(brightness),
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.goalB),
                         minHeight: 8,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       const SizedBox(height: 12.0),
                       Row(
                         children: [
-                          const Icon(Icons.people, color: AppColors.cyanAccent, size: 16),
+                          Icon(Icons.people, color: AppColors.accent, size: 16),
                           const SizedBox(width: 8),
                           Text(
-                            'Учасників: ${members.length}',
-                            style: const TextStyle(color: AppColors.cyanAccent, fontSize: 12),
+                            AppLocalizations.format(currentLocale, 'squad_members', {'count': '${members.length}'}),
+                            style: AppTypography.caption(context, color: AppColors.accent),
                           ),
                         ],
                       ),
                     ],
                   ),
-                ).animate().fadeIn(delay: (index * 100).ms, duration: 400.ms).slideX(),
+                ),
               );
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.magentaAccent)),
-        error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: Colors.red))),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.goalB)),
+        error: (e, _) => Center(child: Text('${t("common_error")}: $e', style: TextStyle(color: AppColors.error))),
       ),
     );
   }
