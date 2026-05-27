@@ -6,9 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
-import '../../../core/providers/penalty_notifier.dart';
 import '../../../core/providers/providers.dart';
-import '../../../core/providers/savings_notifier.dart';
 import '../../../core/utils/money_utils.dart';
 import '../../../core/widgets/neon_avatar_painter.dart';
 import '../../../core/models/avatar_config.dart';
@@ -16,7 +14,7 @@ import '../../../core/widgets/surface_card.dart';
 import '../../../core/widgets/app_button.dart';
 
 class PenaltyVaultScreen extends ConsumerWidget {
-  const PenaltyVaultScreen({Key? key}) : super(key: key);
+  const PenaltyVaultScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,7 +69,7 @@ class PenaltyVaultScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8.0),
                     Text(
-                      AppLocalizations.format(currentLocale, 'penalty_integrity', {'value': '${(config.integrity * 100).toInt()}'}),
+                      '${t('penalty_integrity')} ${(config.integrity * 100).toInt()}%',
                       style: AppTypography.body(context),
                     ),
                   ],
@@ -111,8 +109,9 @@ class PenaltyVaultScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 4.0),
                               Text(
-                                AppLocalizations.format(currentLocale, 'penalty_debt', {'amount': centsToDisplay(fine.amountKopecks)}),
-                                style: AppTypography.caption(context, color: AppColors.error),
+                                '${t('penalty_debt')} ${centsToDisplay(fine.amountKopecks)}',
+                                style: AppTypography.caption(context,
+                                    color: AppColors.error),
                               ),
                             ],
                           ),
@@ -144,7 +143,7 @@ class PenaltyVaultScreen extends ConsumerWidget {
                     ),
                   ),
                 );
-              }).toList(),
+              }),
             ] else ...[
               Center(
                 child: Text(

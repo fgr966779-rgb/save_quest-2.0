@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -10,7 +9,7 @@ import '../../../core/providers/l10n.dart';
 import '../../../core/widgets/surface_card.dart';
 
 class StreakRoomScreen extends ConsumerStatefulWidget {
-  const StreakRoomScreen({Key? key}) : super(key: key);
+  const StreakRoomScreen({super.key});
 
   @override
   ConsumerState<StreakRoomScreen> createState() => _StreakRoomScreenState();
@@ -270,7 +269,7 @@ class ReactiveFlamePainter extends CustomPainter {
       ..style = PaintingStyle.fill
       ..shader = RadialGradient(
         colors: [
-          streakCount > 0 ? AppColors.accent.withOpacity(0.8) : AppColors.border(brightness).withOpacity(0.6),
+          streakCount > 0 ? AppColors.accent.withValues(alpha: 0.8) : AppColors.border(brightness).withValues(alpha: 0.6),
           Colors.transparent
         ],
       ).createShader(Rect.fromCircle(center: center, radius: baseRadius));

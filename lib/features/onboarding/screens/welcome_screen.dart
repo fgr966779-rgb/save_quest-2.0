@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
-import '../../../core/providers/providers.dart';
 import '../../../core/widgets/app_button.dart';
 
 class WelcomeScreen extends ConsumerWidget {

@@ -8,11 +8,11 @@ class CipherText extends StatefulWidget {
   final bool isCiphered;
 
   const CipherText({
-    Key? key,
+    super.key,
     required this.text,
     this.style,
     this.isCiphered = false,
-  }) : super(key: key);
+  });
 
   @override
   State<CipherText> createState() => _CipherTextState();

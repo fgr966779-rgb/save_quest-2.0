@@ -16,11 +16,11 @@ class PriceAnalysisScreen extends ConsumerStatefulWidget {
   final String? currency;
 
   const PriceAnalysisScreen({
-    Key? key,
+    super.key,
     this.initialQuery,
     this.targetAmountKopecks,
     this.currency,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<PriceAnalysisScreen> createState() =>
@@ -78,9 +78,9 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
     final locale = ref.watch(localeProvider);
     final currency = widget.currency ?? '₴';
+    final brightness = Theme.of(context).brightness;
 
     return Scaffold(
       backgroundColor: AppColors.background(brightness),
@@ -256,10 +256,10 @@ class _PriceAnalysisScreenState extends ConsumerState<PriceAnalysisScreen> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(0.15),
+                    color: AppColors.warning.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                        color: AppColors.warning.withOpacity(0.5)),
+                        color: AppColors.warning.withValues(alpha: 0.5)),
                   ),
                   child: Text(
                     AppLocalizations.get(locale, 'price_estimate'),

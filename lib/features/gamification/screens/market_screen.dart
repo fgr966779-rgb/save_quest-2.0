@@ -12,10 +12,9 @@ import '../../../core/widgets/surface_card.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/neon_avatar_painter.dart';
 import '../../../core/models/avatar_config.dart';
-import '../../../data/database.dart';
 
 class MarketScreen extends ConsumerStatefulWidget {
-  const MarketScreen({Key? key}) : super(key: key);
+  const MarketScreen({super.key});
 
   @override
   ConsumerState<MarketScreen> createState() => _MarketScreenState();
@@ -180,7 +179,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                 width: 3.0,
               ),
             ),
-            color: isSelected ? AppColors.warning.withOpacity(0.1) : Colors.transparent,
+            color: isSelected ? AppColors.warning.withValues(alpha: 0.1) : Colors.transparent,
           ),
           alignment: Alignment.center,
           child: Text(
@@ -227,7 +226,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
   }
 
   Widget _buildCosmeticItems(AvatarConfig config, String Function(String) t) {
-    final brightness = Theme.of(context).brightness);
+    final brightness = Theme.of(context).brightness;
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       children: [
@@ -250,8 +249,16 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
     );
   }
 
-  Widget _buildCosmeticItem(AvatarConfig currentConfig, String itemId, String name, String description, int cost, Color color, AvatarConfig previewConfig, String Function(String) t) {
-    final brightness = Theme.of(context).brightness);
+  Widget _buildCosmeticItem(
+      AvatarConfig currentConfig,
+      String itemId,
+      String name,
+      String description,
+      int cost,
+      Color color,
+      AvatarConfig previewConfig,
+      String Function(String) t) {
+    final brightness = Theme.of(context).brightness;
     final bool isOwned = currentConfig.ownedItems.contains(itemId);
     final bool canAfford = currentConfig.credits >= cost;
 
@@ -275,7 +282,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
             if (isOwned)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: AppColors.success.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                decoration: BoxDecoration(color: AppColors.success.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
                 child: Text(t('market_purchased_badge'), style: AppTypography.overline(context, color: AppColors.success)),
               )
             else

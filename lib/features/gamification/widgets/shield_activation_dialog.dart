@@ -5,7 +5,6 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/surface_card.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/providers/l10n.dart';
-import '../../../core/providers/providers.dart';
 
 class ShieldActivationDialog extends StatelessWidget {
   final int daysSaved;
@@ -17,7 +16,7 @@ class ShieldActivationDialog extends StatelessWidget {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Dismiss',
-      barrierColor: Colors.black.withOpacity(0.8),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
       transitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (context, anim1, anim2) {
         return ShieldActivationDialog(daysSaved: daysSaved);

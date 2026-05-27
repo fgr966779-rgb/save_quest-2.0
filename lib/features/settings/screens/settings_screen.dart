@@ -14,14 +14,12 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/neon_avatar_painter.dart';
 import '../../../core/models/avatar_config.dart';
 import '../../../core/providers/banking_provider.dart';
-import '../../../core/providers/events_notifier.dart';
 import '../../../core/services/openrouter_service.dart';
 import '../../../core/services/biometric_service.dart';
 import '../../../core/services/milestone_service.dart';
 import '../../../core/services/weekly_challenge_service.dart';
 import '../../../core/services/goal_dependency_service.dart';
 import '../../../core/services/notification_service.dart';
-import '../../../core/services/sound_service.dart';
 import '../../../data/backup_service.dart';
 import '../../../main.dart' show themeModeProvider;
 
@@ -131,7 +129,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             RepaintBoundary(
               key: _shareKey,
               child: SurfaceCard(
-                borderColor: AppColors.accent.withOpacity(0.3),
+                borderColor: AppColors.accent.withValues(alpha: 0.3),
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -249,7 +247,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             const SizedBox(height: 8.0),
             DropdownButtonFormField<String>(
-              value: settings.coachPersonality,
+              initialValue: settings.coachPersonality,
               isExpanded: true,
               decoration: InputDecoration(
                 hintText: t('settings_ai_hint'),
@@ -415,7 +413,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ? t('settings_biometric_sub')
                   : t('biometric_unavailable'),
               value: _biometricEnabled,
-              onChanged: _biometricAvailable ? _handleBiometricToggle : null,
+              onChanged: (val) {
+                if (_biometricAvailable) {
+                  _handleBiometricToggle(val);
+                }
+              },
             ),
             const SizedBox(height: 32.0),
 
@@ -528,7 +530,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSelectorItem(
               title: t('settings_currency'),
               value: settings.currency,
-              options: ['₴', '\$', '€'],
+              options: const ['₴', '\$', '€'],
               onSelected: (val) {
                 HapticFeedback.lightImpact();
                 setState(() {
@@ -541,7 +543,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             _buildSelectorItem(
               title: t('settings_language'),
               value: currentLocale,
-              options: ['UA', 'EN'],
+              options: const ['UA', 'EN'],
               onSelected: (val) {
                 HapticFeedback.lightImpact();
                 ref.read(localeProvider.notifier).setLocale(val);
@@ -557,7 +559,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: 8.0),
             SurfaceCard(
               padding: const EdgeInsets.all(16.0),
-              borderColor: AppColors.error.withOpacity(0.3),
+              borderColor: AppColors.error.withValues(alpha: 0.3),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -904,7 +906,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Handle CSV Import — pick file, parse, preview, insert.
   Future<void> _handleImportCsv() async {
     final locale = ref.read(localeProvider);
-    final t = (String key) => AppLocalizations.get(locale, key);
 
     setState(() => _isBackupBusy = true);
     try {
@@ -1092,10 +1093,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await GoalDependencyService().clearAll();
 
       // 4. Navigate to onboarding
-      if (context.mounted) {
-        HapticFeedback.heavyImpact();
-        context.go('/welcome');
-      }
+      if (!context.mounted) return;
+      HapticFeedback.heavyImpact();
+      context.go('/welcome');
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1111,12 +1111,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   /// Handle daily reminder toggle — schedule/cancel push notification.
   Future<void> _onReminderChanged(bool enabled) async {
     if (enabled) {
-      final settings = ref.read(settingsServiceProvider);
+      final settingsLocal = ref.read(settingsServiceProvider);
       final notifService = NotificationService();
       await notifService.requestPermissions();
       await notifService.scheduleDailyReminder(
-        hour: settings.reminderHour,
-        minute: settings.reminderMinute,
+        hour: settingsLocal.reminderHour,
+        minute: settingsLocal.reminderMinute,
       );
     } else {
       await NotificationService().cancelAll();
@@ -1231,7 +1231,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 10.0),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.accent.withOpacity(0.12)
+              ? AppColors.accent.withValues(alpha: 0.12)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8.0),
           border: Border.all(
@@ -1257,7 +1257,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     required List<String> options,
     required ValueChanged<String> onSelected,
   }) {
-    final brightness = Theme.of(context).brightness;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1269,6 +1268,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Row(
           children: options.map((opt) {
             final bool isSelected = value == opt;
+            final brightness = Theme.of(context).brightness;
             return Expanded(
               child: GestureDetector(
                 onTap: () => onSelected(opt),
@@ -1277,7 +1277,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 10.0),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.accent.withOpacity(0.12)
+                        ? AppColors.accent.withValues(alpha: 0.12)
                         : Colors.transparent,
                     borderRadius: BorderRadius.circular(8.0),
                     border: Border.all(

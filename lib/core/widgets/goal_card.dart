@@ -97,7 +97,7 @@ class _GoalCardState extends State<GoalCard> with SingleTickerProviderStateMixin
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: widget.accentColor.withOpacity(0.1),
+                        color: widget.accentColor.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Hero(
@@ -126,7 +126,7 @@ class _GoalCardState extends State<GoalCard> with SingleTickerProviderStateMixin
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: widget.accentColor.withOpacity(0.1),
+                        color: widget.accentColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       ),
                       child: Text(
@@ -196,7 +196,7 @@ class _GoalCardState extends State<GoalCard> with SingleTickerProviderStateMixin
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: AppColors.background(brightness).withOpacity(0.7),
+                    color: AppColors.background(brightness).withValues(alpha: 0.7),
                     borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                   ),
                   child: Center(

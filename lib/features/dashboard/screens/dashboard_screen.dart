@@ -8,25 +8,22 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/providers/l10n.dart';
-import '../../../core/providers/savings_notifier.dart';
+import '../../../core/services/gamification/xp_service.dart';
 import '../../../core/utils/money_utils.dart';
 import '../../../core/widgets/dual_progress_ring.dart';
 import '../../../core/widgets/neon_avatar_painter.dart';
 import '../../../core/widgets/financial_health_thermometer.dart';
 import '../../../core/models/avatar_config.dart';
-import '../../../core/providers/banking_provider.dart';
-import '../../../core/providers/events_notifier.dart';
 import '../../../core/providers/financial_health_provider.dart';
+import '../../../data/settings_service.dart';
 
 // New clean widgets (may be created in parallel — forward-import safe).
 import '../../../core/widgets/surface_card.dart';
 import '../../../core/widgets/app_button.dart';
-import '../../../core/widgets/progress_bar.dart';
 import '../../../core/widgets/goal_card.dart';
 
 // Existing feature widgets
 import '../widgets/banking_insights_card.dart';
-import '../../gamification/providers/bounty_provider.dart';
 import '../../gamification/providers/quest_provider.dart';
 import '../../gamification/providers/daily_bonus_provider.dart';
 import '../../gamification/models/daily_quest.dart';
@@ -43,6 +40,11 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  String t(String key) {
+    final locale = ref.watch(localeProvider);
+    return AppLocalizations.get(locale, key);
+  }
+
   @override
   Widget build(BuildContext context) {
     // Listen for daily bonus / shield activation dialogs
@@ -51,15 +53,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final state = next.value;
         if (state.shieldActivated && state.shieldDaysSaved > 0) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!context.mounted) return;
             ShieldActivationDialog.show(context, state.shieldDaysSaved);
             if (state.isBonusAvailable) {
               Future.delayed(const Duration(seconds: 2), () {
-                if (mounted) DailyBonusDialog.show(context);
+                if (!mounted) return;
+                DailyBonusDialog.show(context);
               });
             }
           });
         } else if (state.isBonusAvailable) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!context.mounted) return;
             DailyBonusDialog.show(context);
           });
         }
@@ -68,15 +73,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final goalsAsync = ref.watch(goalsProvider);
     final profileAsync = ref.watch(userProfileProvider);
-    final currentLocale = ref.watch(localeProvider);
     final brightness = Theme.of(context).brightness;
     final settings = ref.watch(settingsServiceProvider);
 
-    String t(String key) => AppLocalizations.get(currentLocale, key);
-
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: _buildAppBar(context, t),
+      appBar: _buildAppBar(context),
       body: RefreshIndicator(
         onRefresh: () async {
           await Future.delayed(const Duration(milliseconds: 400));
@@ -93,11 +95,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── Header: Avatar + Greeting + Level ──
-              _buildHeader(context, profileAsync, brightness, t),
+              _buildHeader(context, profileAsync, brightness),
               const SizedBox(height: AppTheme.spaceXl),
 
               // ── Streak Banner ──
-              _buildStreakBanner(profileAsync, brightness, t),
+              _buildStreakBanner(profileAsync, brightness),
               const SizedBox(height: AppTheme.spaceLg),
 
               // ── Progress Rings ──
@@ -105,7 +107,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: AppTheme.spaceLg),
 
               // ── Deposit CTA ──
-              _buildDepositButton(context, t),
+              _buildDepositButton(context),
               const SizedBox(height: AppTheme.spaceXxl),
 
               // ── Goal Cards ──
@@ -117,7 +119,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: AppTheme.spaceLg),
 
               // ── Quick Actions ──
-              _buildQuickActions(context, t),
+              _buildQuickActions(context),
               const SizedBox(height: AppTheme.spaceLg),
 
               // ── Financial Health Thermometer ──
@@ -133,7 +135,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               const SizedBox(height: AppTheme.spaceSm),
 
               // ── Penalty Banner ──
-              _buildPenaltyBanner(profileAsync, brightness),
+              _buildPenaltyBanner(profileAsync),
               const SizedBox(height: AppTheme.spaceXxxl),
             ],
           ),
@@ -145,7 +147,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   // ============================================
   // APP BAR
   // ============================================
-  PreferredSizeWidget _buildAppBar(BuildContext context, String Function(String) t) {
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -156,12 +158,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.person_outline_rounded),
+          icon: const Icon(Icons.person_outline_rounded),
           onPressed: () => context.push('/avatar-builder'),
           tooltip: t('dash_profile_tooltip'),
         ),
         IconButton(
-          icon: Icon(Icons.notifications_none_rounded),
+          icon: const Icon(Icons.notifications_none_rounded),
           onPressed: () => context.push('/notifications'),
           tooltip: t('dash_notifications_tooltip'),
         ),
@@ -176,7 +178,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     BuildContext context,
     AsyncValue<UserProfile?> profileAsync,
     Brightness brightness,
-    String Function(String) t,
   ) {
     return profileAsync.when(
       loading: () => const SizedBox(height: 64),
@@ -186,7 +187,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
         final currentLevel = profile.level;
         final currentXp = profile.xp;
-        final xpNeeded = SavingsNotifier.xpRequiredForLevel(currentLevel);
+        final xpNeeded = XpService.xpRequiredForLevel(currentLevel);
         final xpProgress = (currentXp / xpNeeded).clamp(0.0, 1.0);
 
         final avatarConfig = profile.avatarConfig != null
@@ -279,7 +280,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildStreakBanner(
     AsyncValue<UserProfile?> profileAsync,
     Brightness brightness,
-    String Function(String) t,
   ) {
     return profileAsync.when(
       loading: () => const SizedBox(height: 56),
@@ -302,7 +302,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 hasStreak
                     ? Icons.local_fire_department_rounded
                     : Icons.opacity_rounded,
-                color: hasStreak ? AppColors.warning : AppColors.textTertiary(brightness),
+                color: hasStreak
+                    ? AppColors.warning
+                    : AppColors.textTertiary(brightness),
                 size: 28,
               ),
               const SizedBox(width: AppTheme.spaceMd),
@@ -384,8 +386,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             progressA: ratioA,
             progressB: ratioB,
             size: 180,
-            strokeWidth: 12,
-            ringSpacing: 10,
           ),
         );
       },
@@ -395,11 +395,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   // ============================================
   // DEPOSIT CTA
   // ============================================
-  Widget _buildDepositButton(BuildContext context, String Function(String) t) {
+  Widget _buildDepositButton(BuildContext context) {
     return AppButton(
       label: t('dash_deposit'),
       variant: ButtonVariant.primary,
-      icon: Icons.add_card_rounded,
+      icon: const Icon(Icons.add_card_rounded, color: Colors.white),
       onPressed: () => context.push('/deposit'),
     );
   }
@@ -459,14 +459,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     required bool isPrivate,
     required String heroTag,
   }) {
-    final displayCurrent = isPrivate ? '•••' : centsToDisplay(goal.currentAmount);
-    final displayTarget = isPrivate ? '•••' : centsToDisplay(goal.targetAmount);
-    final progress = (goal.currentAmount / goal.targetAmount).clamp(0.0, 1.0);
-
     return GestureDetector(
       onVerticalDragEnd: (details) async {
         if (details.primaryVelocity != null && details.primaryVelocity! < -300) {
           HapticFeedback.heavyImpact();
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(t('dash_quick_deposit_snack')),
@@ -624,7 +621,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   // ============================================
   // QUICK ACTIONS ROW
   // ============================================
-  Widget _buildQuickActions(BuildContext context, String Function(String) t) {
+  Widget _buildQuickActions(BuildContext context) {
     return Wrap(
       alignment: WrapAlignment.spaceEvenly,
       runSpacing: 8.0,
@@ -674,7 +671,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildFinancialHealth(Brightness brightness) {
     final healthAsync = ref.watch(financialHealthProvider);
     final locale = ref.read(localeProvider);
-    final t = (String key) => AppLocalizations.get(locale, key);
+    String t(String key) => AppLocalizations.get(locale, key);
 
     return SurfaceCard(
       padding: const EdgeInsets.all(16),
@@ -746,7 +743,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return SurfaceCard(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
-      borderColor: AppColors.accent,
       child: Row(
         children: [
           Icon(Icons.event_rounded, color: AppColors.accent, size: 24),
@@ -782,7 +778,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   // ============================================
   Widget _buildPenaltyBanner(
     AsyncValue<UserProfile?> profileAsync,
-    Brightness brightness,
   ) {
     return profileAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -794,7 +789,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
         return SurfaceCard(
           padding: const EdgeInsets.all(AppTheme.spaceMd),
-          borderColor: AppColors.error,
           child: Row(
             children: [
               Icon(Icons.warning_amber_rounded,
@@ -817,11 +811,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ],
                 ),
               ),
-              AppButton(
-                label: t('dash_penalties_btn'),
-                variant: ButtonVariant.ghost,
-                size: ButtonSize.small,
-                onPressed: () => context.push('/penalty-vault'),
+              IntrinsicWidth(
+                child: AppButton(
+                  label: t('dash_penalties_btn'),
+                  variant: ButtonVariant.ghost,
+                  fullWidth: false,
+                  onPressed: () => context.push('/penalty-vault'),
+                ),
               ),
             ],
           ),
@@ -847,7 +843,6 @@ class _HealthDetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
     final pct = value.round();
 
     return Row(

@@ -39,10 +39,11 @@ Future<List<LeaderboardEntry>> weeklyLeaderboard(Ref ref) async {
     // Determine a fake weekly score based on user's XP
     // For realism, let's just use a percentage of their total XP or a random high number
     // Let's pretend they earned 1500 XP this week, or their total XP if it's less.
-    final weeklyScore = profile.xp > 0 ? (profile.xp * 0.3).toInt().clamp(50, 4500) : 0;
-    
+    final weeklyScore =
+        profile.xp > 0 ? (profile.xp * 0.3).toInt().clamp(50, 4500) : 0;
+
     entries.add(LeaderboardEntry(
-      id: profile.id,
+      id: profile.id.toString(),
       displayName: 'You (Player)', // or profile name if we have one
       score: weeklyScore,
       level: profile.level,
@@ -83,7 +84,7 @@ Future<List<LeaderboardEntry>> monthlyLeaderboard(Ref ref) async {
 
   if (profile != null) {
     entries.add(LeaderboardEntry(
-      id: profile.id,
+      id: profile.id.toString(),
       displayName: 'You (Player)',
       score: profile.xp, // Monthly score might just be their total XP for now
       level: profile.level,

@@ -89,7 +89,6 @@ class _InputKey extends StatefulWidget {
   final VoidCallback onTap;
 
   const _InputKey({
-    super.key,
     required this.label,
     required this.onTap,
   });
@@ -146,13 +145,13 @@ class _InputKeyState extends State<_InputKey> with SingleTickerProviderStateMixi
           height: 60,
           decoration: BoxDecoration(
             color: isOperator
-                ? AppColors.accent.withOpacity(0.08)
+                ? AppColors.accent.withValues(alpha: 0.08)
                 : AppColors.surfaceMuted(brightness),
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(
               color: isSpecial
                   ? AppColors.border(brightness)
-                  : AppColors.border(brightness).withOpacity(0.6),
+                  : AppColors.border(brightness).withValues(alpha: 0.6),
               width: 1,
             ),
           ),

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/providers/l10n.dart';
 import '../../../core/widgets/surface_card.dart';
@@ -33,7 +32,7 @@ class SavingsStatsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final brightness = Theme.of(context).brightness;
     final locale = ref.read(localeProvider);
-    final t = (String key) => AppLocalizations.get(locale, key);
+    String t(String key) => AppLocalizations.get(locale, key);
     final currency = ref.read(settingsServiceProvider).currency;
 
     final penaltiesAsync = ref.watch(_penaltyHabitsProvider);
@@ -80,7 +79,8 @@ class SavingsStatsScreen extends ConsumerWidget {
                         Expanded(
                           child: _MetricCard(
                             title: t('stats_penalties'),
-                            value: MoneyUtils.formatKopecks(totalPenalties),
+                            value: centsToDisplay(totalPenalties)
+                                .toStringAsFixed(0),
                             unit: currency,
                             icon: Icons.gavel_rounded,
                             color: AppColors.error,
@@ -91,7 +91,8 @@ class SavingsStatsScreen extends ConsumerWidget {
                         Expanded(
                           child: _MetricCard(
                             title: t('stats_avoided'),
-                            value: MoneyUtils.formatKopecks(totalAvoided),
+                            value: centsToDisplay(totalAvoided)
+                                .toStringAsFixed(0),
                             unit: currency,
                             icon: Icons.block_rounded,
                             color: AppColors.success,
@@ -132,8 +133,8 @@ class SavingsStatsScreen extends ConsumerWidget {
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: _HabitBar(
                             name: p.habitName,
-                            amount:
-                                MoneyUtils.formatKopecks(p.penaltyAmount),
+                            amount: centsToDisplay(p.penaltyAmount)
+                                .toStringAsFixed(0),
                             fraction: maxAmount > 0
                                 ? p.penaltyAmount / maxAmount
                                 : 0,
@@ -352,7 +353,7 @@ class _WeeklyTrendChart extends StatelessWidget {
           horizontalInterval: maxVal > 0 ? _niceStep(maxVal) : 100,
           getDrawingHorizontalLine: (value) => FlLine(
             color: AppColors.border(Theme.of(context).brightness)
-                .withOpacity(0.5),
+                .withValues(alpha: 0.5),
             strokeWidth: 1,
           ),
         ),
@@ -414,7 +415,7 @@ class _WeeklyTrendChart extends StatelessWidget {
             ),
             belowBarData: BarAreaData(
               show: true,
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
             ),
           ),
         ],

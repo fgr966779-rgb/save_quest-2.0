@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:drift/drift.dart' as drift;
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
@@ -15,7 +16,9 @@ import '../../../data/database.dart';
 
 final avoidedPurchasesProvider = StreamProvider<List<AvoidedPurchase>>((ref) {
   final db = ref.watch(databaseProvider);
-  return (db.select(db.avoidedPurchases)..orderBy([(t) => OrderingTerm.desc(t.createdAt)])).watch();
+  return (db.select(db.avoidedPurchases)
+        ..orderBy([(t) => drift.OrderingTerm.desc(t.createdAt)]))
+      .watch();
 });
 
 class RegretArchiveScreen extends ConsumerWidget {
@@ -80,8 +83,10 @@ class RegretArchiveScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, WidgetRef ref, Brightness brightness, String Function(String) t) {
-    return Center(
+  Widget _buildEmptyState(BuildContext context, WidgetRef ref,
+      Brightness brightness, String Function(String) t) {
+    return Container(
+      alignment: Alignment.center,
       padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -117,7 +122,7 @@ class RegretArchiveScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.accentMutedBg(brightness),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [

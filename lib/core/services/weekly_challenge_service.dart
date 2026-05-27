@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -12,9 +11,12 @@ class WeeklyChallenge {
   final bool isCompleted;
   final DateTime createdAt;
 
+  final String description;
+
   WeeklyChallenge({
     String? id,
     required this.title,
+    this.description = '',
     required this.targetAmount,
     this.currentAmount = 0,
     required this.deadline,
@@ -32,6 +34,7 @@ class WeeklyChallenge {
   Map<String, dynamic> toJson() => {
         'id': id,
         'title': title,
+        'description': description,
         'targetAmount': targetAmount,
         'currentAmount': currentAmount,
         'deadline': deadline.toIso8601String(),
@@ -43,6 +46,7 @@ class WeeklyChallenge {
     return WeeklyChallenge(
       id: json['id'] as String,
       title: json['title'] as String,
+      description: json['description'] as String? ?? '',
       targetAmount: json['targetAmount'] as int,
       currentAmount: json['currentAmount'] as int,
       deadline: DateTime.parse(json['deadline'] as String),
@@ -53,6 +57,7 @@ class WeeklyChallenge {
 
   WeeklyChallenge copyWith({
     String? title,
+    String? description,
     int? targetAmount,
     int? currentAmount,
     DateTime? deadline,
@@ -61,6 +66,7 @@ class WeeklyChallenge {
     return WeeklyChallenge(
       id: id,
       title: title ?? this.title,
+      description: description ?? this.description,
       targetAmount: targetAmount ?? this.targetAmount,
       currentAmount: currentAmount ?? this.currentAmount,
       deadline: deadline ?? this.deadline,

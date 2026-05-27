@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
-import '../theme/app_theme.dart';
 import '../widgets/app_button.dart';
 
 /// A celebratory dialog shown when a goal reaches a milestone (25%, 50%, 75%, 100%).
@@ -112,7 +111,7 @@ class _MilestoneDialogState extends State<MilestoneDialog>
                     border: Border.all(color: accentColor, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: accentColor.withOpacity(0.2),
+                        color: accentColor.withValues(alpha: 0.2),
                         blurRadius: 30,
                         spreadRadius: 5,
                       ),
@@ -126,7 +125,7 @@ class _MilestoneDialogState extends State<MilestoneDialog>
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: accentColor.withOpacity(0.1),
+                          color: accentColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(36),
                         ),
                         child: Icon(
@@ -254,7 +253,7 @@ class _MilestoneConfettiPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final p in particles) {
       final paint = Paint()
-        ..color = p.color.withOpacity(opacity * 0.8)
+        ..color = p.color.withValues(alpha: opacity * 0.8)
         ..style = PaintingStyle.fill;
 
       final cx = p.x * size.width;

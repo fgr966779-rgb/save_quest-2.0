@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import '../../features/gamification/models/badge_model.dart';
 
 /// Pure data model for user avatar configuration.
 /// Extracted from legacy neon_avatar_painter.dart — no legacy color references.

@@ -7,7 +7,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
-import '../../../data/database.dart';
 import '../models/core_skill.dart';
 
 // ─────────────────────────────────────────────
@@ -220,7 +219,7 @@ class SkillTreeScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surface(brightness),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -271,13 +270,16 @@ class SkillTreeScreen extends ConsumerWidget {
                 isUnlocked: isUnlocked,
                 canUnlock: canUnlock,
                 isLocked: !reqMet || !depMet,
-                currentLocale: currentLocale,
+                locale: ref.read(localeProvider),
                 onTap: () {
                   if (canUnlock) {
                     _unlockSkill(context, ref, node);
                   } else if (!isUnlocked) {
                     String msg = '${t('skill_req_level')}${node.cost} SP.';
-                    if (!reqMet) msg += ' ${t('skill_req_text')}$name: ${node.requiredLevel}.';
+                    if (!reqMet) {
+                      msg +=
+                          ' ${t('skill_req_text')}$name: ${node.requiredLevel}.';
+                    }
                     if (!depMet) msg += ' ${t('skill_locked_dep')}';
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(msg)),
@@ -318,7 +320,7 @@ class _SkillNodeCard extends StatelessWidget {
   final bool canUnlock;
   final bool isLocked;
   final VoidCallback onTap;
-  final String currentLocale;
+  final String locale;
 
   const _SkillNodeCard({
     required this.node,
@@ -326,7 +328,7 @@ class _SkillNodeCard extends StatelessWidget {
     required this.canUnlock,
     required this.isLocked,
     required this.onTap,
-    required this.currentLocale,
+    required this.locale,
   });
 
   @override
@@ -336,7 +338,7 @@ class _SkillNodeCard extends StatelessWidget {
     final borderColor = isUnlocked
         ? node.color
         : canUnlock
-            ? node.color.withOpacity(0.5)
+            ? node.color.withValues(alpha: 0.5)
             : AppColors.border(brightness);
 
     final iconColor = isUnlocked ? node.color : AppColors.textDisabled(brightness);
@@ -351,7 +353,7 @@ class _SkillNodeCard extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isUnlocked ? node.color.withOpacity(0.1) : Colors.transparent,
+          color: isUnlocked ? node.color.withValues(alpha: 0.1) : Colors.transparent,
           border: Border.all(color: borderColor),
           borderRadius: BorderRadius.circular(12),
         ),
@@ -360,7 +362,7 @@ class _SkillNodeCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isUnlocked ? node.color.withOpacity(0.2) : AppColors.surfaceMuted(brightness),
+                color: isUnlocked ? node.color.withValues(alpha: 0.2) : AppColors.surfaceMuted(brightness),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -375,12 +377,12 @@ class _SkillNodeCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.get(currentLocale, node.titleKey),
+                    AppLocalizations.get(locale, node.titleKey),
                     style: AppTypography.h3(context, color: titleColor),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    AppLocalizations.get(currentLocale, node.descKey),
+                    AppLocalizations.get(locale, node.descKey),
                     style: AppTypography.caption(context),
                   ),
                 ],
@@ -424,7 +426,7 @@ class _SpBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface(brightness),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.warning.withOpacity(0.5)),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

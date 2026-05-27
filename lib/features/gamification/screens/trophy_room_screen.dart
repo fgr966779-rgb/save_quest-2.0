@@ -8,10 +8,10 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/providers/l10n.dart';
 import '../../../core/widgets/surface_card.dart';
-import '../models/achievement_model.dart';
+import '../models/reward_model.dart';
 
 class TrophyRoomScreen extends ConsumerWidget {
-  const TrophyRoomScreen({Key? key}) : super(key: key);
+  const TrophyRoomScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -144,11 +144,13 @@ class TrophyRoomScreen extends ConsumerWidget {
                               mainAxisSpacing: 12.0,
                               childAspectRatio: 0.85,
                             ),
-                            itemCount: allAchievements.length,
+                            itemCount: allRewards.length,
                             itemBuilder: (context, index) {
-                              final achievement = allAchievements[index];
-                              final bool isUnlocked = unlockedIds.contains(achievement.id);
-                              return _buildTrophyCard(context, achievement, isUnlocked, t);
+                              final reward = allRewards[index];
+                              final bool isUnlocked =
+                                  unlockedIds.contains(reward.id);
+                              return _buildTrophyCard(
+                                  context, reward, isUnlocked, t, ref);
                             },
                           ),
                         ),
@@ -164,21 +166,22 @@ class TrophyRoomScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTrophyCard(BuildContext context, Achievement achievement, bool isUnlocked, String Function(String) t) {
+  Widget _buildTrophyCard(BuildContext context, Reward reward, bool isUnlocked,
+      String Function(String) t, WidgetRef ref) {
     final brightness = Theme.of(context).brightness;
     Color rarityColor = AppColors.textTertiary(brightness);
     if (isUnlocked) {
-      switch (achievement.rarity) {
-        case AchievementRarity.common:
+      switch (reward.rarity) {
+        case RewardRarity.common:
           rarityColor = AppColors.accent;
           break;
-        case AchievementRarity.rare:
+        case RewardRarity.rare:
           rarityColor = AppColors.goalB;
           break;
-        case AchievementRarity.epic:
+        case RewardRarity.epic:
           rarityColor = AppColors.warning;
           break;
-        case AchievementRarity.legendary:
+        case RewardRarity.legendary:
           rarityColor = AppColors.legendary;
           break;
       }
@@ -187,7 +190,7 @@ class TrophyRoomScreen extends ConsumerWidget {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        _showAchievementDetailSheet(context, achievement, isUnlocked, t);
+        _showAchievementDetailSheet(context, reward, isUnlocked, t, ref);
       },
       child: SurfaceCard(
         padding: const EdgeInsets.all(12.0),
@@ -201,7 +204,7 @@ class TrophyRoomScreen extends ConsumerWidget {
                 width: 60.0,
                 height: 60.0,
                 decoration: BoxDecoration(
-                  color: isUnlocked ? rarityColor.withOpacity(0.1) : AppColors.surfaceMuted(brightness),
+                  color: isUnlocked ? rarityColor.withValues(alpha: 0.1) : AppColors.surfaceMuted(brightness),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: isUnlocked ? rarityColor : AppColors.border(brightness),
@@ -210,7 +213,7 @@ class TrophyRoomScreen extends ConsumerWidget {
                 ),
                 child: Center(
                   child: Text(
-                    achievement.icon,
+                    reward.icon,
                     style: const TextStyle(fontSize: 32.0),
                   ),
                 ),
@@ -218,31 +221,38 @@ class TrophyRoomScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12.0),
 
-            // Achievement Title
+            // Reward Title
             Text(
-              achievement.titleUa.toUpperCase(),
+              reward.getTitle(ref.watch(localeProvider)).toUpperCase(),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: AppTypography.overline(
                 context,
-                color: isUnlocked ? AppColors.textPrimary(brightness) : AppColors.textSecondary(brightness),
+                color: isUnlocked
+                    ? AppColors.textPrimary(brightness)
+                    : AppColors.textSecondary(brightness),
               ),
             ),
             const SizedBox(height: 4.0),
 
             // Rarity Label
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
               decoration: BoxDecoration(
-                color: isUnlocked ? rarityColor.withOpacity(0.1) : AppColors.surfaceMuted(brightness),
+                color: isUnlocked
+                    ? rarityColor.withValues(alpha: 0.1)
+                    : AppColors.surfaceMuted(brightness),
                 borderRadius: BorderRadius.circular(4.0),
               ),
               child: Text(
-                isUnlocked ? achievement.rarity.name.toUpperCase() : t('ach_locked'),
+                isUnlocked ? reward.rarity.name.toUpperCase() : t('ach_locked'),
                 style: AppTypography.overline(
                   context,
-                  color: isUnlocked ? rarityColor : AppColors.textSecondary(brightness),
+                  color: isUnlocked
+                      ? rarityColor
+                      : AppColors.textSecondary(brightness),
                 ),
               ),
             ),
@@ -252,7 +262,8 @@ class TrophyRoomScreen extends ConsumerWidget {
     );
   }
 
-  void _showAchievementDetailSheet(BuildContext context, Achievement achievement, bool isUnlocked, String Function(String) t) {
+  void _showAchievementDetailSheet(BuildContext context, Reward reward,
+      bool isUnlocked, String Function(String) t, WidgetRef ref) {
     final brightness = Theme.of(context).brightness;
 
     showModalBottomSheet(
@@ -275,7 +286,7 @@ class TrophyRoomScreen extends ConsumerWidget {
                   width: 50.0,
                   height: 4.0,
                   decoration: BoxDecoration(
-                    color: AppColors.textSecondary(brightness).withOpacity(0.3),
+                    color: AppColors.textSecondary(brightness).withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2.0),
                   ),
                 ),
@@ -285,7 +296,7 @@ class TrophyRoomScreen extends ConsumerWidget {
               // Giant emoji badge
               Center(
                 child: Text(
-                  achievement.icon,
+                  reward.icon,
                   style: const TextStyle(
                     fontSize: 64.0,
                   ),
@@ -294,24 +305,26 @@ class TrophyRoomScreen extends ConsumerWidget {
               const SizedBox(height: 20.0),
 
               Text(
-                achievement.titleUa.toUpperCase(),
+                reward.getTitle(ref.watch(localeProvider)).toUpperCase(),
                 textAlign: TextAlign.center,
                 style: AppTypography.h2(context),
               ),
               const SizedBox(height: 6.0),
               Text(
-                achievement.rarity.name.toUpperCase(),
+                reward.rarity.name.toUpperCase(),
                 textAlign: TextAlign.center,
                 style: AppTypography.overline(
                   context,
-                  color: isUnlocked ? AppColors.accent : AppColors.textSecondary(brightness),
+                  color: isUnlocked
+                      ? AppColors.accent
+                      : AppColors.textSecondary(brightness),
                 ),
               ),
               const SizedBox(height: 16.0),
 
               // Description
               Text(
-                achievement.descriptionUa,
+                reward.getDescription(ref.watch(localeProvider)),
                 textAlign: TextAlign.center,
                 style: AppTypography.body(context),
               ),

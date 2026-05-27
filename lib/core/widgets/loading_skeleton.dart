@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import '../theme/app_theme.dart';
 import 'surface_card.dart';
 
 /// A single skeleton line placeholder with a subtle shimmer animation.
@@ -72,7 +71,7 @@ class _SkeletonLineState extends State<SkeletonLine>
                       widthFactor: 0.4,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppColors.border(brightness).withOpacity(0.5),
+                          color: AppColors.border(brightness).withValues(alpha: 0.5),
                         ),
                       ),
                     ),

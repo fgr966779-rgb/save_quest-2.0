@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -9,7 +8,7 @@ class GoalDependency {
   final String parentGoalId;
   final bool isUnlocked;
 
-  const GoalDependency({
+  GoalDependency({
     String? id,
     required this.childGoalId,
     required this.parentGoalId,

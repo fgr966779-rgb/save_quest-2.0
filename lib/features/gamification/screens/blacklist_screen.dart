@@ -9,7 +9,7 @@ import '../../../core/providers/providers.dart';
 import '../../../core/widgets/surface_card.dart';
 
 class BlacklistScreen extends ConsumerStatefulWidget {
-  const BlacklistScreen({Key? key}) : super(key: key);
+  const BlacklistScreen({super.key});
 
   @override
   ConsumerState<BlacklistScreen> createState() => _BlacklistScreenState();
@@ -114,7 +114,7 @@ class _BlacklistScreenState extends ConsumerState<BlacklistScreen> {
                 children: blacklist.map((cat) {
                   return Chip(
                     label: Text(cat, style: TextStyle(color: AppColors.textPrimary(brightness), fontWeight: FontWeight.bold)),
-                    backgroundColor: AppColors.error.withOpacity(0.2),
+                    backgroundColor: AppColors.error.withValues(alpha: 0.2),
                     side: const BorderSide(color: AppColors.error),
                     deleteIconColor: AppColors.textPrimary(brightness),
                     onDeleted: () => _removeCategory(cat),

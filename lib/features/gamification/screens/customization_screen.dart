@@ -6,10 +6,9 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
-import '../../../data/database.dart';
 
 class CustomizationScreen extends ConsumerWidget {
-  const CustomizationScreen({Key? key}) : super(key: key);
+  const CustomizationScreen({super.key});
 
   void _selectTheme(BuildContext context, WidgetRef ref, String theme) async {
     final db = ref.read(databaseProvider);
@@ -62,32 +61,38 @@ class CustomizationScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16.0),
               _buildThemeOption(
-                context, ref, 
-                id: 'default', 
-                name: t('custom_theme_neon'), 
-                color: AppColors.accent, 
+                context,
+                ref,
+                id: 'default',
+                name: t('custom_theme_neon'),
+                color: AppColors.accent,
                 isSelected: currentTheme == 'default',
                 isUnlocked: true,
+                locale: currentLocale,
               ),
               const SizedBox(height: 12.0),
               _buildThemeOption(
-                context, ref, 
-                id: 'gold', 
-                name: t('custom_theme_gold'), 
-                color: AppColors.warning, 
+                context,
+                ref,
+                id: 'gold',
+                name: t('custom_theme_gold'),
+                color: AppColors.warning,
                 isSelected: currentTheme == 'gold',
                 isUnlocked: unlockedLevel >= 5,
                 unlockCondition: t('custom_unlock_level_5'),
+                locale: currentLocale,
               ),
               const SizedBox(height: 12.0),
               _buildThemeOption(
-                context, ref, 
-                id: 'crimson', 
-                name: t('custom_theme_crimson'), 
-                color: AppColors.error, 
+                context,
+                ref,
+                id: 'crimson',
+                name: t('custom_theme_crimson'),
+                color: AppColors.error,
                 isSelected: currentTheme == 'crimson',
                 isUnlocked: unlockedLevel >= 10,
                 unlockCondition: t('custom_unlock_level_10'),
+                locale: currentLocale,
               ),
               const SizedBox(height: 32.0),
               
@@ -142,15 +147,19 @@ class CustomizationScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildThemeOption(BuildContext context, WidgetRef ref, {
+  Widget _buildThemeOption(
+    BuildContext context,
+    WidgetRef ref, {
     required String id,
     required String name,
     required Color color,
     required bool isSelected,
     required bool isUnlocked,
     String? unlockCondition,
+    required String locale,
   }) {
-    final brightness = Theme.of(context).brightness);
+    final brightness = Theme.of(context).brightness;
+    String t(String key) => AppLocalizations.get(locale, key);
 
     return Opacity(
       opacity: isUnlocked ? 1.0 : 0.5,

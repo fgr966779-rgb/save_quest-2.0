@@ -8,7 +8,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/providers/l10n.dart';
 import '../../../core/widgets/surface_card.dart';
-import '../../../core/widgets/app_button.dart';
 
 /// Savings Calculator — pure math, no Drift.
 /// Given a target amount and a term (days/weeks/months),
@@ -93,7 +92,7 @@ class _SavingsCalculatorScreenState
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final locale = ref.read(localeProvider);
-    final t = (String key) => AppLocalizations.get(locale, key);
+    String t(String key) => AppLocalizations.get(locale, key);
     final currency = ref.read(settingsServiceProvider).currency;
     final result = _result;
 
@@ -217,7 +216,7 @@ class _SavingsCalculatorScreenState
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.accent.withOpacity(0.12)
+                            ? AppColors.accent.withValues(alpha: 0.12)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(8.0),
                         border: Border.all(
@@ -282,25 +281,24 @@ class _SavingsCalculatorScreenState
               // Summary
               SurfaceCard(
                 child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline_rounded,
-                        size: 20,
-                        color: AppColors.textSecondary(brightness),
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 20,
+                      color: AppColors.textSecondary(brightness),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        '${t('calc_title')}: $_termValue ${switch (_termUnit) {
+                          _TermUnit.days => t('calc_days'),
+                          _TermUnit.weeks => t('calc_weeks'),
+                          _TermUnit.months => t('calc_months'),
+                        }} = ${result.totalDays} ${t('calc_days')}',
+                        style: AppTypography.bodySmall(context),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          '${t('calc_title')}: $_termValue ${switch (_termUnit) {
-                            _TermUnit.days => t('calc_days'),
-                            _TermUnit.weeks => t('calc_weeks'),
-                            _TermUnit.months => t('calc_months'),
-                          }} = ${result.totalDays} ${t('calc_days')}',
-                          style: AppTypography.bodySmall(context),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ] else ...[
@@ -394,7 +392,7 @@ class _ResultCard extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
+              color: accentColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: accentColor, size: 22),

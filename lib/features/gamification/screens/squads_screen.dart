@@ -5,13 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
-import '../../../core/providers/providers.dart';
 import '../../../core/widgets/surface_card.dart';
 import '../providers/joint_goals_provider.dart';
 import '../widgets/create_joint_goal_dialog.dart';
 
 class SquadsScreen extends ConsumerWidget {
-  const SquadsScreen({Key? key}) : super(key: key);
+  const SquadsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

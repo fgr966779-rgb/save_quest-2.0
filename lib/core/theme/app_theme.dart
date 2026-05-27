@@ -82,8 +82,6 @@ class AppTheme {
             surface: AppColors.darkSurface,
             onSurface: AppColors.textDarkPrimary,
             onSurfaceVariant: AppColors.textDarkSecondary,
-            background: AppColors.darkBackground,
-            onBackground: AppColors.textDarkPrimary,
             error: AppColors.error,
             onError: Colors.white,
             errorContainer: AppColors.errorDark,
@@ -100,8 +98,6 @@ class AppTheme {
             surface: AppColors.lightSurface,
             onSurface: AppColors.textLightPrimary,
             onSurfaceVariant: AppColors.textLightSecondary,
-            background: AppColors.lightBackground,
-            onBackground: AppColors.textLightPrimary,
             error: AppColors.error,
             onError: Colors.white,
             errorContainer: AppColors.errorMuted,
@@ -287,7 +283,7 @@ class AppTheme {
       // --- Text Selection ---
       textSelectionTheme: TextSelectionThemeData(
         cursorColor: AppColors.accent,
-        selectionColor: AppColors.accent.withOpacity(0.3),
+        selectionColor: AppColors.accent.withValues(alpha: 0.3),
         selectionHandleColor: AppColors.accent,
       ),
 
