@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/openrouter_service.dart';
-import '../../data/database.dart';
 import '../../data/settings_service.dart';
 import '../utils/money_utils.dart';
 import 'providers.dart';

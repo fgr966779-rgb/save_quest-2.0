@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
-import '../theme/app_theme.dart';
 
 /// Clean allocation slider between two goals.
 /// Replaces old SplitSlider. No Orbitron font.
@@ -114,7 +113,7 @@ class SplitSlider extends StatelessWidget {
                   elevation: 2,
                   pressedElevation: 4,
                 ),
-                overlayColor: AppColors.accent.withOpacity(0.1),
+                overlayColor: AppColors.accent.withValues(alpha: 0.1),
                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
               ),
               child: Slider(

@@ -6,7 +6,6 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
-import '../../../core/providers/providers.dart';
 import '../../../core/widgets/surface_card.dart';
 import '../../../core/widgets/app_button.dart';
 import '../providers/leaderboard_provider.dart';
@@ -122,7 +121,6 @@ class _WeeklyTab extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: SurfaceCard(
         padding: const EdgeInsets.all(16),
-        borderColor: AppColors.accent.withOpacity(0.3),
         child: Row(
           children: [
             Expanded(
@@ -208,7 +206,6 @@ class _AllianceTab extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: SurfaceCard(
               padding: const EdgeInsets.all(12),
-              borderColor: AppColors.warning.withOpacity(0.3),
               child: Row(
                 children: [
                   Icon(Icons.lock, size: 18, color: AppColors.warning),

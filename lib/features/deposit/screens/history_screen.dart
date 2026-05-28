@@ -7,9 +7,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
-import '../../../core/providers/savings_notifier.dart';
 import '../../../core/utils/money_utils.dart';
-import '../../../core/widgets/surface_card.dart';
 import '../../../core/widgets/empty_state.dart';
 import '../../../core/widgets/loading_skeleton.dart';
 import '../../../data/database.dart';
@@ -121,7 +119,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                       goalsAsync.value ?? [],
                                       locale,
                                     ))
-                                .toList(),
+                                ,
                           ],
                         );
                       },
@@ -183,7 +181,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           decoration: BoxDecoration(
             color: active
-                ? AppColors.accent.withOpacity(0.1)
+                ? AppColors.accent.withValues(alpha: 0.1)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(8.0),
             border: Border.all(

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../../../core/widgets/surface_card.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/providers/l10n.dart';
@@ -169,7 +168,7 @@ class _DailySpinDialogState extends ConsumerState<DailySpinDialog>
                     child: Center(
                       child: Icon(
                         Icons.star,
-                        color: AppColors.accent.withOpacity(0.3),
+                        color: AppColors.accent.withValues(alpha: 0.3),
                         size: 100,
                       ),
                     ),

@@ -5,7 +5,7 @@
 ///   DB  → UI  : use [centsToDisplay]  (int → double)
 ///   UI  → DB  : use [displayToCents]  (double → int)
 ///   UI display: use [formatAmount]    (int → String like "1 250.50")
-library money_utils;
+library;
 
 import 'package:intl/intl.dart';
 

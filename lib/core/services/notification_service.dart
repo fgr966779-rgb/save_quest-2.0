@@ -96,6 +96,8 @@ class NotificationService {
       details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     debugPrint('Scheduled daily reminder at $hour:$minute');
@@ -166,10 +168,11 @@ class NotificationService {
   }
 
   /// Get the next occurrence of the given time (today or tomorrow).
-  TZDateTime _nextInstanceOfTime(int hour, int minute) {
+  tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
     final location = tz.local;
-    final now = TZDateTime.now(location);
-    var scheduled = TZDateTime(location, now.year, now.month, now.day, hour, minute);
+    final now = tz.TZDateTime.now(location);
+    var scheduled =
+        tz.TZDateTime(location, now.year, now.month, now.day, hour, minute);
     if (scheduled.isBefore(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }

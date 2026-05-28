@@ -1,6 +1,4 @@
 // FILE: lib/core/services/notification_center_service.dart
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 /// In-app notification model (stored in Hive, not Drift — avoids build_runner).

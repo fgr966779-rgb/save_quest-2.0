@@ -1,6 +1,5 @@
 import 'dart:math' show log;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/database.dart';
 import 'providers.dart';
 
 /// Financial health score model.

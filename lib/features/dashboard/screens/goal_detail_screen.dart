@@ -15,20 +15,17 @@ class GoalDetailScreen extends ConsumerWidget {
   final int goalId; // We support parsing as string keys 'goal_a' or 'goal_b'
   final String goalStrId;
 
-  GoalDetailScreen({
-    Key? key,
-    required int goalId,
-  })  : goalId = goalId,
-        goalStrId = goalId == 0 ? 'goal_a' : 'goal_a', // Backwards compatible fallback
-        super(key: key);
+  const GoalDetailScreen({
+    super.key,
+    required this.goalId,
+  }) : goalStrId = goalId == 0 ? 'goal_a' : 'goal_b';
 
   // String constructor variant
   const GoalDetailScreen.fromString({
-    Key? key,
+    super.key,
     required String id,
   })  : goalId = id == 'goal_a' ? 0 : 1,
-        goalStrId = id,
-        super(key: key);
+        goalStrId = id;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -198,7 +195,6 @@ class GoalDetailScreen extends ConsumerWidget {
 
   Widget _buildMetricColumn(BuildContext context, String label, String value) {
     final brightness = Theme.of(context).brightness;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -338,9 +334,9 @@ class GoalDetailScreen extends ConsumerWidget {
                     width: 40.0,
                     height: 40.0,
                     decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.08),
+                      color: accentColor.withValues(alpha: 0.08),
                       shape: BoxShape.circle,
-                      border: Border.all(color: accentColor.withOpacity(0.4), width: 1.0),
+                      border: Border.all(color: accentColor.withValues(alpha: 0.4), width: 1.0),
                     ),
                     child: Icon(Icons.arrow_downward_rounded, color: accentColor, size: 20.0),
                   ),

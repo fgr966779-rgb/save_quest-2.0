@@ -150,7 +150,7 @@ class _ConcentricRingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     const startAngle = -math.pi / 2;
-    final trackColor = AppColors.border(brightness).withOpacity(0.3);
+    final trackColor = AppColors.border(brightness).withValues(alpha: 0.3);
 
     // ── Outer Ring (Goal A) ──
     final outerRadius = (size.width / 2) - (strokeWidth / 2);

@@ -44,7 +44,7 @@ class _WeeklyChallengesScreenState
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final locale = ref.read(localeProvider);
-    final t = (String key) => AppLocalizations.get(locale, key);
+    String t(String key) => AppLocalizations.get(locale, key);
     final currency = ref.read(settingsServiceProvider).currency;
 
     final active = _challenges.where((c) => !c.isCompleted && !c.isExpired).toList();
@@ -68,7 +68,7 @@ class _WeeklyChallengesScreenState
         actions: [
           IconButton(
             icon: const Icon(Icons.add_rounded),
-            onPressed: () => _showCreateSheet(context, t, currency),
+            onPressed: () => _showCreateSheet(context, currency),
           ),
         ],
       ),
@@ -78,8 +78,9 @@ class _WeeklyChallengesScreenState
         },
         child: _challenges.isEmpty
             ? EmptyState(
-                icon: Icons.emoji_events_rounded,
+                icon: const Icon(Icons.emoji_events_rounded),
                 title: t('challenge_empty'),
+                description: '',
               )
             : ListView(
                 padding: const EdgeInsets.symmetric(
@@ -127,8 +128,7 @@ class _WeeklyChallengesScreenState
                           child: _ChallengeCard(
                             challenge: c,
                             currency: currency,
-                            onTap: () => _showEditSheet(
-                                context, t, currency, c),
+                            onTap: () => _showEditSheet(context, currency, c),
                             onDelete: () => _deleteChallenge(c),
                           ),
                         )),
@@ -177,7 +177,7 @@ class _WeeklyChallengesScreenState
               ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateSheet(context, t, currency),
+        onPressed: () => _showCreateSheet(context, currency),
         backgroundColor: AppColors.accent,
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -186,8 +186,7 @@ class _WeeklyChallengesScreenState
 
   // ── CRUD Actions ──────────────────────────────────────────────────────
 
-  Future<void> _showCreateSheet(
-      BuildContext context, String Function(String) t, String currency) async {
+  Future<void> _showCreateSheet(BuildContext context, String currency) async {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -195,7 +194,9 @@ class _WeeklyChallengesScreenState
         currency: currency,
         onSave: (title, target, deadline) async {
           await _service.create(WeeklyChallenge(
+            id: const Uuid().v4(),
             title: title,
+            description: title,
             targetAmount: target,
             deadline: deadline,
           ));
@@ -206,8 +207,8 @@ class _WeeklyChallengesScreenState
     );
   }
 
-  Future<void> _showEditSheet(BuildContext context, String Function(String) t,
-      String currency, WeeklyChallenge challenge) async {
+  Future<void> _showEditSheet(
+      BuildContext context, String currency, WeeklyChallenge challenge) async {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -270,7 +271,7 @@ class _CreateChallengeSheetState extends ConsumerState<_CreateChallengeSheet> {
     _titleCtrl = TextEditingController(text: widget.initialTitle ?? '');
     _targetCtrl = TextEditingController(
         text: widget.initialTarget != null
-            ? MoneyUtils.formatKopecks(widget.initialTarget!)
+            ? centsToDisplay(widget.initialTarget!).toStringAsFixed(0)
             : '');
     _deadline = widget.initialDeadline ??
         DateTime.now().add(const Duration(days: 7));
@@ -312,7 +313,7 @@ class _CreateChallengeSheetState extends ConsumerState<_CreateChallengeSheet> {
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final locale = ref.read(localeProvider);
-    final t = (String key) => AppLocalizations.get(locale, key);
+    String t(String key) => AppLocalizations.get(locale, key);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -476,6 +477,15 @@ class _ChallengeCard extends StatelessWidget {
                 ),
             ],
           ),
+          if (challenge.description.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              challenge.description,
+              style: AppTypography.caption(context),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
 
           // Progress
           const SizedBox(height: 10),
@@ -495,7 +505,7 @@ class _ChallengeCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${MoneyUtils.formatKopecks(challenge.currentAmount)} / ${MoneyUtils.formatKopecks(challenge.targetAmount)} $currency',
+                '${centsToDisplay(challenge.currentAmount).toStringAsFixed(0)} / ${centsToDisplay(challenge.targetAmount).toStringAsFixed(0)} $currency',
                 style: AppTypography.caption(context),
               ),
               Text(

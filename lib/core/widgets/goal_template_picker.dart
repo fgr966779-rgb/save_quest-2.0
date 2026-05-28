@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../constants/app_colors.dart';
-import '../../constants/app_text_styles.dart';
-import '../../theme/app_theme.dart';
-import '../../providers/l10n.dart';
-import '../../providers/providers.dart';
-import '../../models/goal_template.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_text_styles.dart';
+import '../providers/l10n.dart';
+import '../providers/providers.dart';
+import '../models/goal_template.dart';
 import '../widgets/surface_card.dart';
-import '../widgets/app_button.dart';
 
 /// Bottom sheet showing predefined goal templates.
 /// When a template is selected, calls [onSelected] with the name and target amount.
@@ -37,7 +35,7 @@ class GoalTemplatePicker extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final brightness = Theme.of(context).brightness;
     final locale = ref.watch(localeProvider);
-    final t = (String key) => AppLocalizations.get(locale, key);
+    String t(String key) => AppLocalizations.get(locale, key);
     final currency = ref.watch(settingsServiceProvider).currency;
 
     return DraggableScrollableSheet(
@@ -139,7 +137,7 @@ class _TemplateCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.08),
+                  color: AppColors.accent.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 alignment: Alignment.center,
@@ -183,7 +181,7 @@ class _TemplateCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.border(brightness).withOpacity(0.3),
+                  color: AppColors.border(brightness).withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(

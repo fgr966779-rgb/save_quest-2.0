@@ -5,13 +5,13 @@ import 'package:drift/drift.dart' as drift;
 import '../../data/database.dart';
 import '../providers/providers.dart';
 import '../utils/money_utils.dart';
-import '../../features/gamification/models/achievement_model.dart';
-import '../../features/gamification/models/badge_model.dart';
-import '../../features/gamification/screens/skill_tree_screen.dart' show allSkillNodes;
+import '../../features/gamification/models/reward_model.dart';
 import '../../core/models/avatar_config.dart';
-import '../providers/events_notifier.dart';
 import '../../features/gamification/providers/bounty_provider.dart';
 import '../../features/gamification/providers/quest_provider.dart';
+import '../services/gamification/xp_service.dart';
+import '../services/gamification/streak_service.dart';
+import '../services/gamification/achievement_service.dart';
 
 enum ActionContext {
   standard,
@@ -30,7 +30,7 @@ class DepositResult {
   final int bonusXp;
   final int earnedCredits;
   final Lootbox? earnedLootbox;
-  final List<Achievement> newlyUnlockedAchievements;
+  final List<Reward> newlyUnlockedRewards;
   final int hackerXpGained;
   final int magnateXpGained;
   final int resilienceXpGained;
@@ -46,7 +46,7 @@ class DepositResult {
     required this.bonusXp,
     required this.earnedCredits,
     this.earnedLootbox,
-    required this.newlyUnlockedAchievements,
+    required this.newlyUnlockedRewards,
     required this.hackerXpGained,
     required this.magnateXpGained,
     required this.resilienceXpGained,
@@ -58,76 +58,6 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
   final Ref _ref;
 
   SavingsNotifier(this._db, this._ref) : super(const AsyncValue.data(null));
-
-  // Formula: XP required for level N = 1000 * N^1.5
-  static int xpRequiredForLevel(int level) {
-    return (1000 * math.pow(level, 1.5)).toInt();
-  }
-
-  static Map<String, dynamic> calculateStreak({
-    required DateTime? lastDepositDate,
-    required int currentStreak,
-    required int maxStreak,
-    required int freezeTokens,
-    String? playerClass,
-    Set<String> unlockedSkillIds = const {},
-  }) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    if (lastDepositDate == null) {
-      return {
-        'streak': 1,
-        'maxStreak': math.max(1, maxStreak),
-        'freezeUsed': false,
-        'freezeTokens': freezeTokens,
-      };
-    }
-
-    final last = DateTime(lastDepositDate.year, lastDepositDate.month, lastDepositDate.day);
-    final difference = today.difference(last).inDays;
-
-    if (difference == 0) {
-      return {
-        'streak': currentStreak,
-        'maxStreak': maxStreak,
-        'freezeUsed': false,
-        'freezeTokens': freezeTokens,
-      };
-    } else if (difference == 1) {
-      final newStreak = currentStreak + 1;
-      return {
-        'streak': newStreak,
-        'maxStreak': math.max(newStreak, maxStreak),
-        'freezeUsed': false,
-        'freezeTokens': freezeTokens,
-      };
-    } else {
-      // resilience_shield: auto-protect once every 14 days (stored separately; simplified here as a bonus freeze)
-      final hasShield = unlockedSkillIds.contains('resilience_shield');
-      final effectiveFreezes = hasShield ? math.max(1, freezeTokens) : freezeTokens;
-
-      if (effectiveFreezes > 0) {
-        final newStreak = currentStreak + 1;
-        bool consumeToken = true;
-        
-        final actualConsume = consumeToken && !hasShield;
-        return {
-          'streak': newStreak,
-          'maxStreak': math.max(newStreak, maxStreak),
-          'freezeUsed': true,
-          'freezeTokens': actualConsume ? freezeTokens - 1 : freezeTokens,
-        };
-      } else {
-        return {
-          'streak': 1,
-          'maxStreak': maxStreak,
-          'freezeUsed': false,
-          'freezeTokens': freezeTokens,
-        };
-      }
-    }
-  }
 
   // ==========================================
   // TRANSACTION: CONFIRM DEPOSIT
@@ -165,7 +95,7 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
       // Single atomic transaction: savings + gamification
       // ----------------------------------------
       late UserProfile updatedProfile;
-      List<Achievement> newlyUnlocked = [];
+      List<Reward> newlyUnlocked = [];
       late int xpGained;
       late bool leveledUp;
       late int finalLevel;
@@ -201,7 +131,7 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
         final unlockedSkillIds = unlockedSkillList.map((s) => s.id).toSet();
 
         // 4. Streak calculation
-        final streakResults = calculateStreak(
+        final streakResults = StreakService.calculateStreak(
           lastDepositDate: profile.lastDepositDate,
           currentStreak: profile.streakCount,
           maxStreak: profile.maxStreak,
@@ -216,32 +146,19 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
         final currentFreezes = streakResults['freezeTokens'] as int;
 
         // 5. XP multiplier (streak-based)
-        double multiplier = 1.0;
-        if (newStreak >= 30)      multiplier = 1.5;
-        else if (newStreak >= 14) multiplier = 1.3;
-        else if (newStreak >= 7)  multiplier = 1.2;
-        else if (newStreak >= 3)  multiplier = 1.1;
+        double multiplier = XpService.calculateStreakMultiplier(newStreak);
 
         // Combine streak multiplier with Cyber-Event multiplier
         if (activeEvent != null && activeEvent.isActive) {
           multiplier *= activeEvent.xpMultiplier;
         }
 
-        xpGained = (100 * multiplier).toInt();
-
-        // ── Class bonuses ──
-        if (profile.playerClass == 'warrior') {
-          xpGained = (xpGained * 1.10).toInt(); // Warrior: +10% XP
-        }
-        if (profile.playerClass == 'rogue') {
-          xpGained += 25; // Rogue: Flat +25 XP
-        }
-
-        // ── Skill bonuses ──
-        // magnate_xp_boost: +5% XP
-        if (unlockedSkillIds.contains('magnate_xp_boost')) {
-          xpGained = (xpGained * 1.05).toInt();
-        }
+        xpGained = XpService.calculateXpGained(
+          baseAmount: 100,
+          multiplier: multiplier,
+          playerClass: profile.playerClass,
+          hasXpBoostSkill: unlockedSkillIds.contains('magnate_xp_boost'),
+        );
 
         // Critical Hit logic
         double baseCritChance = profile.playerClass == 'mage' ? 0.25 : 0.10;
@@ -251,13 +168,13 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
         }
         isCritical = math.Random().nextDouble() < baseCritChance;
         bonusXp = isCritical ? xpGained : 0;
-        
+
         var newXP = profile.xp + xpGained + bonusXp;
         var currentLevel = profile.level;
         leveledUp = false;
 
         // 5. Level-up loop
-        while (newXP >= xpRequiredForLevel(currentLevel)) {
+        while (newXP >= XpService.xpRequiredForLevel(currentLevel)) {
           currentLevel++;
           leveledUp = true;
         }
@@ -310,18 +227,62 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
         if (goalANow != null) totalSavedCents += goalANow.currentAmount;
         if (goalBNow != null) totalSavedCents += goalBNow.currentAmount;
 
-        // Badge check
-        final newBadges = checkNewBadges(
-          existingBadges: existingConfig.badges,
+
+        // 5b. Squads update
+        final squads = await _db.select(_db.squads).get();
+        if (squads.isNotEmpty) {
+          final squad = squads.first;
+          await (_db.update(_db.squads)..where((t) => t.id.equals(squad.id))).write(
+            SquadsCompanion(totalXp: drift.Value(squad.totalXp + xpGained + bonusXp)),
+          );
+        }
+
+        // 6. Achievement validation (inside same transaction)
+        final unlockedList = await _db.getUnlockedAchievements();
+        final unlockedIds = unlockedList.map((e) => e.id).toSet();
+
+        // Lootbox drop logic
+        final rnd = math.Random().nextDouble();
+        if (rnd < 0.05) {
+          earnedLootbox = Lootbox(
+              id: const Uuid().v4(),
+              rarity: 'rare',
+              isOpened: false,
+              earnedAt: now);
+        } else if (rnd < 0.25) {
+          earnedLootbox = Lootbox(
+              id: const Uuid().v4(),
+              rarity: 'common',
+              isOpened: false,
+              earnedAt: now);
+        }
+
+        if (earnedLootbox != null) {
+          await _db.into(_db.lootboxes).insert(earnedLootbox!);
+        }
+
+        final allDeps = await _db.getAllDeposits();
+        newlyUnlocked = await AchievementService.validateRewards(
+          db: _db,
           newStreak: newStreak,
           totalSavedCents: totalSavedCents,
           depositAmountCents: totalCents,
-          hour: now.hour,
-          depositsToday: 1, // simplified: no daily counter yet
+          totalDepositsCount: allDeps.length,
+          depositsToday: 1, // simplified
+          currentLevel: finalLevel,
+          freezeUsed: freezeUsed,
+          goalAPercent: goalAPercent,
+          now: now,
+          unlockedIds: unlockedIds,
         );
-        final allNewBadges = [...(existingConfig.badges ?? <String>[]), ...newBadges];
 
-        // Save credits + badges into AvatarConfig
+        final allNewBadges = [
+          ...existingConfig.badges,
+          ...newlyUnlocked
+              .where((r) => r.type == RewardType.badge)
+              .map((r) => r.id)
+        ];
+
         final updatedConfig = existingConfig.copyWith(
           credits: existingConfig.credits + earnedCredits,
           badges: allNewBadges,
@@ -349,121 +310,6 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
           crystalsBalance: profile.crystalsBalance,
         );
         await _db.insertUserProfile(updatedProfile);
-
-        // 5b. Squads update
-        final squads = await _db.select(_db.squads).get();
-        if (squads.isNotEmpty) {
-          final squad = squads.first;
-          await (_db.update(_db.squads)..where((t) => t.id.equals(squad.id))).write(
-            SquadsCompanion(totalXp: drift.Value(squad.totalXp + xpGained + bonusXp)),
-          );
-        }
-
-        // 6. Achievement validation (inside same transaction)
-        final unlockedList = await _db.getUnlockedAchievements();
-        final unlockedIds = unlockedList.map((e) => e.id).toSet();
-        
-        // Lootbox drop logic
-        final rnd = math.Random().nextDouble();
-        if (rnd < 0.05) {
-          earnedLootbox = Lootbox(id: const Uuid().v4(), rarity: 'rare', isOpened: false, earnedAt: now);
-        } else if (rnd < 0.25) {
-          earnedLootbox = Lootbox(id: const Uuid().v4(), rarity: 'common', isOpened: false, earnedAt: now);
-        }
-        
-        if (earnedLootbox != null) {
-          await _db.into(_db.lootboxes).insert(earnedLootbox!);
-        }
-        final goalA = await _db.getGoalById('goal_a');
-        final goalB = await _db.getGoalById('goal_b');
-
-        // Total saved in kopecks (for achievements)
-        int totalSavedCentsAch = 0;
-        if (goalA != null) totalSavedCentsAch += goalA.currentAmount;
-        if (goalB != null) totalSavedCentsAch += goalB.currentAmount;
-
-        for (final ach in allAchievements) {
-          if (unlockedIds.contains(ach.id)) continue;
-
-          bool meetsCriteria = false;
-          switch (ach.id) {
-            case 'first_step':
-              meetsCriteria = true;
-              break;
-            case 'cyber_saver_3':
-              meetsCriteria = newStreak >= 3;
-              break;
-            case 'neon_streak_7':
-              meetsCriteria = newStreak >= 7;
-              break;
-            case 'golden_flame_14':
-              meetsCriteria = newStreak >= 14;
-              break;
-            case 'immortal_fire_30':
-              meetsCriteria = newStreak >= 30;
-              break;
-            case 'halfway_ps5':
-              if (goalA != null) {
-                meetsCriteria = goalA.currentAmount >= (goalA.targetAmount ~/ 2);
-              }
-              break;
-            case 'halfway_monitor':
-              if (goalB != null) {
-                meetsCriteria = goalB.currentAmount >= (goalB.targetAmount ~/ 2);
-              }
-              break;
-            case 'ps5_acquired':
-              if (goalA != null) {
-                meetsCriteria = goalA.currentAmount >= goalA.targetAmount;
-              }
-              break;
-            case 'monitor_acquired':
-              if (goalB != null) {
-                meetsCriteria = goalB.currentAmount >= goalB.targetAmount;
-              }
-              break;
-            case 'split_master':
-              meetsCriteria = goalAPercent == 50.0;
-              break;
-            case 'laser_focus_a':
-              meetsCriteria = goalAPercent == 100.0;
-              break;
-            case 'laser_focus_b':
-              meetsCriteria = goalAPercent == 0.0;
-              break;
-            case 'freeze_shield':
-              meetsCriteria = freezeUsed;
-              break;
-            case 'xp_hoarder_1':
-              meetsCriteria = currentLevel >= 5;
-              break;
-            case 'xp_legend':
-              meetsCriteria = currentLevel >= 10;
-              break;
-            case 'night_owl':
-              meetsCriteria = now.hour >= 0 && now.hour < 5;
-              break;
-            case 'centurion':
-              // 100 UAH = 10000 kopecks
-              meetsCriteria = totalCents >= 10000;
-              break;
-            case 'big_boss':
-              // 1000 UAH = 100000 kopecks
-              meetsCriteria = totalSavedCentsAch >= 100000;
-              break;
-            case 'serial_investor':
-              // Check total deposits count
-              final allDeps = await _db.getAllDeposits();
-              meetsCriteria = allDeps.length >= 10;
-              break;
-            // analytics_master and gambling_hacker are tracked elsewhere
-          }
-
-          if (meetsCriteria) {
-            await _db.unlockAchievement(ach.id);
-            newlyUnlocked.add(ach);
-          }
-        }
       }); // end transaction
 
       // Check Bounty
@@ -484,7 +330,7 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
         bonusXp: bonusXp,
         earnedCredits: earnedCredits,
         earnedLootbox: earnedLootbox,
-        newlyUnlockedAchievements: newlyUnlocked,
+        newlyUnlockedRewards: newlyUnlocked,
         hackerXpGained: hackerXpInc,
         magnateXpGained: magnateXpInc,
         resilienceXpGained: resilienceXpInc,

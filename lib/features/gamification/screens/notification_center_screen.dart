@@ -1,14 +1,11 @@
 // FILE: lib/features/gamification/screens/notification_center_screen.dart
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
-import '../../../core/providers/providers.dart';
 import '../../../core/services/notification_center_service.dart';
 import '../../../core/widgets/surface_card.dart';
 
@@ -82,7 +79,7 @@ class _NotificationCenterScreenState
             ),
             IconButton(
               icon: Icon(Icons.delete_sweep_outlined,
-                  color: AppColors.error.withOpacity(0.7)),
+                  color: AppColors.error.withValues(alpha: 0.7)),
               tooltip: t('notif_delete_all'),
               onPressed: _deleteAll,
             ),
@@ -97,7 +94,7 @@ class _NotificationCenterScreenState
     );
   }
 
-  Widget _buildEmpty(String t(String k), Brightness brightness) {
+  Widget _buildEmpty(String Function(String k) t, Brightness brightness) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -119,7 +116,7 @@ class _NotificationCenterScreenState
   }
 
   Widget _buildList(
-      String t(String k), Brightness brightness, int unreadCount) {
+      String Function(String k) t, Brightness brightness, int unreadCount) {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: _notifications.length,
@@ -132,14 +129,12 @@ class _NotificationCenterScreenState
   }
 
   Widget _buildTile(
-      AppNotification notif, String t(String k), Brightness brightness) {
+      AppNotification notif, String Function(String k) t, Brightness brightness) {
     final iconData = _getIconForType(notif.type);
     final iconColor = _getColorForType(notif.type);
 
     return SurfaceCard(
       padding: const EdgeInsets.all(16),
-      borderColor:
-          notif.isRead ? null : AppColors.accent.withOpacity(0.3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -147,7 +142,7 @@ class _NotificationCenterScreenState
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(iconData, color: iconColor, size: 20),
@@ -162,7 +157,7 @@ class _NotificationCenterScreenState
                     Expanded(
                       child: Text(
                         notif.title,
-                        style: AppTypography.body(context,
+                        style: AppTypography.body(context).copyWith(
                             fontWeight: notif.isRead
                                 ? FontWeight.w400
                                 : FontWeight.w600),

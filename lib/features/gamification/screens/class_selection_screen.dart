@@ -10,7 +10,7 @@ import '../../../core/providers/providers.dart';
 import '../../../core/widgets/app_button.dart';
 
 class ClassSelectionScreen extends ConsumerWidget {
-  const ClassSelectionScreen({Key? key}) : super(key: key);
+  const ClassSelectionScreen({super.key});
 
   void _selectClass(BuildContext context, WidgetRef ref, String playerClass) async {
     final db = ref.read(databaseProvider);
@@ -158,9 +158,9 @@ class ClassSelectionScreen extends ConsumerWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12.0),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12.0),
-                border: Border.all(color: color.withOpacity(0.3)),
+                border: Border.all(color: color.withValues(alpha: 0.3)),
               ),
               child: Center(
                 child: Text(

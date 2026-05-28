@@ -172,23 +172,27 @@ class _GoalASetupScreenState extends ConsumerState<GoalASetupScreen> {
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _targetController,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
                         decoration: const InputDecoration(
                           hintText: '25000',
                           prefixIcon: Icon(Icons.attach_money_rounded),
                         ),
                         validator: (val) {
                           if (val == null || val.trim().isEmpty) {
-                            return AppLocalizations.get(locale, 'onb_goal_amount_validator');
+                            return AppLocalizations.get(
+                                locale, 'onb_goal_amount_validator');
                           }
                           final numVal = double.tryParse(val);
                           if (numVal == null || numVal <= 0) {
-                            return AppLocalizations.get(locale, 'onb_goal_amount_invalid');
+                            return AppLocalizations.get(
+                                locale, 'onb_goal_amount_invalid');
                           }
                           return null;
                         },
                       ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 20),
                 // Currency selector
@@ -212,7 +216,7 @@ class _GoalASetupScreenState extends ConsumerState<GoalASetupScreen> {
                               horizontal: 20, vertical: 10),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.accent.withOpacity(0.12)
+                                ? AppColors.accent.withValues(alpha: 0.12)
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
@@ -233,11 +237,7 @@ class _GoalASetupScreenState extends ConsumerState<GoalASetupScreen> {
                     );
                   }).toList(),
                 ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 40),
+                const SizedBox(height: 40),
                 // Template picker button
                 AppButton(
                   label: AppLocalizations.get(locale, 'template_btn'),

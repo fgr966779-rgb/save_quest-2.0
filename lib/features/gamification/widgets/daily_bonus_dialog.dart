@@ -15,7 +15,7 @@ class DailyBonusDialog extends ConsumerStatefulWidget {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.8),
+      barrierColor: Colors.black.withValues(alpha: 0.8),
       transitionDuration: const Duration(milliseconds: 400),
       pageBuilder: (context, anim1, anim2) {
         return const DailyBonusDialog();
@@ -133,7 +133,7 @@ class _DailyBonusDialogState extends ConsumerState<DailyBonusDialog> {
                           color: AppColors.accentMutedBg(brightness),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: AppColors.accent.withOpacity(0.3),
+                            color: AppColors.accent.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(

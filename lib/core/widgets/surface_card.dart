@@ -9,6 +9,7 @@ class SurfaceCard extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
   final double borderRadius;
   final Color? color;
+  final Color? borderColor;
 
   const SurfaceCard({
     super.key,
@@ -17,13 +18,14 @@ class SurfaceCard extends StatelessWidget {
     this.margin,
     this.borderRadius = 16,
     this.color,
+    this.borderColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final bgColor = color ?? AppColors.surface(brightness);
-    final borderColor = AppColors.border(brightness);
+    final effectiveBorderColor = borderColor ?? AppColors.border(brightness);
 
     return Container(
       margin: margin,
@@ -31,7 +33,7 @@ class SurfaceCard extends StatelessWidget {
         color: bgColor,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: borderColor,
+          color: effectiveBorderColor,
           width: 1,
         ),
       ),

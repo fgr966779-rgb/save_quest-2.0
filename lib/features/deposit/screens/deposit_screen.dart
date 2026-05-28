@@ -9,7 +9,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
-import '../../../core/providers/savings_notifier.dart';
 import '../../../core/utils/money_utils.dart';
 import '../../../core/widgets/amount_input_pad.dart';
 import '../../../core/widgets/app_button.dart';
@@ -382,7 +381,9 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
                 child: AnimatedBuilder(
                   animation: _successAnimController,
                   builder: (context, _) {
-                    for (var p in _confettiParticles) p.update();
+                    for (var p in _confettiParticles) {
+                      p.update();
+                    }
                     return CustomPaint(
                       painter: ConfettiPainter(
                         particles: _confettiParticles,
@@ -701,7 +702,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
                 const SizedBox(height: 16),
                 ProgressBar(
                   progress: currentProgressA,
-                  color: AppColors.goalA.withOpacity(0.4),
+                  color: AppColors.goalA.withValues(alpha: 0.4),
                   label: AppLocalizations.get(locale, 'dep_progress_current'),
                   trailingText: '${(currentProgressA * 100).toInt()}%',
                 ),
@@ -747,7 +748,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
                 const SizedBox(height: 16),
                 ProgressBar(
                   progress: currentProgressB,
-                  color: AppColors.goalB.withOpacity(0.4),
+                  color: AppColors.goalB.withValues(alpha: 0.4),
                   label: AppLocalizations.get(locale, 'dep_progress_current'),
                   trailingText: '${(currentProgressB * 100).toInt()}%',
                 ),
@@ -890,7 +891,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
                     height: 88,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.success.withOpacity(0.1),
+                      color: AppColors.success.withValues(alpha: 0.1),
                     ),
                     child: const Icon(
                       Icons.check_circle_rounded,
@@ -982,7 +983,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
                       _rewardRow(
                         context,
                         label: AppLocalizations.get(locale, 'dep_reward_lootbox'),
-                        value: '${result!.earnedLootbox!.rarity}',
+                        value: result!.earnedLootbox!.rarity,
                         valueColor: AppColors.accent,
                       ),
                     ],
@@ -1100,7 +1101,7 @@ class ConfettiPainter extends CustomPainter {
     for (final p in particles) {
       if (p.y > 1.2 || p.y < -0.2) continue;
 
-      paint.color = p.color.withOpacity(0.85);
+      paint.color = p.color.withValues(alpha: 0.85);
       final px = p.x * size.width;
       final py = p.y * size.height;
 

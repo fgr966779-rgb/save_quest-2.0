@@ -125,9 +125,9 @@ class BackupService {
   static const String _backupMimeType = 'application/json';
 
   final AppDatabase _db;
-  final SettingsService _settings;
+  final SettingsService? _settings;
 
-  BackupService(this._db, this._settings);
+  BackupService(this._db, [this._settings]);
 
   // ────────────────────────────────────────────
   // EXPORT
@@ -535,6 +535,7 @@ class BackupService {
   // ────────────────────────────────────────────
 
   Map<String, dynamic> _exportSettings() {
+    if (_settings == null) return {};
     return {
       'has_completed_onboarding': _settings.hasCompletedOnboarding,
       'currency': _settings.currency,
@@ -552,6 +553,7 @@ class BackupService {
   }
 
   void _importSettings(Map<String, dynamic> data) {
+    if (_settings == null) return;
     if (data.containsKey('has_completed_onboarding')) {
       _settings.hasCompletedOnboarding =
           data['has_completed_onboarding'] as bool;
@@ -615,7 +617,7 @@ class BackupService {
             .map((g) => g.name)
             .firstOrNull ??
         'Goal B';
-    final currency = _settings.currency;
+    final currency = _settings?.currency ?? '₴';
 
     // 3. Build CSV content
     final buffer = StringBuffer();
@@ -770,7 +772,7 @@ class BackupService {
         // Insert deposit
         await _db.into(_db.deposits).insert(
               Deposit(
-                id: DateTime.now().millisecondsSinceEpoch.toString() + '_$i',
+                id: '${DateTime.now().millisecondsSinceEpoch}_$i',
                 amount: amount.round(),
                 goalAAmount: goalA.round(),
                 goalBAmount: goalB.round(),

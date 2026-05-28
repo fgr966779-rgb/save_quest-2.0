@@ -5,15 +5,13 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/surface_card.dart';
-import '../../../core/widgets/app_button.dart';
 import '../../../core/providers/l10n.dart';
-import '../../../core/providers/providers.dart';
 import '../providers/joint_goals_provider.dart';
 
 class JointGoalDetailScreen extends ConsumerWidget {
   final String goalId;
 
-  const JointGoalDetailScreen({Key? key, required this.goalId}) : super(key: key);
+  const JointGoalDetailScreen({super.key, required this.goalId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,8 +31,9 @@ class JointGoalDetailScreen extends ConsumerWidget {
           style: AppTypography.h3(context, color: AppColors.goalB),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary(brightness), size: 20),
-          onPressed: () => context.pop(),
+          icon: Icon(Icons.arrow_back_ios,
+              color: AppColors.textPrimary(brightness), size: 20),
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: jointGoalsAsync.when(
@@ -86,8 +85,8 @@ class JointGoalDetailScreen extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   AppLocalizations.format(currentLocale, 'squad_collected', {
-                    'current': '${(goal.currentAmount / 100).toStringAsFixed(0)}',
-                    'target': '${(goal.targetAmount / 100).toStringAsFixed(0)}',
+                    'current': (goal.currentAmount / 100).toStringAsFixed(0),
+                    'target': (goal.targetAmount / 100).toStringAsFixed(0),
                     'currency': '₴',
                   }),
                   style: AppTypography.body(context),
@@ -125,7 +124,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
                                 title: '',
                                 radius: 25,
                               );
-                            }).toList(),
+                            }),
                           ],
                         ),
                       ),
@@ -144,7 +143,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
                               height: 110,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: AppColors.goalB.withOpacity(0.3),
+                                color: AppColors.goalB.withValues(alpha: 0.3),
                               ),
                               child: Icon(Icons.image_not_supported, color: AppColors.textSecondary(brightness), size: 40),
                             );
@@ -208,7 +207,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: color.withOpacity(0.2),
+                          backgroundColor: color.withValues(alpha: 0.2),
                           child: Icon(Icons.person, color: color),
                         ),
                         const SizedBox(width: 16),
@@ -222,7 +221,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
                               ),
                               Text(
                                 AppLocalizations.format(currentLocale, 'joint_detail_contribution', {
-                                  'amount': '${(m.contributedAmount / 100).toStringAsFixed(0)}',
+                                  'amount': (m.contributedAmount / 100).toStringAsFixed(0),
                                   'currency': '₴',
                                 }),
                                 style: AppTypography.caption(context),
@@ -240,7 +239,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           );
@@ -252,7 +251,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
   }
 
   void _showAddContributionDialog(BuildContext context, WidgetRef ref, String goalId, String memberId, String memberName) {
-    final _controller = TextEditingController();
+    final controller = TextEditingController();
     final brightness = Theme.of(context).brightness;
     
     showDialog(
@@ -269,7 +268,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
             style: TextStyle(color: AppColors.textPrimary(brightness)),
           ),
           content: TextField(
-            controller: _controller,
+            controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: TextStyle(color: AppColors.textPrimary(brightness)),
             decoration: InputDecoration(
@@ -287,7 +286,7 @@ class JointGoalDetailScreen extends ConsumerWidget {
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.goalB),
               onPressed: () async {
-                final amount = double.tryParse(_controller.text.trim()) ?? 0;
+                final amount = double.tryParse(controller.text.trim()) ?? 0;
                 if (amount > 0) {
                   final amountInKopecks = (amount * 100).toInt();
                   await ref.read(jointGoalsNotifierProvider.notifier).addContribution(goalId, memberId, amountInKopecks);

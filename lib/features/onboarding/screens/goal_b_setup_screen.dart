@@ -214,7 +214,7 @@ class _GoalBSetupScreenState extends ConsumerState<GoalBSetupScreen> {
                               horizontal: 20, vertical: 10),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.accent.withOpacity(0.12)
+                                ? AppColors.accent.withValues(alpha: 0.12)
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
