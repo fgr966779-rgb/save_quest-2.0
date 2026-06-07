@@ -7,12 +7,15 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/providers/l10n.dart';
 import '../../../core/utils/money_utils.dart';
-import '../../../core/widgets/progress_bar.dart';
+import '../../../core/services/price_tracker_service.dart';
+import '../../gamification/widgets/memory_vault_widgets.dart';
 import '../../../core/widgets/surface_card.dart';
 import '../../../data/database.dart';
+import '../../gamification/widgets/boss_hp_bar.dart';
+import '../../gamification/widgets/price_hunter_widget.dart';
 
-class GoalDetailScreen extends ConsumerWidget {
-  final int goalId; // We support parsing as string keys 'goal_a' or 'goal_b'
+class GoalDetailScreen extends ConsumerStatefulWidget {
+  final int goalId;
   final String goalStrId;
 
   const GoalDetailScreen({
@@ -20,7 +23,6 @@ class GoalDetailScreen extends ConsumerWidget {
     required this.goalId,
   }) : goalStrId = goalId == 0 ? 'goal_a' : 'goal_b';
 
-  // String constructor variant
   const GoalDetailScreen.fromString({
     super.key,
     required String id,
@@ -28,17 +30,89 @@ class GoalDetailScreen extends ConsumerWidget {
         goalStrId = id;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<GoalDetailScreen> createState() => _GoalDetailScreenState();
+}
+
+class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
+  bool _isLoading = false;
+
+  Future<void> _onScanPrices(Goal goal) async {
+    final locale = ref.read(localeProvider);
+    setState(() => _isLoading = true);
+    
+    try {
+      final price = await PriceTrackerService.fetchPrice(goal.name, sku: goal.productUrl);
+      
+      if (!mounted) return;
+      if (price == null) {
+         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+             content: Text(AppLocalizations.get(locale, 'price_not_found')),
+         ));
+         return;
+      }
+      
+      final priceInKopecks = (price * 100).toInt();
+      final db = ref.read(databaseProvider);
+      final oldTarget = goal.targetAmount;
+      
+      final diff = (priceInKopecks - oldTarget).abs() / oldTarget;
+      
+      if (diff > 0.05) {
+          final shouldUpdate = await showDialog<bool>(
+            context: context,
+            builder: (c) => AlertDialog(
+              title: Text(AppLocalizations.get(locale, 'update_target_title')),
+              content: Text(AppLocalizations.format(locale, 'update_target_content', {
+                '0': price.toStringAsFixed(0),
+                '1': (oldTarget / 100).toStringAsFixed(0)
+              })),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(c, false), 
+                  child: Text(AppLocalizations.get(locale, 'common_cancel'))
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(c, true), 
+                  child: Text(AppLocalizations.get(locale, 'common_save'))
+                ),
+              ],
+            )
+          ) ?? false;
+
+          if (shouldUpdate) {
+             await db.updateGoal(goal.copyWith(targetAmount: priceInKopecks));
+             if (!mounted) return;
+             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                 content: Text(AppLocalizations.get(locale, 'target_updated'))
+             ));
+             ref.invalidate(goalsProvider);
+          }
+       } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(AppLocalizations.get(locale, 'price_actual'))
+          ));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('${AppLocalizations.get(locale, 'price_fetch_error')} $e')
+      ));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final brightness = Theme.of(context).brightness;
     final locale = ref.watch(localeProvider);
 
-    // Determine target ID
-    final id = goalId == 0 ? 'goal_a' : (goalId == 1 ? 'goal_b' : goalStrId);
+    final id = widget.goalId == 0 ? 'goal_a' : (widget.goalId == 1 ? 'goal_b' : widget.goalStrId);
     final isA = id == 'goal_a';
     final accentColor = isA ? AppColors.goalA : AppColors.goalB;
 
     final goalsAsync = ref.watch(goalsProvider);
-    final depositsAsync = ref.watch(depositsProvider);
+    final depositsBreakdown = ref.watch(depositsBreakdownProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background(brightness),
@@ -52,11 +126,13 @@ class GoalDetailScreen extends ConsumerWidget {
               orElse: () => Goal(
                 id: id,
                 name: isA ? AppLocalizations.get(locale, 'dash_goal_a') : AppLocalizations.get(locale, 'dash_goal_b'),
-                targetAmount: 1000000, // 10 000.00 UAH in kopecks
+                targetAmount: 1000000,
                 currentAmount: 0,
                 currency: 'UAH',
                 accentColor: isA ? '#00E5FF' : '#FF007F',
                 createdAt: DateTime.now(),
+                updatedAt: DateTime.now(),
+                priceShieldHp: 100,
               ),
             );
 
@@ -68,7 +144,6 @@ class GoalDetailScreen extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Top Custom Navigation Appbar
                 _buildHeader(context, locale, goal, accentColor),
 
                 Expanded(
@@ -77,19 +152,18 @@ class GoalDetailScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Main details card
                         _buildMainMetrics(context, locale, goal, progressRatio, progressPercent, accentColor),
                         const SizedBox(height: 20.0),
-
-                        // Future Projections Panel
-                        _buildProjections(context, locale, goal, depositsAsync, accentColor),
+                        _buildProjections(context, locale, goal, depositsBreakdown, accentColor),
                         const SizedBox(height: 16.0),
-
-                        // Price Analysis entry point
                         _buildPriceAnalysisLink(context, locale, goal, accentColor),
+                        const SizedBox(height: 16.0),
+                        PriceHunterWidget(goal: goal, accentColor: accentColor),
+                        const SizedBox(height: 16.0),
+                        _buildPriceTrackerControls(goal, accentColor),
                         const SizedBox(height: 24.0),
-
-                        // Section header
+                        MemoryVaultWidget(goalId: goal.id, currentPercent: progressPercent),
+                        const SizedBox(height: 24.0),
                         Text(
                           AppLocalizations.get(locale, 'goal_transaction_history'),
                           style: AppTypography.overline(
@@ -98,9 +172,7 @@ class GoalDetailScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 12.0),
-
-                        // Goal Transaction history list
-                        _buildTransactionHistory(context, ref, locale, id, depositsAsync, goal.currency, accentColor),
+                        _buildTransactionHistory(context, ref, locale, id, depositsBreakdown, goal.currency, accentColor),
                       ],
                     ),
                   ),
@@ -113,9 +185,38 @@ class GoalDetailScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildPriceTrackerControls(Goal goal, Color accentColor) {
+    return SurfaceCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(AppLocalizations.get(ref.read(localeProvider), 'goal_price_scanner'), style: AppTypography.caption(context)),
+                Text(
+                  goal.currentPrice != null ? '${(goal.currentPrice! / 100).toStringAsFixed(2)} ₴' : 'Нет данных',
+                  style: AppTypography.bodySmall(context, color: accentColor),
+                ),
+              ],
+            ),
+          ),
+          if (_isLoading)
+            const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
+          else
+            IconButton(
+              icon: Icon(Icons.qr_code_scanner_rounded, color: accentColor),
+              onPressed: () => _onScanPrices(goal),
+              tooltip: AppLocalizations.get(ref.read(localeProvider), 'goal_price_scanner'),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeader(BuildContext context, String locale, Goal goal, Color accentColor) {
     final brightness = Theme.of(context).brightness;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       child: Row(
@@ -131,10 +232,7 @@ class GoalDetailScreen extends ConsumerWidget {
               children: [
                 Text(
                   AppLocalizations.get(locale, 'goal_details'),
-                  style: AppTypography.overline(
-                    context,
-                    color: accentColor,
-                  ),
+                  style: AppTypography.overline(context, color: accentColor),
                 ),
                 Text(
                   goal.name.toUpperCase(),
@@ -151,9 +249,7 @@ class GoalDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildMainMetrics(BuildContext context, String locale, Goal goal, double progressRatio, int progressPercent, Color accentColor) {
-    final brightness = Theme.of(context).brightness;
     final int remaining = (goal.targetAmount - goal.currentAmount).clamp(0, 999999999);
-
     return SurfaceCard(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -183,10 +279,13 @@ class GoalDetailScreen extends ConsumerWidget {
           const SizedBox(height: 16.0),
           _buildMetricColumn(context, AppLocalizations.get(locale, 'goal_target'), '${formatAmount(goal.targetAmount)} ${goal.currency}'),
           const SizedBox(height: 20.0),
-          ProgressBar(
-            progress: progressRatio,
-            color: accentColor,
-            height: 8.0,
+          BossHpBar(
+            goalName: goal.name,
+            currentAmount: goal.currentAmount / 100.0,
+            targetAmount: goal.targetAmount / 100.0,
+            currency: goal.currency,
+            accentColor: accentColor,
+            priceShieldHp: goal.priceShieldHp,
           ),
         ],
       ),
@@ -214,27 +313,20 @@ class GoalDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildProjections(BuildContext context, String locale, Goal goal, AsyncValue<List<Deposit>> depositsAsync, Color accentColor) {
+  Widget _buildProjections(BuildContext context, String locale, Goal goal, AsyncValue<List<DepositBreakdown>> depositsBreakdown, Color accentColor) {
     final brightness = Theme.of(context).brightness;
-
-    return depositsAsync.when(
+    return depositsBreakdown.when(
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
-      data: (deposits) {
+      data: (breakdowns) {
         final id = goal.id;
-        final filtered = deposits.where((d) => id == 'goal_a' ? d.goalAAmount > 0 : d.goalBAmount > 0).toList();
-
+        final filtered = breakdowns.where((b) => b.amountForGoal(id) > 0).toList();
         String forecastText = AppLocalizations.get(locale, 'goal_forecast_need_more');
         if (filtered.isNotEmpty) {
-          // Calculate average deposit per day (in kopecks)
-          int totalGoalDeposits = 0;
-          for (var dep in filtered) {
-            totalGoalDeposits += id == 'goal_a' ? dep.goalAAmount : dep.goalBAmount;
-          }
-          final firstDate = filtered.last.createdAt;
+          int totalGoalDeposits = filtered.fold(0, (s, b) => s + b.amountForGoal(id));
+          final firstDate = filtered.last.deposit.createdAt;
           final daysRange = DateTime.now().difference(firstDate).inDays.clamp(1, 99999);
           final double avgPerDay = totalGoalDeposits / daysRange;
-
           if (avgPerDay > 0) {
             final int remaining = (goal.targetAmount - goal.currentAmount).clamp(0, 999999999);
             final remainingDays = (remaining / avgPerDay).ceil();
@@ -243,7 +335,6 @@ class GoalDetailScreen extends ConsumerWidget {
             forecastText = AppLocalizations.get(locale, 'goal_forecast_first');
           }
         }
-
         return SurfaceCard(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
           child: Row(
@@ -281,18 +372,16 @@ class GoalDetailScreen extends ConsumerWidget {
     WidgetRef ref,
     String locale,
     String id,
-    AsyncValue<List<Deposit>> depositsAsync,
+    AsyncValue<List<DepositBreakdown>> depositsBreakdown,
     String currency,
     Color accentColor,
   ) {
     final brightness = Theme.of(context).brightness;
-
-    return depositsAsync.when(
+    return depositsBreakdown.when(
       loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
       error: (e, _) => Text('${AppLocalizations.get(locale, 'common_error')}: $e'),
-      data: (deposits) {
-        final filtered = deposits.where((d) => id == 'goal_a' ? d.goalAAmount > 0 : d.goalBAmount > 0).toList();
-
+      data: (breakdowns) {
+        final filtered = breakdowns.where((b) => b.amountForGoal(id) > 0).toList();
         if (filtered.isEmpty) {
           return SurfaceCard(
             padding: const EdgeInsets.all(24.0),
@@ -308,18 +397,15 @@ class GoalDetailScreen extends ConsumerWidget {
             ),
           );
         }
-
         return ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: filtered.length,
           itemBuilder: (context, index) {
-            final dep = filtered[index];
-            final int amount = id == 'goal_a' ? dep.goalAAmount : dep.goalBAmount;
-
-            // Check if deletable (editable within 24 hours of creation)
+            final breakdown = filtered[index];
+            final dep = breakdown.deposit;
+            final int amount = breakdown.amountForGoal(id);
             final isDeletable = DateTime.now().difference(dep.createdAt).inHours < 24;
-
             return Container(
               margin: const EdgeInsets.only(bottom: 12.0),
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
@@ -393,8 +479,7 @@ class GoalDetailScreen extends ConsumerWidget {
         },
       ),
       child: SurfaceCard(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
         child: Row(
           children: [
             Icon(Icons.radar_rounded, color: accentColor, size: 24.0),
@@ -418,8 +503,7 @@ class GoalDetailScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_right_rounded,
-                color: accentColor, size: 22.0),
+            Icon(Icons.chevron_right_rounded, color: accentColor, size: 22.0),
           ],
         ),
       ),

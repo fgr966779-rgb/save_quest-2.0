@@ -1,32 +1,28 @@
 # Implementation Plan — PiggyVault (Скарбничка)
 
 > [!IMPORTANT]
-> **Urgent Task: Fix Compilation & Run Project**
-> The project currently fails to compile due to several Dart/Flutter type mismatches, missing imports, and database-generated naming discrepancies.
+> **Phase 16: Dopamine Detox Mode & Haptic Heartbeat**
+> We will implement psychological and behavioral triggers from Sprint 1 of our product roadmap to improve user discipline:
 > 
-> **Proposed Fixes:**
-> 1. **Lootbox Type Mismatch**: Drift generates `Lootboxe` from the table `Lootboxes` due to singularization. We will add `typedef Lootbox = Lootboxe;` in `lib/data/database.dart` to make the `Lootbox` name globally visible.
-> 2. **Missing UserProfile fields during Onboarding**: Add `skillPoints`, `currentTheme`, and `penaltyBalance` with default values to the `UserProfile` instantiation in `setup_finish_screen.dart`.
-> 3. **Drift Value mismatch in Class Selection**: Wrap the class ID in `drift.Value(playerClass)` in `class_selection_screen.dart` as Drift expects a `Value<String?>` rather than a raw `String`.
-> 4. **Undefined goalA in Savings Notifier**: Fetch `goalA` using `_db.getGoalById('goal_a')` inside the `SavingsNotifier.createDeposit` transaction so it's accessible for achievement checks. Also initialize `newlyUnlocked` as a list rather than leaving it unassigned.
-> 5. **Incorrect cardBgDark Color reference**: Change `AppColors.cardBgDark` to `AppColors.cardBg` in `daily_spin_dialog.dart`.
-> 6. **Dashboard Screen type and import errors**:
->    - Import `lib/core/providers/savings_notifier.dart` for the provider reference.
->    - Update `.scale()` animation to use `const Offset(0.92, 0.92)` and `const Offset(1.0, 1.0)`.
->    - Convert cents in the database to display amounts in hryvnias using `centsToDisplay` before sending to `SavingGoalCard`.
+> 1. **Dopamine Detox Mode**:
+>    * Add settings keys `dopamine_detox_enabled` (bool) and `dopamine_detox_until` (timestamp) in `SettingsService`.
+>    * Toggle and manual 24-hour trigger cycle option in `SettingsScreen`.
+>    * Auto-triggers a 24h detox cycle when a penalty is active if `isDopamineDetoxEnabled` is true.
+>    * Turns the entire application monochrome (grayscale filter) in `ShellScaffold` during active detox.
+>    * Intercepts route navigation in `GoRouter` to redirect users away from customization, market, lootboxes, and skill-tree back to the dashboard, displaying a warning banner.
 > 
-> We will execute these fixes, verify that they compile, and launch the application on Chrome.
+> 2. **Haptic Heartbeat**:
+>    * Create a custom double-pulse haptic vibration helper (heartbeat sensation).
+>    * Trigger this haptic heartbeat when the user views the main balance on the Dashboard or opens a Goal Detail screen.
+> 
+> Please review and approve!
 
-> [!IMPORTANT]
-> **Фаза 13: Anti-Goals (Blacklist & Віруси)**
-> Ви відповіли "давай", і я пропоную взятися за **Anti-Goals / Blacklist**. Це потужний інструмент поведінкової економіки: ми не лише нагороджуємо за хороші звички, але й "штрафуємо" за погані!
-> 
-> **Мій план (Фаза 13):**
-> 1. **Система Blacklist**: Створимо екран `BlacklistScreen`, де ви зможете додати категорії витрат, яких хочете уникати (наприклад: Фастфуд, Ігри, Підписки).
-> 2. **Авто-штрафи**: Наш `mockBankingProvider` буде іноді генерувати транзакції з цих категорій. Якщо система фіксує таку покупку, вона *автоматично* виписує штраф через `PenaltyVault` (наприклад, 10% від суми витрати).
-> 3. **Візуальні Віруси (Glitch)**: Якщо у вас є несплачені штрафи за Blacklist, на Dashboard з'явиться ефект "вірусу" / "глітчу", а ваш аватар може змінити колір на червоний.
-> 
-> Чи погоджуєтесь ви з таким планом для Фази 13?
+## User Review Required
+- **Detox Trigger Behavior**: Do you want Dopamine Detox to also automatically trigger when the pet reactor core temperature enters the critical (>60°C) state?
+- **Grayscale Filter Intensity**: Fully monochrome (0% color saturation) is proposed to starve the brain of visual reward triggers.
+
+## Open Questions
+- None.
 
 ---
 

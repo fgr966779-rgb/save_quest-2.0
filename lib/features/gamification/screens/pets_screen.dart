@@ -7,16 +7,13 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
 import '../../../core/providers/providers.dart';
+import '../../../core/providers/pets_provider.dart';
 import '../../../core/widgets/surface_card.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/progress_bar.dart';
 import '../../../data/database.dart';
 
-// Provider for Pets
-final petsProvider = FutureProvider<List<Pet>>((ref) async {
-  final db = ref.watch(databaseProvider);
-  return await db.select(db.pets).get();
-});
+
 
 class PetsScreen extends ConsumerWidget {
   const PetsScreen({super.key});
@@ -25,37 +22,6 @@ class PetsScreen extends ConsumerWidget {
     final daysSinceFed = DateTime.now().difference(pet.lastFedAt).inDays;
     final loss = daysSinceFed * 20;
     return (pet.happinessLevel - loss).clamp(0, 100);
-  }
-
-  /// Calculate pet level from happiness.
-  /// Level = 1 + (total feed count). Feed count is derived from happiness resets.
-  /// Each feed session adds 1 effective level. Stored indirectly via happiness pattern.
-  /// Simple approach: level = max(1, 100 - happinessLevel at last feed).
-  /// Better: we track level separately using the profile's total deposits.
-  ///
-  /// XP-based leveling:
-  /// Each deposit gives pet XP = (depositAmount / 100).round()
-  /// Level thresholds: level * 200 XP needed per level
-  int _calculatePetLevel(int totalPetXp) {
-    // Level 1: 0 XP, Level 2: 200 XP, Level 3: 600 XP, Level N: N*(N-1)*100 XP
-    // Inverse: find max N where N*(N-1)*100 <= totalPetXp
-    int level = 1;
-    while ((level + 1) * level * 100 <= totalPetXp) {
-      level++;
-    }
-    return level;
-  }
-
-  int _xpForNextLevel(int level) {
-    // XP needed to go from current level to next
-    final currentThreshold = level * (level - 1) * 100;
-    final nextThreshold = (level + 1) * level * 100;
-    return nextThreshold - currentThreshold;
-  }
-
-  int _xpProgressInLevel(int totalPetXp, int level) {
-    final currentThreshold = level * (level - 1) * 100;
-    return totalPetXp - currentThreshold;
   }
 
   /// Get pet mood label.
@@ -108,9 +74,8 @@ class PetsScreen extends ConsumerWidget {
     }
 
     // ignore: unused_result
-    ref.refresh(userProfileProvider);
-    // ignore: unused_result
-    ref.refresh(petsProvider);
+    ref.invalidate(userProfileProvider);
+    ref.invalidate(petsProvider);
   }
 
   Future<void> _adoptPet(
@@ -124,8 +89,7 @@ class PetsScreen extends ConsumerWidget {
             lastFedAt: DateTime.now(),
           ),
         );
-    // ignore: unused_result
-    ref.refresh(petsProvider);
+    ref.invalidate(petsProvider);
   }
 
   /// Add XP to pet when a deposit is made.
@@ -176,12 +140,20 @@ class PetsScreen extends ConsumerWidget {
           final moodLabel = _getMoodLabel(happiness, t);
 
           // Pet level derived from profile XP
-          final profileXp = profileAsync.when(
-            data: (p) => p?.xp ?? 0,
-            loading: () => 0,
-            error: (_, __) => 0,
-          );
+          final profile = profileAsync.value;
+          final profileXp = profile?.xp ?? 0;
           final petLevel = getPetLevelFromProfile(profileXp);
+
+          final lastDepositDate = profile?.lastDepositDate;
+          double temp = 37.0;
+          if (lastDepositDate != null) {
+            final hours = DateTime.now().difference(lastDepositDate).inHours;
+            if (hours > 24) {
+              temp = 37.0 + (hours - 24) * 1.5;
+            }
+          }
+          temp = temp.clamp(37.0, 99.0);
+          final isOverheating = temp > 60.0;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
@@ -271,6 +243,35 @@ class PetsScreen extends ConsumerWidget {
                         color: moodColor,
                         height: 8.0,
                       ),
+                      const SizedBox(height: 16),
+                      // Core temperature bar
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(t('pet_core_temp'),
+                              style: AppTypography.caption(context)),
+                          Text('${temp.toStringAsFixed(1)}°C',
+                              style: AppTypography.h3(context,
+                                  color: isOverheating ? AppColors.error : AppColors.success)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ProgressBar(
+                        progress: ((temp - 37.0) / (99.0 - 37.0)).clamp(0.0, 1.0),
+                        color: isOverheating ? AppColors.error : AppColors.success,
+                        height: 8.0,
+                      ),
+                      if (isOverheating) ...[
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                          child: Text(
+                            t('pet_overheating_warning'),
+                            style: AppTypography.caption(context, color: AppColors.error),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 12),
                       // XP info
                       Text(

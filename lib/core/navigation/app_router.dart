@@ -34,10 +34,18 @@ import '../../features/remote_control/screens/remote_control_screen.dart';
 import '../../features/dashboard/screens/shell_scaffold.dart';
 import '../../features/gamification/screens/notification_center_screen.dart';
 
+import '../../features/gamification/screens/freezer_screen.dart';
+import '../../features/gamification/screens/gift_fund_screen.dart';
+import '../../features/gamification/screens/gift_goal_setup_screen.dart';
 import '../../features/dashboard/screens/goal_complete_screen.dart';
 import '../../features/dashboard/screens/savings_calculator_screen.dart';
 import '../../features/gamification/screens/weekly_challenges_screen.dart';
 import '../../features/gamification/screens/savings_stats_screen.dart';
+import '../../features/subscriptions/screens/subscriptions_screen.dart';
+import '../../features/gamification/screens/oracle_screen.dart';
+import '../../features/dashboard/screens/annual_report_screen.dart';
+import '../../features/dashboard/screens/investment_market_screen.dart';
+
 final routerProvider = Provider<GoRouter>((ref) {
   final settings = ref.watch(settingsServiceProvider);
 
@@ -56,6 +64,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (completedOnboarding && isOnboarding) {
+        return '/dashboard';
+      }
+
+      // Block gamification triggers during active Dopamine Detox
+      final detoxBlockedRoutes = [
+        '/market',
+        '/customization',
+        '/avatar-builder',
+        '/lootboxes',
+        '/skill-tree',
+      ];
+      final isBlocked = detoxBlockedRoutes.any((route) => state.uri.path.startsWith(route));
+      if (settings.isDopamineDetoxActive && isBlocked) {
         return '/dashboard';
       }
 
@@ -119,6 +140,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/trophies',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: TrophyRoomScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/gift-fund',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: GiftFundScreen(),
             ),
           ),
           GoRoute(
@@ -215,9 +242,29 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/goal-detail/:goalId',
         builder: (context, state) {
-          final goalId = int.tryParse(state.pathParameters['goalId'] ?? '') ?? 0;
-          return GoalDetailScreen(goalId: goalId);
+          final goalId = state.pathParameters['goalId'] ?? 'goal_a';
+          return GoalDetailScreen.fromString(id: goalId);
         },
+      ),
+      GoRoute(
+        path: '/oracle',
+        builder: (context, state) => const OracleScreen(),
+      ),
+      GoRoute(
+        path: '/annual-report',
+        builder: (context, state) => const AnnualReportScreen(),
+      ),
+      GoRoute(
+        path: '/investment-market',
+        builder: (context, state) => const InvestmentMarketScreen(),
+      ),
+      GoRoute(
+        path: '/gift-goal-setup',
+        builder: (context, state) => const GiftGoalSetupScreen(),
+      ),
+      GoRoute(
+        path: '/freezer',
+        builder: (context, state) => const FreezerScreen(),
       ),
       GoRoute(
         path: '/savings-calculator',
@@ -230,6 +277,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/savings-stats',
         builder: (context, state) => const SavingsStatsScreen(),
+      ),
+      GoRoute(
+        path: '/subscriptions',
+        builder: (context, state) => const SubscriptionsScreen(),
       ),
       GoRoute(
         path: '/goal-complete',

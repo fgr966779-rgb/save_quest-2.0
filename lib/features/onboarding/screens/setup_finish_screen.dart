@@ -57,6 +57,8 @@ class _SetupFinishScreenState extends ConsumerState<SetupFinishScreen> {
           currency: goalACurrency,
           accentColor: '#6366F1',
           createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          priceShieldHp: 100,
         ),
       );
 
@@ -69,6 +71,8 @@ class _SetupFinishScreenState extends ConsumerState<SetupFinishScreen> {
           currency: goalBCurrency,
           accentColor: '#10B981',
           createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          priceShieldHp: 100,
         ),
       );
 
@@ -92,6 +96,15 @@ class _SetupFinishScreenState extends ConsumerState<SetupFinishScreen> {
           lastBonusClaimDate: null,
           bonusStreak: 0,
           crystalsBalance: 0,
+          updatedAt: DateTime.now(),
+          karmaDebt: 0,
+          noSpendStreakCount: 0,
+          partnerName: null,
+          partnerLastDepositDate: null,
+          pricePulseTrackingCount: 0,
+          debuffActiveUntil: null,
+          karmaHealingStreakCount: 0,
+          lastKarmaHealDate: null,
         ),
       );
 

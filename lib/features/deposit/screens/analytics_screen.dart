@@ -34,7 +34,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
   @override
   Widget build(BuildContext context) {
     final goalsAsync = ref.watch(goalsProvider);
-    final depositsAsync = ref.watch(depositsProvider);
+    final depositsAsync = ref.watch(depositsBreakdownProvider);
     final locale = ref.watch(localeProvider);
 
     return Scaffold(
@@ -204,7 +204,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     );
   }
 
-  Widget _buildTimelineChartCard(AsyncValue<List<Deposit>> depositsAsync, String locale) {
+  Widget _buildTimelineChartCard(AsyncValue<List<DepositBreakdown>> depositsAsync, String locale) {
     return depositsAsync.when(
       loading: () => const SkeletonList(itemCount: 2),
       error: (_, __) => const SizedBox.shrink(),
@@ -300,7 +300,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
   Widget _buildProjectionsSummaryCard(
     AsyncValue<List<Goal>> goalsAsync,
-    AsyncValue<List<Deposit>> depositsAsync,
+    AsyncValue<List<DepositBreakdown>> depositsAsync,
     String locale,
   ) {
     return goalsAsync.when(
@@ -323,7 +323,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
             final oneWeekAgo = now.subtract(const Duration(days: 7));
 
             for (var dep in deposits) {
-              if (dep.createdAt.isAfter(oneWeekAgo)) {
+              if (dep.deposit.createdAt.isAfter(oneWeekAgo)) {
                 totalAWeekly += centsToDisplay(dep.goalAAmount);
                 totalBWeekly += centsToDisplay(dep.goalBAmount);
               }

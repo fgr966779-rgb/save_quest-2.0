@@ -169,6 +169,46 @@ class OpenRouterService {
       throw Exception('OpenRouter Error ${response.statusCode}: ${response.body}');
     }
   }
+
+  /// Chat completion for multi-turn conversation (Oracle / AI Chat).
+  /// Tries [_model] first; if that fails (non-200), retries with fallback model.
+  static const String _fallbackModel = 'google/gemma-4-31b-it:free';
+
+  Future<String> getChatCompletion(List<Map<String, String>> messages) async {
+    if (!isAvailable) throw Exception('OpenRouter API Key not set');
+    try {
+      return await _chatRequest(messages, _model);
+    } catch (_) {
+      return await _chatRequest(messages, _fallbackModel);
+    }
+  }
+
+  Future<String> _chatRequest(
+      List<Map<String, String>> messages, String model) async {
+    final response = await http
+        .post(
+          Uri.parse(_baseUrl),
+          headers: {
+            'Authorization': 'Bearer $apiKey',
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://piggyvault.app',
+            'X-Title': 'PiggyVault Oracle',
+          },
+          body: jsonEncode({
+            'model': model,
+            'messages': messages,
+          }),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['choices'][0]['message']['content'] as String;
+    } else {
+      throw Exception(
+          'OpenRouter Error ${response.statusCode}: ${response.body}');
+    }
+  }
 }
 
 final openRouterProvider = Provider<OpenRouterService>((ref) {

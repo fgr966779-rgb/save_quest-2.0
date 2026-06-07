@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:async';
+import 'dart:math' as math;
 
 import '../../../core/providers/providers.dart';
+import '../../../core/services/gamification/xp_service.dart';
 
 class TerminalScreen extends ConsumerStatefulWidget {
   const TerminalScreen({super.key});
@@ -15,6 +18,52 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
   final TextEditingController _cmdController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
+
+  bool _isDecrypting = false;
+  String _decryptionTarget = '';
+  int _decryptionTimeLeft = 0;
+  Timer? _countdownTimer;
+
+  void _startDecryption() {
+    _countdownTimer?.cancel();
+
+    final words = [
+      'SYS_OVERLOAD',
+      'NETRUNNER',
+      'NEON_VAULT',
+      'BLACKOUT',
+      'ARASAKA',
+      'MATRIX_CORE',
+      'CORP_SPY',
+      'CYBERNETIC',
+      'QUANTUM_BIT',
+      'FIREWALL_BYPASS'
+    ];
+    final random = math.Random();
+    _decryptionTarget = words[random.nextInt(words.length)];
+    _isDecrypting = true;
+    _decryptionTimeLeft = 12;
+
+    _log('DECRYPTION PROTOCOL INITIATED...');
+    _log('RETRIEVING SECURITY CIPHER...');
+    _log('CYPHER GENERATED: $_decryptionTarget');
+    _log('ENTER CYPHER WITHIN 12 SECONDS TO PURGE VIRUS.');
+
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _decryptionTimeLeft--;
+        if (_decryptionTimeLeft <= 0) {
+          timer.cancel();
+          _isDecrypting = false;
+          _log('DECRYPTION TIMED OUT. CONNECTION CLOSED. SYSTEM DAMAGE ENFORCED.');
+        }
+      });
+    });
+  }
 
   final List<String> _logs = [
     'SAVEQUEST OS v14.0.1 INITIATED',
@@ -36,6 +85,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     _cmdController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
+    _countdownTimer?.cancel();
     super.dispose();
   }
 
@@ -65,6 +115,51 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
     _cmdController.clear();
     _log('\n> $input');
 
+    if (_isDecrypting) {
+      _countdownTimer?.cancel();
+      setState(() {
+        _isDecrypting = false;
+      });
+
+      if (input.toUpperCase() == _decryptionTarget.toUpperCase()) {
+        _log('DECRYPTION SUCCESSFUL!');
+        _log('VIRUS REMOVED FROM SECTORS.');
+
+        final db = ref.read(databaseProvider);
+        final profile = await db.getUserProfile();
+        if (profile != null) {
+          final newPenalty = math.max(0, profile.penaltyBalance - 5000); // subtract 50 UAH (5000 cents)
+          var newXP = profile.xp + 50;
+          var currentLevel = profile.level;
+          bool leveledUp = false;
+          while (newXP >= XpService.xpRequiredForLevel(currentLevel)) {
+            currentLevel++;
+            leveledUp = true;
+          }
+          await db.updateUserProfile(profile.copyWith(
+            penaltyBalance: newPenalty,
+            xp: newXP,
+            level: currentLevel,
+            hackerXp: profile.hackerXp + 10,
+          ));
+
+          _log('PENALTY RECOVERED: -50.00 UAH');
+          _log('+ XP GAINED: 50');
+          _log('+ HACKER XP GAINED: 10');
+          if (leveledUp) {
+            _log('!!! SYSTEM LEVEL UP: $currentLevel !!!');
+          }
+
+          ref.invalidate(userProfileProvider);
+        }
+      } else {
+        _log('ERROR: DECRYPTION FAILED. INVALID CIPHER. VIRUS STILL ACTIVE.');
+      }
+
+      _focusNode.requestFocus();
+      return;
+    }
+
     final parts = input.split(' ');
     final command = parts.first.toLowerCase();
 
@@ -74,6 +169,8 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         _log('  /status   - Display current system metrics and balances');
         _log('  /save <X> - Deposit X amount into your savings');
         _log('  /goals    - List all active savings goals');
+        _log('  /decrypt  - Try to decrypt and clear active virus');
+        _log('  /purge    - Instantly purge active virus for 15 crystals');
         _log('  /clear    - Clear terminal logs');
         _log('  /exit     - Return to visual interface');
         break;
@@ -163,6 +260,45 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
         } else {
           _log('ERROR: DEPOSIT FAILED.');
         }
+        break;
+
+      case '/decrypt':
+        final profileAsync = ref.read(userProfileProvider);
+        profileAsync.whenData((profile) {
+          if (profile == null) {
+            _log('ERROR: PROFILE NOT FOUND.');
+            return;
+          }
+          if (profile.penaltyBalance <= 0) {
+            _log('SYSTEM STABLE. NO VIRUS DETECTED. NO NEED TO DECRYPT.');
+            return;
+          }
+          _startDecryption();
+        });
+        break;
+
+      case '/purge':
+        final db = ref.read(databaseProvider);
+        final profile = await db.getUserProfile();
+        if (profile == null) {
+          _log('ERROR: PROFILE NOT FOUND.');
+          break;
+        }
+        if (profile.penaltyBalance <= 0) {
+          _log('SYSTEM STABLE. NO ACTIVE VIRUSES TO PURGE.');
+          break;
+        }
+        if (profile.crystalsBalance < 15) {
+          _log('ERROR: INSUFFICIENT CRYSTALS. NEED 15, YOU HAVE ${profile.crystalsBalance}.');
+          break;
+        }
+        _log('PURGING VIRUS FROM SYSTEMS...');
+        await db.updateUserProfile(profile.copyWith(
+          penaltyBalance: 0,
+          crystalsBalance: profile.crystalsBalance - 15,
+        ));
+        _log('SUCCESS: VIRUS PURGED. SHIELD RESTORED. -15 CRYSTALS.');
+        ref.invalidate(userProfileProvider);
         break;
 
       default:

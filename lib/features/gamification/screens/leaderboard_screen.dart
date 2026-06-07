@@ -112,7 +112,8 @@ class _WeeklyTab extends ConsumerWidget {
   }
 
   Widget _buildShareBanner(BuildContext context, WidgetRef ref, List<LeaderboardEntry> entries) {
-    final userEntry = entries.where((e) => e.isCurrentUser).firstOrNull;
+    final currentUserEntries = entries.where((e) => e.isCurrentUser).toList();
+    final userEntry = currentUserEntries.isNotEmpty ? currentUserEntries.first : null;
     if (userEntry == null) return const SizedBox.shrink();
 
     final position = entries.indexOf(userEntry) + 1;
@@ -132,7 +133,7 @@ class _WeeklyTab extends ConsumerWidget {
                     style: AppTypography.h1(context, color: AppColors.accent),
                   ),
                   Text(
-                    '${userEntry.score} XP',
+                    '\${userEntry.score} XP',
                     style: AppTypography.body(context),
                   ),
                 ],
@@ -145,7 +146,7 @@ class _WeeklyTab extends ConsumerWidget {
                 Share.share(
                   t('lb_share_text')
                       .replaceAll('{position}', '$position')
-                      .replaceAll('{score}', '${userEntry.score}'),
+                      .replaceAll('{score}', '\${userEntry.score}'),
                 );
               },
               variant: ButtonVariant.secondary,
@@ -199,44 +200,18 @@ class _AllianceTab extends ConsumerWidget {
     return allianceAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
-      data: (entries) => Column(
-        children: [
-          // "Online coming soon" banner
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SurfaceCard(
-              padding: const EdgeInsets.all(12),
-              child: Row(
-                children: [
-                  Icon(Icons.lock, size: 18, color: AppColors.warning),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      t('lb_online_soon'),
-                      style: AppTypography.bodySmall(context,
-                          color: AppColors.warning),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async => ref.invalidate(allianceLeaderboardProvider),
-              child: ListView.builder(
-                padding: const EdgeInsets.only(top: 8, bottom: 80),
-                itemCount: entries.length,
-                itemBuilder: (context, index) {
-                  return AllianceLeaderboardTile(
-                    entry: entries[index],
-                    position: index + 1,
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
+      data: (entries) => RefreshIndicator(
+        onRefresh: () async => ref.invalidate(allianceLeaderboardProvider),
+        child: ListView.builder(
+          padding: const EdgeInsets.only(top: 8, bottom: 80),
+          itemCount: entries.length,
+          itemBuilder: (context, index) {
+            return AllianceLeaderboardTile(
+              entry: entries[index],
+              position: index + 1,
+            );
+          },
+        ),
       ),
     );
   }

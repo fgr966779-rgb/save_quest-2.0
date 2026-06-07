@@ -70,6 +70,7 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
               data: (profile) {
                 final streak = profile?.streakCount ?? 0;
                 final tokens = profile?.freezeTokens ?? 0;
+                final crystalsBalance = profile?.crystalsBalance ?? 0;
 
                 return Column(
                   children: [
@@ -146,18 +147,69 @@ class _StreakRoomScreenState extends ConsumerState<StreakRoomScreen> with Single
                               ],
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                            decoration: BoxDecoration(
-                              color: AppColors.accentMutedBg(brightness),
-                              borderRadius: BorderRadius.circular(20.0),
-                              border: Border.all(color: AppColors.accent),
-                            ),
-                            child: Text(
-                              '$tokens ${t('streak_tokens_btn')}',
-                              style: AppTypography.caption(
-                                context,
-                                color: AppColors.accent,
+                          GestureDetector(
+                            onTap: () async {
+                              if (profile == null) return;
+                              if (crystalsBalance >= 50) {
+                                final db = ref.read(databaseProvider);
+                                await db.updateUserProfile(
+                                  profile.copyWith(
+                                    crystalsBalance: crystalsBalance - 50,
+                                    freezeTokens: profile.freezeTokens + 1,
+                                  ),
+                                );
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(t('streak_shield_activated')),
+                                      backgroundColor: AppColors.success,
+                                    ),
+                                  );
+                                }
+                              } else {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(t('streak_shield_error')),
+                                      backgroundColor: AppColors.error,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                              decoration: BoxDecoration(
+                                color: crystalsBalance >= 50
+                                    ? AppColors.accentMutedBg(brightness)
+                                    : AppColors.surfaceMuted(brightness),
+                                borderRadius: BorderRadius.circular(20.0),
+                                border: Border.all(
+                                  color: crystalsBalance >= 50
+                                      ? AppColors.accent
+                                      : AppColors.border(brightness),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '$tokens ${t('streak_tokens_btn')}',
+                                    style: AppTypography.caption(
+                                      context,
+                                      color: crystalsBalance >= 50
+                                          ? AppColors.accent
+                                          : AppColors.textSecondary(brightness),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Icon(
+                                    Icons.add_shopping_cart,
+                                    size: 14,
+                                    color: crystalsBalance >= 50
+                                        ? AppColors.accent
+                                        : AppColors.textSecondary(brightness),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

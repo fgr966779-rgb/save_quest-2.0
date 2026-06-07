@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/providers/l10n.dart';
 import '../../../core/widgets/surface_card.dart';
@@ -14,6 +15,7 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/neon_avatar_painter.dart';
 import '../../../core/models/avatar_config.dart';
 import '../../../core/providers/banking_provider.dart';
+import '../../gamification/providers/flash_goal_provider.dart';
 import '../../../core/services/openrouter_service.dart';
 import '../../../core/services/biometric_service.dart';
 import '../../../core/services/milestone_service.dart';
@@ -21,7 +23,8 @@ import '../../../core/services/weekly_challenge_service.dart';
 import '../../../core/services/goal_dependency_service.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../data/backup_service.dart';
-import '../../../main.dart' show themeModeProvider;
+import '../../../data/settings_service.dart';
+import '../../../core/providers/theme_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -247,7 +250,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
             const SizedBox(height: 8.0),
             DropdownButtonFormField<String>(
-              initialValue: settings.coachPersonality,
+              value: settings.coachPersonality,
               isExpanded: true,
               decoration: InputDecoration(
                 hintText: t('settings_ai_hint'),
@@ -385,6 +388,51 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               icon: const Icon(Icons.block, size: 18),
               fullWidth: true,
             ),
+            const SizedBox(height: 32.0),
+
+            // ── Dopamine Detox Mode ──
+            Text(
+              t('dopamine_detox_title'),
+              style: AppTypography.h3(context),
+            ),
+            const SizedBox(height: 8.0),
+            _buildToggleItem(
+              icon: Icons.do_not_disturb_on_rounded,
+              title: t('settings_detox_mode'),
+              subtitle: t('settings_detox_mode_sub'),
+              value: settings.isDopamineDetoxEnabled,
+              onChanged: (val) {
+                HapticFeedback.mediumImpact();
+                setState(() => settings.isDopamineDetoxEnabled = val);
+                ref.invalidate(settingsServiceProvider);
+              },
+            ),
+            if (settings.isDopamineDetoxEnabled) ...[
+              const SizedBox(height: 10.0),
+              _buildDetoxStatusCard(settings, brightness, t),
+              const SizedBox(height: 10.0),
+              AppButton(
+                label: t('settings_detox_trigger'),
+                onPressed: settings.isDopamineDetoxActive
+                    ? null
+                    : () {
+                        HapticFeedback.heavyImpact();
+                        settings.dopamineDetoxUntil = DateTime.now()
+                            .add(const Duration(hours: 24))
+                            .millisecondsSinceEpoch;
+                        ref.invalidate(settingsServiceProvider);
+                        setState(() {});
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${t('dopamine_detox_title')} — 24г активовано!'),
+                          ),
+                        );
+                      },
+                variant: ButtonVariant.secondary,
+                icon: const Icon(Icons.do_not_disturb_on_rounded, size: 18),
+                fullWidth: true,
+              ),
+            ],
             const SizedBox(height: 32.0),
 
             // ── Security & Privacy ──
@@ -664,6 +712,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     icon: const Icon(Icons.settings_remote, size: 16),
                     fullWidth: true,
                   ),
+                  const SizedBox(height: 8.0),
+                  AppButton(
+                    label: 'Simulate New Day (Flash Goal)',
+                    onPressed: () async {
+                      HapticFeedback.heavyImpact();
+                      await ref.read(flashGoalProvider.notifier).resetForTesting();
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Flash Goal reset!')),
+                        );
+                      }
+                    },
+                    variant: ButtonVariant.ghost,
+                    icon: const Icon(Icons.av_timer, size: 16),
+                    fullWidth: true,
+                  ),
                 ],
               ),
             ),
@@ -741,6 +805,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       // Pick file
       final backup = await backupService.pickBackupFile();
       if (backup == null) return; // User cancelled picker
+      if (!mounted) return;
 
       // Show confirmation dialog
       final locale = ref.read(localeProvider);
@@ -1128,7 +1193,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     HapticFeedback.lightImpact();
     final settings = ref.read(settingsServiceProvider);
     final locale = ref.read(localeProvider);
-    final brightness = Theme.of(context).brightness;
     final bio = BiometricService();
 
     if (val) {
@@ -1300,6 +1364,86 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           }).toList(),
         ),
       ],
+    );
+  }
+  /// Detox status card — shows remaining time or "ready" state.
+  Widget _buildDetoxStatusCard(
+    SettingsService settings,
+    Brightness brightness,
+    String Function(String) t,
+  ) {
+    final isActive = settings.isDopamineDetoxActive;
+
+    if (!isActive) {
+      return SurfaceCard(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spaceMd,
+          vertical: AppTheme.spaceSm,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.check_circle_outline_rounded,
+              color: AppColors.success,
+              size: 18,
+            ),
+            const SizedBox(width: AppTheme.spaceSm),
+            Text(
+              'Детокс неактивний — система у нормі',
+              style: AppTypography.bodySmall(
+                context,
+                color: AppColors.success,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final until = DateTime.fromMillisecondsSinceEpoch(settings.dopamineDetoxUntil);
+    final remaining = until.difference(DateTime.now());
+    final h = remaining.inHours;
+    final m = remaining.inMinutes % 60;
+
+    return SurfaceCard(
+      padding: const EdgeInsets.all(AppTheme.spaceMd),
+      borderColor: AppColors.error.withValues(alpha: 0.35),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.do_not_disturb_on_rounded,
+              color: AppColors.error,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: AppTheme.spaceMd),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ДЕТОКС АКТИВНИЙ',
+                  style: AppTypography.overline(
+                    context,
+                    color: AppColors.error,
+                  ),
+                ),
+                Text(
+                  'Залишилось: $hг ${m.toString().padLeft(2, '0')}хв',
+                  style: AppTypography.bodySmall(context),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' as drift;
 import '../../../core/providers/providers.dart';
 import '../../../core/models/avatar_config.dart';
 import '../models/daily_quest.dart';
+import 'karma_provider.dart';
 
 class QuestNotifier extends StateNotifier<AsyncValue<List<DailyQuest>>> {
   final Ref ref;
@@ -17,31 +18,50 @@ class QuestNotifier extends StateNotifier<AsyncValue<List<DailyQuest>>> {
       final settings = ref.read(settingsServiceProvider);
       final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
       
+      List<DailyQuest> quests = [];
       final savedDate = settings.dailyQuestsDate;
       if (savedDate == todayStr) {
         final rawList = settings.dailyQuests;
         if (rawList != null) {
-          final quests = rawList.map((q) => DailyQuest.fromJson(Map<String, dynamic>.from(q))).toList();
-          state = AsyncValue.data(quests);
-          return;
+          quests = rawList.map((q) => DailyQuest.fromJson(Map<String, dynamic>.from(q))).toList();
         }
       }
       
-      // Generate new quests for today
-      await _generateNewQuests(todayStr);
+      if (quests.isEmpty) {
+        // Generate new quests for today
+        quests = _generateBaseQuests();
+      }
+
+      // Check if Karma Debt is active, append "Heal Karma-Borg" if so
+      final db = ref.read(databaseProvider);
+      final profile = await db.getUserProfile();
+      if (profile != null && profile.karmaDebt > 0) {
+        final hasKarmaQuest = quests.any((q) => q.id == 'heal_karma');
+        if (!hasKarmaQuest) {
+          quests = [
+            ...quests,
+            const DailyQuest(
+              id: 'heal_karma',
+              title: 'Вилікувати Карма-Борга',
+              description: 'Усуньте вірусну атаку та очистіть карма-борг.',
+              rewardXp: 15,
+              rewardCredits: 5,
+            )
+          ];
+        }
+      } else {
+        // Remove it if karma is already 0
+        quests = quests.where((q) => q.id != 'heal_karma').toList();
+      }
+
+      state = AsyncValue.data(quests);
     } catch (e, stack) {
       state = AsyncValue.error(e, stack);
     }
   }
 
-  Future<void> _generateNewQuests(String dateStr) async {
-    state = const AsyncValue.loading();
-    
-    // We will always have 3 quests. 
-    // The first one could represent the AI Bounty conceptually, but since Bounty is handled via BountyNotifier,
-    // we'll keep DailyQuests for specific UI actions.
-    
-    final newQuests = [
+  List<DailyQuest> _generateBaseQuests() {
+    return [
       const DailyQuest(
         id: 'deposit_any',
         title: 'Фінансовий Потік',
@@ -64,9 +84,9 @@ class QuestNotifier extends StateNotifier<AsyncValue<List<DailyQuest>>> {
         rewardCredits: 2,
       ),
     ];
-    
-    _saveQuests(newQuests, dateStr);
   }
+
+
 
   void _saveQuests(List<DailyQuest> quests, String dateStr) {
     final settings = ref.read(settingsServiceProvider);
@@ -110,6 +130,13 @@ class QuestNotifier extends StateNotifier<AsyncValue<List<DailyQuest>>> {
         avatarConfig: drift.Value(updatedConfig.toJson()),
       ));
       ref.invalidate(userProfileProvider);
+
+      if (questId == 'heal_karma') {
+        // Automatically trigger karma cleansing logic
+        // Import of karmaProvider is not needed because it will resolve via ref
+        // We will read the karmaProvider notifier and perform cleanse.
+        await ref.read(karmaProvider.notifier).cleanseKarma();
+      }
     }
 
     final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());

@@ -70,8 +70,6 @@ class DailyBonusNotifier extends StateNotifier<AsyncValue<DailyBonusState>> {
             
             // Only consume 1 token per missed period (or we can consume 1 token per missed day depending on the balance we want)
             // Let's say 1 freeze token saves the streak entirely regardless of days missed for simplicity, 
-            // OR we consume up to the missed days. Let's consume 1 token per missed day.
-            int tokensToConsume = missedDays > freezeTokens ? freezeTokens : missedDays;
             
             if (freezeTokens >= missedDays) {
                // Full streak saved

@@ -54,5 +54,12 @@ worklog.md
 # Skill files
 *.skill
 
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
 # Flutter metadata
 .metadata

@@ -19,6 +19,7 @@ class PiggyVaultBackup {
   // Drift tables — each is a List of JSON-serializable maps (camelCase keys).
   final List<Map<String, dynamic>> goals;
   final List<Map<String, dynamic>> deposits;
+  final List<Map<String, dynamic>> depositAllocations;
   final List<Map<String, dynamic>> userProfiles;
   final List<Map<String, dynamic>> unlockedAchievements;
   final List<Map<String, dynamic>> unlockedSkills;
@@ -33,6 +34,16 @@ class PiggyVaultBackup {
   final List<Map<String, dynamic>> jointGoalMembers;
   final List<Map<String, dynamic>> avoidedPurchases;
 
+  // ── v2 tables (added in schema v14–v20) ──
+  final List<Map<String, dynamic>> memoryVaultEntries;
+  final List<Map<String, dynamic>> lendingContracts;
+  final List<Map<String, dynamic>> chatMessages;
+  final List<Map<String, dynamic>> giftGoals;
+  final List<Map<String, dynamic>> subscriptions;
+  final List<Map<String, dynamic>> priceHistoryEntries;
+  final List<Map<String, dynamic>> investmentPortfolio;
+  final List<Map<String, dynamic>> marketPrices;
+
   // Hive settings
   final Map<String, dynamic> settings;
 
@@ -42,6 +53,7 @@ class PiggyVaultBackup {
     required this.appVersion,
     required this.goals,
     required this.deposits,
+    required this.depositAllocations,
     required this.userProfiles,
     required this.unlockedAchievements,
     required this.unlockedSkills,
@@ -55,6 +67,14 @@ class PiggyVaultBackup {
     required this.jointGoals,
     required this.jointGoalMembers,
     required this.avoidedPurchases,
+    required this.memoryVaultEntries,
+    required this.lendingContracts,
+    required this.chatMessages,
+    required this.giftGoals,
+    required this.subscriptions,
+    required this.priceHistoryEntries,
+    required this.investmentPortfolio,
+    required this.marketPrices,
     required this.settings,
   });
 
@@ -64,6 +84,7 @@ class PiggyVaultBackup {
         'appVersion': appVersion,
         'goals': goals,
         'deposits': deposits,
+        'depositAllocations': depositAllocations,
         'userProfiles': userProfiles,
         'unlockedAchievements': unlockedAchievements,
         'unlockedSkills': unlockedSkills,
@@ -77,6 +98,14 @@ class PiggyVaultBackup {
         'jointGoals': jointGoals,
         'jointGoalMembers': jointGoalMembers,
         'avoidedPurchases': avoidedPurchases,
+        'memoryVaultEntries': memoryVaultEntries,
+        'lendingContracts': lendingContracts,
+        'chatMessages': chatMessages,
+        'giftGoals': giftGoals,
+        'subscriptions': subscriptions,
+        'priceHistoryEntries': priceHistoryEntries,
+        'investmentPortfolio': investmentPortfolio,
+        'marketPrices': marketPrices,
         'settings': settings,
       };
 
@@ -89,6 +118,7 @@ class PiggyVaultBackup {
       appVersion: json['appVersion'] as String? ?? 'unknown',
       goals: _castList(json['goals']),
       deposits: _castList(json['deposits']),
+      depositAllocations: _castList(json['depositAllocations']),
       userProfiles: _castList(json['userProfiles']),
       unlockedAchievements: _castList(json['unlockedAchievements']),
       unlockedSkills: _castList(json['unlockedSkills']),
@@ -102,6 +132,14 @@ class PiggyVaultBackup {
       jointGoals: _castList(json['jointGoals']),
       jointGoalMembers: _castList(json['jointGoalMembers']),
       avoidedPurchases: _castList(json['avoidedPurchases']),
+      memoryVaultEntries: _castList(json['memoryVaultEntries']),
+      lendingContracts: _castList(json['lendingContracts']),
+      chatMessages: _castList(json['chatMessages']),
+      giftGoals: _castList(json['giftGoals']),
+      subscriptions: _castList(json['subscriptions']),
+      priceHistoryEntries: _castList(json['priceHistoryEntries']),
+      investmentPortfolio: _castList(json['investmentPortfolio']),
+      marketPrices: _castList(json['marketPrices']),
       settings: (json['settings'] as Map<String, dynamic>?) ?? {},
     );
   }
@@ -119,7 +157,7 @@ class PiggyVaultBackup {
 
 /// Service for exporting and importing full app backups as JSON files.
 class BackupService {
-  static const int _currentBackupVersion = 1;
+  static const int _currentBackupVersion = 2;
   static const String _appVersion = '1.0.0';
   static const String _backupFileName = 'piggyvault_backup';
   static const String _backupMimeType = 'application/json';
@@ -141,6 +179,7 @@ class BackupService {
       appVersion: _appVersion,
       goals: await _readAll(_db.select(_db.goals)),
       deposits: await _readAll(_db.select(_db.deposits)),
+      depositAllocations: await _readAll(_db.select(_db.depositAllocations)),
       userProfiles: await _readAll(_db.select(_db.userProfiles)),
       unlockedAchievements:
           await _readAll(_db.select(_db.unlockedAchievements)),
@@ -155,6 +194,14 @@ class BackupService {
       jointGoals: await _readAll(_db.select(_db.jointGoals)),
       jointGoalMembers: await _readAll(_db.select(_db.jointGoalMembers)),
       avoidedPurchases: await _readAll(_db.select(_db.avoidedPurchases)),
+      memoryVaultEntries: await _readAll(_db.select(_db.memoryVaultEntries)),
+      lendingContracts: await _readAll(_db.select(_db.lendingContracts)),
+      chatMessages: await _readAll(_db.select(_db.chatMessages)),
+      giftGoals: await _readAll(_db.select(_db.giftGoals)),
+      subscriptions: await _readAll(_db.select(_db.subscriptions)),
+      priceHistoryEntries: await _readAll(_db.select(_db.priceHistoryEntries)),
+      investmentPortfolio: await _readAll(_db.select(_db.investmentPortfolio)),
+      marketPrices: await _readAll(_db.select(_db.marketPrices)),
       settings: _exportSettings(),
     );
   }
@@ -241,6 +288,7 @@ class BackupService {
       const tables = [
         'goals',
         'deposits',
+        'deposit_allocations',
         'user_profiles',
         'unlocked_achievements',
         'unlocked_skills',
@@ -254,6 +302,14 @@ class BackupService {
         'joint_goals',
         'joint_goal_members',
         'avoided_purchases',
+        'memory_vault_entries',
+        'lending_contracts',
+        'chat_messages',
+        'gift_goals',
+        'subscriptions',
+        'price_history_entries',
+        'investment_portfolio',
+        'market_prices',
       ];
       for (final table in tables) {
         await _db.customStatement('DELETE FROM $table');
@@ -262,6 +318,11 @@ class BackupService {
       // 2. Insert backup data using typed Drift insertOrReplace
       await _insertGoals(backup.goals);
       await _insertDeposits(backup.deposits);
+      if (backup.depositAllocations.isNotEmpty) {
+        await _insertDepositAllocations(backup.depositAllocations);
+      } else {
+        await _insertLegacyDepositAllocations(backup.deposits);
+      }
       await _insertUserProfiles(backup.userProfiles);
       await _insertAchievements(backup.unlockedAchievements);
       await _insertSkills(backup.unlockedSkills);
@@ -275,6 +336,14 @@ class BackupService {
       await _insertJointGoals(backup.jointGoals);
       await _insertJointMembers(backup.jointGoalMembers);
       await _insertAvoided(backup.avoidedPurchases);
+      await _insertMemoryVaultEntries(backup.memoryVaultEntries);
+      await _insertLendingContracts(backup.lendingContracts);
+      await _insertChatMessages(backup.chatMessages);
+      await _insertGiftGoals(backup.giftGoals);
+      await _insertSubscriptions(backup.subscriptions);
+      await _insertPriceHistoryEntries(backup.priceHistoryEntries);
+      await _insertInvestmentPortfolio(backup.investmentPortfolio);
+      await _insertMarketPrices(backup.marketPrices);
     });
 
     // 3. Restore Hive settings (outside transaction — Hive is separate)
@@ -295,7 +364,9 @@ class BackupService {
               currentAmount: r['currentAmount'] as int,
               currency: r['currency'] as String,
               accentColor: r['accentColor'] as String,
+              priceShieldHp: r['priceShieldHp'] as int? ?? 100,
               createdAt: _parseDate(r['createdAt']),
+              updatedAt: _parseDate(r['updatedAt'] ?? r['createdAt']),
             ),
             mode: InsertMode.insertOrReplace,
           );
@@ -308,14 +379,63 @@ class BackupService {
             Deposit(
               id: r['id'] as String,
               amount: r['amount'] as int,
-              goalAAmount: r['goalAAmount'] as int,
-              goalBAmount: r['goalBAmount'] as int,
               note: r['note'] as String?,
               createdAt: _parseDate(r['createdAt']),
+              updatedAt: _parseDate(r['updatedAt'] ?? r['createdAt']),
               isDeleted: r['isDeleted'] as bool? ?? false,
             ),
             mode: InsertMode.insertOrReplace,
           );
+    }
+  }
+
+  Future<void> _insertDepositAllocations(List<Map<String, dynamic>> rows) async {
+    for (final r in rows) {
+      await _db.into(_db.depositAllocations).insert(
+            DepositAllocation(
+              id: r['id'] as String,
+              depositId: r['depositId'] as String,
+              goalId: r['goalId'] as String,
+              amount: r['amount'] as int,
+              updatedAt: _parseDate(r['updatedAt'] ?? r['createdAt'] ?? DateTime.now().toIso8601String()),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+    }
+  }
+
+  Future<void> _insertLegacyDepositAllocations(List<Map<String, dynamic>> rows) async {
+    for (final r in rows) {
+      final depositId = r['id'] as String;
+      final goalAAmount = r['goalAAmount'] as int? ?? 0;
+      final goalBAmount = r['goalBAmount'] as int? ?? 0;
+      final createdAt = _parseDate(r['createdAt']);
+
+      if (goalAAmount > 0) {
+        await _db.into(_db.depositAllocations).insert(
+              DepositAllocation(
+                id: '${depositId}_goal_a',
+                depositId: depositId,
+                goalId: 'goal_a',
+                amount: goalAAmount,
+                updatedAt: createdAt,
+              ),
+              mode: InsertMode.insertOrReplace,
+            );
+      }
+
+      if (goalBAmount > 0) {
+        await _db.into(_db.depositAllocations).insert(
+              DepositAllocation(
+                id: '${depositId}_goal_b',
+                depositId: depositId,
+                goalId: 'goal_b',
+                amount: goalBAmount,
+                updatedAt: createdAt,
+              ),
+              mode: InsertMode.insertOrReplace,
+            );
+      }
     }
   }
 
@@ -341,6 +461,14 @@ class BackupService {
               lastBonusClaimDate: _parseNullableDate(r['lastBonusClaimDate']),
               bonusStreak: r['bonusStreak'] as int? ?? 0,
               crystalsBalance: r['crystalsBalance'] as int? ?? 0,
+              noSpendStreakCount: r['noSpendStreakCount'] as int? ?? 0,
+              lastNoSpendDate: _parseNullableDate(r['lastNoSpendDate']),
+              karmaDebt: r['karmaDebt'] as int? ?? 0,
+              pricePulseTrackingCount: r['pricePulseTrackingCount'] as int? ?? 0,
+              debuffActiveUntil: _parseNullableDate(r['debuffActiveUntil']),
+              karmaHealingStreakCount: r['karmaHealingStreakCount'] as int? ?? 0,
+              lastKarmaHealDate: _parseNullableDate(r['lastKarmaHealDate']),
+              updatedAt: _parseDate(r['updatedAt'] ?? DateTime.now().toIso8601String()),
             ),
             mode: InsertMode.insertOrReplace,
           );
@@ -477,6 +605,7 @@ class BackupService {
               currentAmount: r['currentAmount'] as int? ?? 0,
               deadline: _parseNullableDate(r['deadline']),
               createdAt: _parseDate(r['createdAt']),
+              updatedAt: _parseDate(r['updatedAt'] ?? r['createdAt']),
             ),
             mode: InsertMode.insertOrReplace,
           );
@@ -493,6 +622,7 @@ class BackupService {
               contributedAmount: r['contributedAmount'] as int? ?? 0,
               avatarIndex: r['avatarIndex'] as int? ?? 0,
               isCurrentUser: r['isCurrentUser'] as bool? ?? false,
+              updatedAt: _parseDate(r['updatedAt'] ?? DateTime.now().toIso8601String()),
             ),
             mode: InsertMode.insertOrReplace,
           );
@@ -507,6 +637,135 @@ class BackupService {
               title: r['title'] as String,
               amount: r['amount'] as int,
               createdAt: _parseDate(r['createdAt']),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+    }
+  }
+
+  Future<void> _insertMemoryVaultEntries(List<Map<String, dynamic>> rows) async {
+    for (final r in rows) {
+      await _db.into(_db.memoryVaultEntries).insert(
+            MemoryVaultEntry(
+              id: r['id'] as String,
+              goalId: r['goalId'] as String,
+              unlockThresholdPercent: r['unlockThresholdPercent'] as int,
+              content: r['content'] as String?,
+              isUnlocked: r['isUnlocked'] as bool? ?? false,
+              createdAt: _parseDate(r['createdAt']),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+    }
+  }
+
+  Future<void> _insertLendingContracts(List<Map<String, dynamic>> rows) async {
+    for (final r in rows) {
+      await _db.into(_db.lendingContracts).insert(
+            LendingContract(
+              id: r['id'] as String,
+              debtorName: r['debtorName'] as String,
+              amount: r['amount'] as int,
+              returnDate: _parseDate(r['returnDate']),
+              isReturned: r['isReturned'] as bool? ?? false,
+              createdAt: _parseDate(r['createdAt']),
+              updatedAt: _parseDate(r['updatedAt'] ?? r['createdAt']),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+    }
+  }
+
+  Future<void> _insertChatMessages(List<Map<String, dynamic>> rows) async {
+    for (final r in rows) {
+      await _db.into(_db.chatMessages).insert(
+            ChatMessagesCompanion(
+              role: Value(r['role'] as String),
+              content: Value(r['content'] as String),
+              createdAt: Value(_parseDate(r['createdAt'])),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+    }
+  }
+
+  Future<void> _insertGiftGoals(List<Map<String, dynamic>> rows) async {
+    for (final r in rows) {
+      await _db.into(_db.giftGoals).insert(
+            GiftGoal(
+              id: r['id'] as String,
+              goalId: r['goalId'] as String,
+              recipientName: r['recipientName'] as String,
+              recipientRelationship: r['recipientRelationship'] as String,
+              occasionType: r['occasionType'] as String,
+              occasionDate: _parseDate(r['occasionDate']),
+              emoji: r['emoji'] as String? ?? '🎁',
+              personalizedMessage: r['personalizedMessage'] as String?,
+              isSurpriseMode: r['isSurpriseMode'] as bool? ?? true,
+              createdAt: _parseDate(r['createdAt']),
+              updatedAt: _parseDate(r['updatedAt'] ?? r['createdAt']),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+    }
+  }
+
+  Future<void> _insertSubscriptions(List<Map<String, dynamic>> rows) async {
+    for (final r in rows) {
+      await _db.into(_db.subscriptions).insert(
+            SubscriptionsCompanion(
+              name: Value(r['name'] as String),
+              amountKopecks: Value(r['amountKopecks'] as int),
+              currency: Value(r['currency'] as String? ?? 'UAH'),
+              billingCycle: Value(r['billingCycle'] as String? ?? 'monthly'),
+              nextBillingDate: Value(_parseDate(r['nextBillingDate'])),
+              reminderDaysBefore: Value(r['reminderDaysBefore'] as int? ?? 3),
+              isActive: Value(r['isActive'] as bool? ?? true),
+              lastCheckedAt: Value(_parseDate(r['lastCheckedAt'] ?? r['nextBillingDate'])),
+              createdAt: Value(_parseDate(r['createdAt'])),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+    }
+  }
+
+  Future<void> _insertPriceHistoryEntries(List<Map<String, dynamic>> rows) async {
+    for (final r in rows) {
+      await _db.into(_db.priceHistoryEntries).insert(
+            PriceHistoryEntriesCompanion(
+              goalId: Value(r['goalId'] as String),
+              priceKopecks: Value(r['priceKopecks'] as int),
+              store: Value(r['store'] as String? ?? 'SerpAPI'),
+              dataSource: Value(r['dataSource'] as String? ?? 'api'),
+              cachedAt: Value(_parseDate(r['cachedAt'])),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+    }
+  }
+
+  Future<void> _insertInvestmentPortfolio(List<Map<String, dynamic>> rows) async {
+    for (final r in rows) {
+      await _db.into(_db.investmentPortfolio).insert(
+            InvestmentPortfolioData(
+              assetId: r['assetId'] as String,
+              assetName: r['assetName'] as String,
+              amountOwned: r['amountOwned'] as int,
+              averageBuyPrice: (r['averageBuyPrice'] as num).toDouble(),
+            ),
+            mode: InsertMode.insertOrReplace,
+          );
+    }
+  }
+
+  Future<void> _insertMarketPrices(List<Map<String, dynamic>> rows) async {
+    for (final r in rows) {
+      await _db.into(_db.marketPrices).insert(
+            MarketPrice(
+              symbol: r['symbol'] as String,
+              price: (r['price'] as num).toDouble(),
+              currency: r['currency'] as String,
+              updatedAt: _parseDate(r['updatedAt']),
             ),
             mode: InsertMode.insertOrReplace,
           );
@@ -607,17 +866,27 @@ class BackupService {
 
     // 2. Read goals for names
     final goals = await _db.getAllGoals();
-    final goalAName = goals
-            .where((g) => g.id == 'goal_a')
-            .map((g) => g.name)
-            .firstOrNull ??
-        'Goal A';
-    final goalBName = goals
-            .where((g) => g.id == 'goal_b')
-            .map((g) => g.name)
-            .firstOrNull ??
-        'Goal B';
+    final goalANameList = goals
+        .where((g) => g.id == 'goal_a')
+        .map((g) => g.name)
+        .toList();
+    final goalBNameList = goals
+        .where((g) => g.id == 'goal_b')
+        .map((g) => g.name)
+        .toList();
+    final goalAName = goalANameList.isNotEmpty ? goalANameList.first : 'Goal A';
+    final goalBName = goalBNameList.isNotEmpty ? goalBNameList.first : 'Goal B';
     final currency = _settings?.currency ?? '₴';
+    final allocations = await _db.select(_db.depositAllocations).get();
+    final allocationsByDeposit = <String, Map<String, int>>{};
+    for (final allocation in allocations) {
+      final perDeposit = allocationsByDeposit.putIfAbsent(
+        allocation.depositId,
+        () => <String, int>{},
+      );
+      perDeposit[allocation.goalId] =
+          (perDeposit[allocation.goalId] ?? 0) + allocation.amount;
+    }
 
     // 3. Build CSV content
     final buffer = StringBuffer();
@@ -629,10 +898,11 @@ class BackupService {
 
     // Rows
     for (final d in deposits) {
+      final breakdown = allocationsByDeposit[d.id] ?? const <String, int>{};
       final date = d.createdAt.toIso8601String().split('T').first;
       final noteEscaped = _csvEscape(d.note ?? '');
-      final goalAAmount = (d.goalAAmount / 100).toStringAsFixed(2);
-      final goalBAmount = (d.goalBAmount / 100).toStringAsFixed(2);
+      final goalAAmount = ((breakdown['goal_a'] ?? 0) / 100).toStringAsFixed(2);
+      final goalBAmount = ((breakdown['goal_b'] ?? 0) / 100).toStringAsFixed(2);
       final totalAmount = (d.amount / 100).toStringAsFixed(2);
 
       buffer.writeln(
@@ -769,18 +1039,43 @@ class BackupService {
             ? fields[noteIdx].trim()
             : 'CSV Import';
 
+        final depositId = '${DateTime.now().millisecondsSinceEpoch}_$i';
+
         // Insert deposit
         await _db.into(_db.deposits).insert(
               Deposit(
-                id: '${DateTime.now().millisecondsSinceEpoch}_$i',
+                id: depositId,
                 amount: amount.round(),
-                goalAAmount: goalA.round(),
-                goalBAmount: goalB.round(),
                 note: note,
                 createdAt: date,
+                updatedAt: date,
                 isDeleted: false,
               ),
             );
+
+        if (goalA.round() > 0) {
+          await _db.into(_db.depositAllocations).insert(
+                DepositAllocation(
+                  id: '${depositId}_goal_a',
+                  depositId: depositId,
+                  goalId: 'goal_a',
+                  amount: goalA.round(),
+                  updatedAt: date,
+                ),
+              );
+        }
+
+        if (goalB.round() > 0) {
+          await _db.into(_db.depositAllocations).insert(
+                DepositAllocation(
+                  id: '${depositId}_goal_b',
+                  depositId: depositId,
+                  goalId: 'goal_b',
+                  amount: goalB.round(),
+                  updatedAt: date,
+                ),
+              );
+        }
 
         importedCount++;
       }

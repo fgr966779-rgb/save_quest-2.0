@@ -146,7 +146,7 @@ class _DailyBonusDialogState extends ConsumerState<DailyBonusDialog> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              '+${state.bonusAmountForToday}',
+                              '+$amount',
                               style: AppTypography.display(
                                 context,
                                 color: AppColors.accent,
@@ -157,7 +157,7 @@ class _DailyBonusDialogState extends ConsumerState<DailyBonusDialog> {
                       ),
                       const SizedBox(height: 32),
                       AppButton(
-                        label: _claimed ? t('daily_bonus_claimed') : t('daily_bonus_claim'),
+                        label: _claimed ? t('daily_bonus_claimed') : t('daily_bonus_claim_btn'),
                         variant: ButtonVariant.primary,
                         onPressed: _claimed ? null : _claim,
                       ),

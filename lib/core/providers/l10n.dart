@@ -21,7 +21,6 @@ final localeProvider = StateNotifierProvider<LocaleNotifier, String>((ref) {
 class AppLocalizations {
   static const Map<String, Map<String, String>> _localizedValues = {
     'UA': {
-
       // =============================================
       // COMMON (shared across screens)
       // =============================================
@@ -90,7 +89,8 @@ class AppLocalizations {
       'dash_leaderboard': 'Лідерборд',
       'dash_class': 'Клас',
       'dash_active_penalties': 'Активні штрафи',
-      'dash_penalties_detected': 'Виявлено транзакції з чорного списку. Штрафи нараховано.',
+      'dash_penalties_detected':
+          'Виявлено транзакції з чорного списку. Штрафи нараховано.',
       'dash_penalties_btn': 'Штрафи',
       'dash_quick_deposit_snack': 'Швидкий внесок: 50.00 ₴ успішно!',
       'dash_quick_deposit_error': 'Помилка при збереженні транзакції',
@@ -115,9 +115,16 @@ class AppLocalizations {
       'goal_price_scanner': 'СКАНЕР РИНКОВИХ ЦІН',
       'goal_price_check': 'Перевірити актуальні ціни на ринку',
       'goal_reversal_title': 'РЕВЕРСІЯ ТРАНЗАКЦІЇ',
-      'goal_reversal_confirm': 'Ви дійсно бажаєте анулювати цей вклад? Ця дія незворотна.',
+      'goal_reversal_confirm':
+          'Ви дійсно бажаєте анулювати цей вклад? Ця дія незворотна.',
       'goal_reversal_success': 'Вклад успішно анульовано!',
       'goal_not_found': 'Ціль не знайдено',
+      'scan_market_prices': 'СКАНЕР РИНКОВИХ ЦІН',
+      'price_not_found': 'Ціну не знайдено в пріоритетних магазинах',
+      'price_actual': 'Ціна актуальна',
+      'update_target_title': 'Оновити мішень?',
+      'update_target_content': 'Знайдено ціну: {0} грн. Поточна мішень: {1} грн. Оновити?',
+      'target_updated': 'Мішень успішно оновлено!',
 
       // =============================================
       // PRICE ANALYSIS
@@ -128,6 +135,10 @@ class AppLocalizations {
       'price_analysis_title': 'АНАЛІЗ ЦІНИ',
       'price_target_product': 'ЦІЛЬОВИЙ ТОВАР',
       'price_hint': 'Наприклад: PS5, монітор 27"',
+      'price_quick_picks': 'Швидкі запити',
+      'price_live_source': 'Актуальні ринкові ціни через SerpAPI',
+      'price_live_badge': 'LIVE MARKET',
+      'price_fallback_badge': 'DEMO ESTIMATE',
       'price_scan_btn': 'СКАНУВАТИ ЦІНИ',
       'price_range_header': 'ДІАПАЗОН ЦІН',
       'price_estimate': 'ОЦІНКА',
@@ -135,6 +146,7 @@ class AppLocalizations {
       'price_avg': 'СЕРЕДНЯ',
       'price_max': 'МАКСИМУМ',
       'price_spread': 'Розкид: ',
+      'price_trend_title': 'Динаміка цін',
       'price_below_market': 'Ціль менша за ринкову ціну — чудова нагода!',
       'price_above_market': 'Ваша ціль вища за ринкову середню',
       'price_comparison': 'ПОРІВНЯННЯ З ЦІЛЛЮ',
@@ -237,7 +249,8 @@ class AppLocalizations {
       'settings_reminder': 'Щоденний нагадувач',
       'settings_reminder_sub': 'Нагадувати про внесення коштів кожні 24 години',
       'settings_achievements': 'Сповіщення про досягнення',
-      'settings_achievements_sub': 'Отримувати пуші при отриманні нового досягнення',
+      'settings_achievements_sub':
+          'Отримувати пуші при отриманні нового досягнення',
       'settings_security': 'БЕЗПЕКА ТА ПРИВАТНІСТЬ',
       'settings_privacy': 'Приватний режим',
       'settings_privacy_sub': 'Приховувати суми на головному екрані',
@@ -275,7 +288,8 @@ class AppLocalizations {
       'settings_debug_remote_btn': 'Управління ПК',
       'settings_reset_word': 'ВИДАЛИТИ',
       'settings_reset_dialog_title': '⚠️ ВИДАЛЕННЯ ВСІХ ДАНИХ',
-      'settings_reset_dialog_desc': 'Ця дія НЕЗВОРОТНА. Всі цілі, транзакції, досягнення та налаштування буде видалено назавжди.',
+      'settings_reset_dialog_desc':
+          'Ця дія НЕЗВОРОТНА. Всі цілі, транзакції, досягнення та налаштування буде видалено назавжди.',
       'settings_reset_dialog_instruction': 'Для підтвердження введіть слово:',
       'settings_reset_error': 'Помилка при видаленні: ',
       'settings_export_backup': 'ЕКСПОРТ БЕКАПУ',
@@ -290,7 +304,8 @@ class AppLocalizations {
       'backup_import_error': 'Помилка при відновленні: ',
       'backup_import_invalid': 'Невірний формат файлу бекапу',
       'backup_import_confirm_title': 'Відновити бекап?',
-      'backup_import_confirm_desc': 'Поточні дані будуть ПЕРЕЗАПИСАНІ даними з файлу бекапу. Ця дія незворотна.',
+      'backup_import_confirm_desc':
+          'Поточні дані будуть ПЕРЕЗАПИСАНІ даними з файлу бекапу. Ця дія незворотна.',
       'backup_import_confirm_yes': 'Відновити',
       'backup_import_confirm_no': 'Скасувати',
       'csv_exporting': 'Генерація CSV...',
@@ -316,7 +331,8 @@ class AppLocalizations {
       'notif_mark_all': 'Позначити всі прочитаними',
       'notif_delete_all': 'Видалити всі',
       'notif_reminder_title': 'Час відкласти!',
-      'notif_reminder_body': 'Сьогодні ще не було вкладень. Зробіть внесок у Скарбничку!',
+      'notif_reminder_body':
+          'Сьогодні ще не було вкладень. Зробіть внесок у Скарбничку!',
       'notif_streak_title': 'Стрік під загрозою!',
       'notif_streak_body': 'Зробіть вкладення до опівночі, щоб зберегти стрік.',
       'notif_achievement_title': 'Нове досягнення!',
@@ -366,8 +382,10 @@ class AppLocalizations {
       // ONBOARDING
       // =============================================
       'onb_splash_tagline': 'Твоя скарбничка мрій',
-      'onb_welcome_subtitle': 'Твій персональний інструмент для\nнакопичення коштів',
-      'onb_welcome_desc': 'Відкладай на дві мрії одночасно, відстежуй прогрес і досягай фінансових цілей',
+      'onb_welcome_subtitle':
+          'Твій персональний інструмент для\nнакопичення коштів',
+      'onb_welcome_desc':
+          'Відкладай на дві мрії одночасно, відстежуй прогрес і досягай фінансових цілей',
       'onb_start_btn': 'Розпочати',
       'onb_step_1_3': 'Крок 1 з 3',
       'onb_step_2_3': 'Крок 2 з 3',
@@ -389,7 +407,8 @@ class AppLocalizations {
       'onb_finish_save_error': 'Помилка при збереженні: ',
       'onb_finish_currency': 'Валюта',
       'onb_finish_split': 'Розподіл внесків',
-      'onb_finish_split_desc': 'Кожен твій внесок буде автоматично розподілятися між цілями відповідно до обраного відсотка',
+      'onb_finish_split_desc':
+          'Кожен твій внесок буде автоматично розподілятися між цілями відповідно до обраного відсотка',
       'onb_finish_start_btn': 'Розпочати накопичувати',
 
       // =============================================
@@ -428,7 +447,8 @@ class AppLocalizations {
       'regret_title': 'АРХІВ ЖАЛЮ',
       'regret_add_btn': 'ДОДАТИ НЕКУПЛЕНЕ',
       'regret_empty_title': 'ВАШ АРХІВ ПОРОЖНІЙ',
-      'regret_empty_desc': 'Тут зберігаються речі, від яких ви свідомо відмовились',
+      'regret_empty_desc':
+          'Тут зберігаються речі, від яких ви свідомо відмовились',
       'regret_empty_btn': 'ДОДАТИ ПЕРШИЙ ЗАПИС',
       'regret_total_saved': 'ВСЬОГО ВРЯТОВАНО',
       'regret_dialog_title': 'ДОДАТИ В АРХІВ',
@@ -447,12 +467,23 @@ class AppLocalizations {
       'pet_dragon': 'КІБЕР-ДРАКОН',
       'pet_dog': 'МЕХА-ПЕС',
       'pet_adopt_btn': 'ВЗЯТИ',
+      'pet_core_temp': 'Реактор вихованця (Core Temp)',
+      'pet_overheating_warning':
+          'УВАГА: КРИТИЧНИЙ ПЕРЕГРІВ РЕАКТОРА! Здійсніть заощадження для охолодження.',
+      'dopamine_detox_title': 'Дофаміновий детокс',
+      'dopamine_detox_subtitle':
+          'ДОФАМІНОВИЙ ДЕТОКС АКТИВНИЙ: Доступ до ринку та налаштувань аватара заблоковано. Зосередьтеся на накопиченні капіталу.',
+      'settings_detox_mode': 'Дофаміновий детокс',
+      'settings_detox_mode_sub':
+          'Автоматично вимикає кольори додатку та блокує гейміфікацію при боргах або перегріві реактора.',
+      'settings_detox_trigger': 'Почати 24г детокс',
 
       // =============================================
       // GAMIFICATION: BLACKLIST
       // =============================================
       'blacklist_title': 'АВТО-ШТРАФИ (BLACKLIST)',
-      'blacklist_desc': 'Якщо система виявить покупку з цих категорій — нарахується автоматичний штраф',
+      'blacklist_desc':
+          'Якщо система виявить покупку з цих категорій — нарахується автоматичний штраф',
       'blacklist_active': 'АКТИВНИЙ БЛЕКЛІСТ',
       'blacklist_empty': 'Жодної категорії не додано. Натисніть "+" щоб додати',
       'blacklist_hint': 'Введіть назву категорії...',
@@ -470,7 +501,8 @@ class AppLocalizations {
       'squad_title': 'АЛЬЯНС / СПІЛЬНІ ЦІЛІ',
       'squad_new_btn': 'Нова спільна ціль',
       'squad_empty_title': 'НЕМАЄ СПІЛЬНИХ ЦІЛЕЙ',
-      'squad_empty_desc': 'Створіть спільну ціль з друзями для спільного накопичення',
+      'squad_empty_desc':
+          'Створіть спільну ціль з друзями для спільного накопичення',
       'squad_collected': 'Зібрано: ',
       'squad_members': 'Учасників: ',
       'joint_detail_together': 'СПІЛЬНО',
@@ -521,7 +553,8 @@ class AppLocalizations {
       'penalty_debt': 'Борг: ',
       'penalty_pay_btn': 'СПЛАТИТИ',
       'penalty_paid': 'Штраф сплачено. Цілісність відновлено!',
-      'penalty_empty': 'У вас немає активних штрафів. Система працює стабільно.',
+      'penalty_empty':
+          'У вас немає активних штрафів. Система працює стабільно.',
 
       // =============================================
       // GAMIFICATION: LOOTBOX
@@ -543,7 +576,8 @@ class AppLocalizations {
       'class_changed': 'Клас успішно змінено!',
       'class_title': 'ВИБІР КЛАСУ',
       'class_warrior_name': 'ВОЇН (Warrior)',
-      'class_warrior_desc': 'Майстер щоденних депозитів. Бонуси за стрік та стабільність.',
+      'class_warrior_desc':
+          'Майстер щоденних депозитів. Бонуси за стрік та стабільність.',
       'class_mage_name': 'МАГ (Mage)',
       'class_mage_desc': 'Майстер цифр. Бонуси за аналітику та прогнози.',
       'class_rogue_name': 'РОЗБІЙНИК (Rogue)',
@@ -577,11 +611,14 @@ class AppLocalizations {
       'skill_req_level': 'Потрібно: ',
       'skill_req_text': 'Рівень ',
       'skill_name_hacker': 'Hacker',
-      'skill_desc_hacker': 'Майстер терміналу. Отримуйте ХР за використання CLI, розшифровку даних та Incognito Mode. Підвищує шанс критичного внеску.',
+      'skill_desc_hacker':
+          'Майстер терміналу. Отримуйте ХР за використання CLI, розшифровку даних та Incognito Mode. Підвищує шанс критичного внеску.',
       'skill_name_magnate': 'Magnate',
-      'skill_desc_magnate': 'Фінансовий геній. Отримуйте ХР за великі депозити та системність. Дає множники ХР та знижки на Чорному Ринку.',
+      'skill_desc_magnate':
+          'Фінансовий геній. Отримуйте ХР за великі депозити та системність. Дає множники ХР та знижки на Чорному Ринку.',
       'skill_name_resilience': 'Resilience',
-      'skill_desc_resilience': 'Незламний кібер-самурай. Отримуйте ХР за відновлення серії та сплату штрафів. Зменшує вартість штрафів.',
+      'skill_desc_resilience':
+          'Незламний кібер-самурай. Отримуйте ХР за відновлення серії та сплату штрафів. Зменшує вартість штрафів.',
       'skill_locked_dep': 'Попередній вузол заблоковано.',
       'skill_ghost_desc': 'Відкриває секретні команди в терміналі.',
       'skill_crit_title': 'Критичний Обхід',
@@ -591,7 +628,8 @@ class AppLocalizations {
       'skill_trade_title': 'Торгова Хитрість',
       'skill_trade_desc': 'Знижки на всі товари Чорного Ринку.',
       'skill_shield_title': 'Щит Серії',
-      'skill_shield_desc': 'Авто-захист при пропуску 1 дня (не витрачає Freeze Token).',
+      'skill_shield_desc':
+          'Авто-захист при пропуску 1 дня (не витрачає Freeze Token).',
       'skill_iron_title': 'Залізний Кордон',
       'skill_iron_desc': 'Вартість штрафів знижена на 15%.',
 
@@ -609,14 +647,16 @@ class AppLocalizations {
       'market_streak_freeze_desc': 'Захищає стрік від згасання на 1 день',
       'market_common_lootbox': 'ЗВИЧАЙНИЙ ЛУТБОКС',
       'market_common_lootbox_desc': 'Містить випадкову нагороду',
-      'market_integration_soon': 'В розробці: Будуть інтегровані реальні нагороди',
+      'market_integration_soon':
+          'В розробці: Будуть інтегровані реальні нагороди',
       'market_exclusive_optics': 'ЕКСКЛЮЗИВНА ОПТИКА',
       'market_terminator': 'Термінатор',
       'market_terminator_desc': 'Червоне кібер-око',
       'market_premium_paints': 'ПРЕМІУМ ФАРБИ',
       'market_decals_scars': 'ДЕКАЛІ ТА ШРАМИ',
       'market_purchased_badge': 'ПРИДБАНО',
-      'market_purchased_success': 'Придбано: {name}! Тепер він доступний у конструкторі.',
+      'market_purchased_success':
+          'Придбано: {name}! Тепер він доступний у конструкторі.',
       'market_item_holo_desc': 'Голографічна смуга',
       'market_item_quantum_desc': 'Абсолютний неон',
       'market_item_gold_desc': 'Сяйво еліти',
@@ -655,10 +695,40 @@ class AppLocalizations {
       // GAMIFICATION: SHIELD ACTIVATION
       // =============================================
       'shield_title': 'Стрік Врятовано!',
-      'shield_desc': 'Ваш Shield (кріо-токен) автоматично захистив вашу серію від згасання!',
+      'shield_desc':
+          'Ваш Shield (кріо-токен) автоматично захистив вашу серію від згасання!',
       'shield_used': 'Використано Shield: ',
       'shield_unit': ' шт.',
       'shield_btn': 'Супер!',
+
+      // --- Price Hunter ---
+      'price_hunter_title': 'Охотник за цінами',
+      'price_hunter_setup_btn': 'ВІДСТЕЖУВАТИ ЦІНУ',
+      'price_hunter_update_btn': 'ОНОВИТИ ЦІНУ',
+      'price_hunter_shield': 'ЩИТ БОСА',
+      'price_hunter_target': 'ЦІЛЬОВА',
+      'price_hunter_current': 'ПОТОЧНА',
+      'price_hunter_critical': 'КРИТИЧНИЙ УДАР!',
+      'price_hunter_cooldown': 'Сканер перезаряджається. Спробуйте пізніше.',
+      'price_hunter_dialog_title': 'Відстежувати товар',
+      'price_hunter_dialog_desc': 'Введіть посилання на товар та його поточну ціну. Якщо ціна впаде, бос отримає урон!',
+      'price_hunter_dialog_url': 'URL товару',
+      'price_hunter_dialog_price': 'Поточна ціна',
+
+      // --- Cyber Partner ---
+      'partner_card_title': 'Кібер-Напарник',
+      'partner_status_online': '✅ Напарник активний!',
+      'partner_status_offline': '⏳ Очікує на твій депозит...',
+      'partner_empty_title': 'Напарник не знайдений',
+      'partner_empty_desc': 'Запроси союзника, щоб отримувати подвійний XP!',
+      'partner_btn_add': 'ДОДАТИ НАПАРНИКА',
+      'partner_btn_change': 'Змінити напарника',
+      'partner_quest_title': 'Подвійний удар',
+      'partner_quest_desc': 'Обидва зробили депозит цього тижня',
+      'partner_dialog_title': 'Знайди Кібер-Напарника!',
+      'partner_dialog_desc': 'Спільні депозити = подвійний XP та бонусні лутбокси. Введіть ім\'я напарника, щоб об\'єднатися.',
+      'partner_dialog_input': 'Ім\'я напарника',
+      'partner_saved_quest': 'Ти врятував спільний квест! Напарник вдячний!',
 
       // =============================================
       // BANKING INSIGHTS
@@ -677,7 +747,8 @@ class AppLocalizations {
       'remote_mode_trackpad': 'Режим: Трекпад',
       'remote_latency': 'Виміряти затримку',
       'remote_disconnect': 'Відключитися',
-      'remote_desc': 'Встановіть з\'єднання з хост-сервером для віддаленого управління',
+      'remote_desc':
+          'Встановіть з\'єднання з хост-сервером для віддаленого управління',
       'remote_ip_label': 'IP АДРЕСА ПК',
       'remote_port_label': 'ПОРТ WebSocket',
       'remote_pin_label': 'КІБЕР-ПАРОЛЬ (PIN)',
@@ -692,7 +763,8 @@ class AppLocalizations {
       'remote_scroll_up': 'Скрол Вгору',
       'remote_text_btn': 'ТЕКСТ',
       'remote_text_dialog_title': 'ВВЕДЕННЯ ТЕКСТУ НА ПК',
-      'remote_text_dialog_desc': 'Введений нижче текст буде послідовно надіслано на віддалений ПК',
+      'remote_text_dialog_desc':
+          'Введений нижче текст буде послідовно надіслано на віддалений ПК',
       'remote_text_hint': 'Введіть текст...',
       'remote_send_btn': 'НАДІСЛАТИ',
 
@@ -759,15 +831,99 @@ class AppLocalizations {
       'onb_currency_label': 'Валюта',
 
       // =============================================
-      // FEAT-15: CSV IMPORT
+      // CSV IMPORT
       // =============================================
       'csv_import': 'Імпорт CSV',
       'csv_import_success': 'Імпортовано: {count} транзакцій',
       'csv_import_error': 'Помилка імпорту',
-      'csv_import_invalid': 'Невірний формат CSV. Очікуються колонки: date, amount',
+      'csv_import_invalid':
+          'Невірний формат CSV. Очікуються колонки: date, amount',
+
+      // =============================================
+      // IMPULSE FREEZER (UA)
+      // =============================================
+      'freezer_title': 'КРІО-ЗАМОРОЖУВАЧ',
+      'freezer_desc': 'Заморожуйте імпульсивні фінансові бажання та перевіряйте їх після охолодження.',
+      'freezer_locked': 'ІМПУЛЬС ЗАМОРОЖЕНО',
+      'freezer_unfreeze_save': 'КРІО-СЕЙВ (+150 XP)',
+      'freezer_unfreeze_buy': 'ЗЛАМАТИ & КУПИТИ',
+      'freezer_duration': 'Тривалість',
+      'freezer_duration_24': '24 Години',
+      'freezer_duration_48': '48 Годин',
+      'freezer_item_name': 'Назва бажання',
+      'freezer_item_name_hint': 'Наприклад: Механічна клавіатура',
+      'freezer_item_name_validator': 'Будь ласка, введіть назву',
+      'freezer_amount': 'Сума (₴)',
+      'freezer_amount_hint': 'Сума для заморозки',
+      'freezer_amount_validator': 'Будь ласка, введіть суму',
+      'freezer_freeze_btn': 'ЗАПУСТИТИ КРІО-ЗАМОРОЖКУ',
+      'freezer_hours': 'год.',
+      'freezer_active_badge': 'КРІО-ЩИТ АКТИВНИЙ',
+      'freezer_saved_toast': 'Перемога сили волі! Кошти збережено у сейф!',
+      'freezer_bought_toast': 'Кріо-щит зламано. Товар куплено.',
+      'freezer_debug_fast_forward': '⚡ ШВИДКИЙ ПЕРЕМОТ (DEBUG)',
+
+      // =============================================
+      // NO-SPEND STREAK (UA)
+      // =============================================
+      'no_spend_title': '🛡️ ЧЕЛЛЕНДЖ «НУЛЬОВІ ВИТРАТИ»',
+      'no_spend_subtitle': 'Не витрачай зайвого — отримуй нагороди!',
+      'no_spend_claim_btn': 'Сьогодні я не витрачав зайвого',
+      'no_spend_claimed': '✅ Вже зафіксовано сьогодні',
+      'no_spend_streak_label': '🛡️ Серія без витрат',
+      'no_spend_days': ' дн.',
+      'no_spend_chest_progress': 'До наступного ящика:',
+      'no_spend_success_title': '🛡️ ДЕНЬ БЕЗ ВИТРАТ!',
+      'no_spend_success_reward': '+15 Кібер-Кредитів',
+      'no_spend_success_streak': 'Серія:',
+      'no_spend_success_progress': 'Прогрес до скрині:',
+      'no_spend_lootbox_title': '🎁 НАГОРОДА 7-ДЕННОЇ СЕРІЇ!',
+      'no_spend_lootbox_desc': 'Ви отримали ЛУТБОКС за 7-денну серію без витрат!',
+      'no_spend_debug_btn': '⚡ DEBUG: +1 день (тест)',
+
+      // =============================================
+      // KARMA DEBT (UA)
+      // =============================================
+      'karma_title': '👾 КАРМА-БОРГ',
+      'karma_subtitle': 'Активний дебафф: -20% XP',
+      'karma_debuff_hours': 'Дебафф активний ще {hours} год.',
+      'karma_debuff_desc': 'Систему скомпрометовано! Накопичено карма-борг через зайві витрати. Виконуйте щоденні квести очищення для відновлення пета.',
+      'karma_cleanse_btn': '🔮 Очистити Карму (-25 боргу)',
+      'karma_report_btn': '💥 Я сорвався / Зайва витрата',
+      'karma_report_dialog_title': '💥 Зафіксувати срив',
+      'karma_report_dialog_desc': 'Чесність — перший крок до виправлення. Введіть суму витрат (необов’язково) для фіксації.',
+      'report_amount_label': 'Сума зриву (₴)',
+      'report_confirm': 'ПІДТВЕРДИТИ ЗРИВ',
+      'karma_compromised_toast': '👾 Карма-Борг атаковав! Твій кібер-пет отримав дебафф -20% XP на 48 годин!',
+      'karma_cleansed_toast': '🔮 Карма очищена! Залишилося боргу: {amount}',
+      'karma_healed_toast': '✨ Кібер-Пет повністю вилікуваний! Дебафф знято!',
+      'karma_quest_title': 'Heal Karma-Borg (Вилікувати Карма-Борга)',
+
+      // =============================================
+      // PRICE HUNTER
+      // =============================================
+      'ph_title': '🎯 Охотник за цінами',
+      'ph_track_btn': 'ВІДСТЕЖУВАТИ ЦІНУ',
+      'ph_update_btn': 'ОНОВИТИ ЦІНУ',
+      'ph_url_label': 'Посилання на товар',
+      'ph_initial_price_label': 'Початкова ціна (₴)',
+      'ph_current_price_label': 'Поточна ціна (₴)',
+      'ph_new_price_label': 'Нова ціна (₴)',
+      'ph_cooldown_msg': 'Ціну можна оновлювати не частіше 1 разу на годину.',
+      'ph_critical_hit': 'КРИТИЧНИЙ УДАР!',
+      'ph_critical_desc': 'Щит ціни знищено! Бос вразливий. +50 XP',
+      'ph_boss_vulnerable': '⚡ БОС УРАЗЛИВИЙ! Ціна впала!',
+
+      // =============================================
+      // STREAK SHIELD
+      // =============================================
+      'streak_shield_activated': 'Щит активовано! (-50 CRYSH)',
+      'streak_shield_error': 'Недостатньо CRYSH (потрібно 50)',
+      'flash_goal_title': 'Щоденна Мікро-Ціль',
+      'flash_goal_desc': 'Відклади %s ₴ до опівночі',
+      'flash_goal_completed': '✅ Виконано! +30 XP',
     },
     'EN': {
-
       // =============================================
       // COMMON
       // =============================================
@@ -836,7 +992,8 @@ class AppLocalizations {
       'dash_leaderboard': 'Leaderboard',
       'dash_class': 'Class',
       'dash_active_penalties': 'Active Penalties',
-      'dash_penalties_detected': 'Blacklist transactions detected. Penalties applied.',
+      'dash_penalties_detected':
+          'Blacklist transactions detected. Penalties applied.',
       'dash_penalties_btn': 'Penalties',
       'dash_quick_deposit_snack': 'Quick deposit: 50.00 ₴ successful!',
       'dash_quick_deposit_error': 'Error saving transaction',
@@ -861,9 +1018,16 @@ class AppLocalizations {
       'goal_price_scanner': 'MARKET PRICE SCANNER',
       'goal_price_check': 'Check current market prices',
       'goal_reversal_title': 'TRANSACTION REVERSAL',
-      'goal_reversal_confirm': 'Are you sure you want to reverse this deposit? This action is irreversible.',
+      'goal_reversal_confirm':
+          'Are you sure you want to reverse this deposit? This action is irreversible.',
       'goal_reversal_success': 'Deposit successfully reversed!',
       'goal_not_found': 'Goal not found',
+      'scan_market_prices': 'MARKET PRICE SCANNER',
+      'price_not_found': 'Price not found in priority stores',
+      'price_actual': 'Price is actual',
+      'update_target_title': 'Update target?',
+      'update_target_content': 'Price found: {0} ₴. Current target: {1} ₴. Update target?',
+      'target_updated': 'Target updated successfully!',
 
       // =============================================
       // PRICE ANALYSIS
@@ -874,6 +1038,10 @@ class AppLocalizations {
       'price_analysis_title': 'PRICE ANALYSIS',
       'price_target_product': 'TARGET PRODUCT',
       'price_hint': 'e.g. PS5, monitor 27"',
+      'price_quick_picks': 'Quick picks',
+      'price_live_source': 'Live market prices via SerpAPI',
+      'price_live_badge': 'LIVE MARKET',
+      'price_fallback_badge': 'DEMO ESTIMATE',
       'price_scan_btn': 'SCAN PRICES',
       'price_range_header': 'PRICE RANGE',
       'price_estimate': 'ESTIMATE',
@@ -881,6 +1049,7 @@ class AppLocalizations {
       'price_avg': 'AVERAGE',
       'price_max': 'MAXIMUM',
       'price_spread': 'Spread: ',
+      'price_trend_title': 'Price trend',
       'price_below_market': 'Target is below market price — great opportunity!',
       'price_above_market': 'Your target is above market average',
       'price_comparison': 'COMPARISON WITH TARGET',
@@ -891,7 +1060,8 @@ class AppLocalizations {
       // GOAL COMPLETE
       // =============================================
       'goal_complete_title': 'GOAL ACHIEVED!',
-      'goal_complete_desc': 'You have successfully saved the full amount. Congratulations!',
+      'goal_complete_desc':
+          'You have successfully saved the full amount. Congratulations!',
       'goal_complete_bonus': 'GOLDEN VAULT BONUS',
       'goal_complete_bonus_desc': '+500 XP added to your account!',
       'goal_complete_back': 'RETURN TO VAULT',
@@ -983,7 +1153,8 @@ class AppLocalizations {
       'settings_reminder': 'Daily Reminder',
       'settings_reminder_sub': 'Remind me to secure deposits every 24 hours',
       'settings_achievements': 'Achievement Notifications',
-      'settings_achievements_sub': 'Receive push notifications for new achievements',
+      'settings_achievements_sub':
+          'Receive push notifications for new achievements',
       'settings_security': 'SECURITY & PRIVACY',
       'settings_privacy': 'Privacy Mode',
       'settings_privacy_sub': 'Hide amounts on the main screen',
@@ -1021,7 +1192,8 @@ class AppLocalizations {
       'settings_debug_remote_btn': 'PC Control',
       'settings_reset_word': 'DELETE',
       'settings_reset_dialog_title': '⚠️ DELETE ALL DATA',
-      'settings_reset_dialog_desc': 'This action is IRREVERSIBLE. All goals, transactions, achievements and settings will be permanently deleted.',
+      'settings_reset_dialog_desc':
+          'This action is IRREVERSIBLE. All goals, transactions, achievements and settings will be permanently deleted.',
       'settings_reset_dialog_instruction': 'Type the word to confirm:',
       'settings_reset_error': 'Error deleting: ',
       'settings_export_backup': 'EXPORT BACKUP',
@@ -1036,7 +1208,8 @@ class AppLocalizations {
       'backup_import_error': 'Restore error: ',
       'backup_import_invalid': 'Invalid backup file format',
       'backup_import_confirm_title': 'Restore Backup?',
-      'backup_import_confirm_desc': 'Current data will be OVERWRITTEN with the backup file data. This action cannot be undone.',
+      'backup_import_confirm_desc':
+          'Current data will be OVERWRITTEN with the backup file data. This action cannot be undone.',
       'backup_import_confirm_yes': 'Restore',
       'backup_import_confirm_no': 'Cancel',
       'csv_exporting': 'Generating CSV...',
@@ -1062,9 +1235,11 @@ class AppLocalizations {
       'notif_mark_all': 'Mark all as read',
       'notif_delete_all': 'Delete all',
       'notif_reminder_title': 'Time to save!',
-      'notif_reminder_body': "You haven't made a deposit today. Add to your PiggyVault!",
+      'notif_reminder_body':
+          "You haven't made a deposit today. Add to your PiggyVault!",
       'notif_streak_title': 'Streak at risk!',
-      'notif_streak_body': 'Make a deposit before midnight to keep your streak.',
+      'notif_streak_body':
+          'Make a deposit before midnight to keep your streak.',
       'notif_achievement_title': 'New achievement!',
       'notif_milestone_title': 'Milestone reached!',
       'notif_levelup_title': 'Level up!',
@@ -1113,7 +1288,8 @@ class AppLocalizations {
       // =============================================
       'onb_splash_tagline': 'Your dream piggy bank',
       'onb_welcome_subtitle': 'Your personal tool\nfor saving money',
-      'onb_welcome_desc': 'Save for two dreams at once, track progress and achieve financial goals',
+      'onb_welcome_desc':
+          'Save for two dreams at once, track progress and achieve financial goals',
       'onb_start_btn': 'Get Started',
       'onb_step_1_3': 'Step 1 of 3',
       'onb_step_2_3': 'Step 2 of 3',
@@ -1135,7 +1311,8 @@ class AppLocalizations {
       'onb_finish_save_error': 'Error saving: ',
       'onb_finish_currency': 'Currency',
       'onb_finish_split': 'Deposit Distribution',
-      'onb_finish_split_desc': 'Each deposit will be automatically distributed between goals according to the selected percentage',
+      'onb_finish_split_desc':
+          'Each deposit will be automatically distributed between goals according to the selected percentage',
       'onb_finish_start_btn': 'Start Saving',
 
       // =============================================
@@ -1174,7 +1351,8 @@ class AppLocalizations {
       'regret_title': 'REGRET ARCHIVE',
       'regret_add_btn': 'ADD UNSPURCHASED',
       'regret_empty_title': 'YOUR ARCHIVE IS EMPTY',
-      'regret_empty_desc': 'Items you consciously chose not to buy are saved here',
+      'regret_empty_desc':
+          'Items you consciously chose not to buy are saved here',
       'regret_empty_btn': 'ADD FIRST RECORD',
       'regret_total_saved': 'TOTAL SAVED',
       'regret_dialog_title': 'ADD TO ARCHIVE',
@@ -1193,12 +1371,28 @@ class AppLocalizations {
       'pet_dragon': 'CYBER-DRAGON',
       'pet_dog': 'MECHA-DOG',
       'pet_adopt_btn': 'ADOPT',
+      'pet_core_temp': 'Pet Reactor Core Temp',
+      'pet_overheating_warning':
+          'WARNING: CRITICAL REACTOR OVERHEATING! Save money to cool down.',
+
+      // PET EVOLUTION
+      'pet_evo_wise': 'Wise Pet',
+      'pet_evo_wealthy': 'Wealthy Pet',
+      'pet_evo_resilient': 'Resilient Pet',
+      'pet_evo_base': 'Base Pet',
+      'pet_evo_progress': 'Evolution: {progress}/7 days {ritual}',
+      'pet_evo_success': 'Your pet evolved into {type}!',
+      'ritual_no_spend': 'No-Spend',
+      'ritual_deposits': 'Deposits',
+      'ritual_karma': 'Karma Healing',
+      'ritual_mixed': 'Mixed',
 
       // =============================================
       // GAMIFICATION: BLACKLIST
       // =============================================
       'blacklist_title': 'AUTO-PENALTIES (BLACKLIST)',
-      'blacklist_desc': 'If the system detects a purchase from these categories, an automatic penalty will be applied',
+      'blacklist_desc':
+          'If the system detects a purchase from these categories, an automatic penalty will be applied',
       'blacklist_active': 'ACTIVE BLACKLIST',
       'blacklist_empty': 'No categories added. Press "+" to add one',
       'blacklist_hint': 'Enter category name...',
@@ -1267,7 +1461,8 @@ class AppLocalizations {
       'penalty_debt': 'Debt: ',
       'penalty_pay_btn': 'PAY',
       'penalty_paid': 'Penalty paid. Integrity restored!',
-      'penalty_empty': 'You have no active penalties. The system is running stable.',
+      'penalty_empty':
+          'You have no active penalties. The system is running stable.',
 
       // =============================================
       // GAMIFICATION: LOOTBOX
@@ -1289,9 +1484,11 @@ class AppLocalizations {
       'class_changed': 'Class changed successfully!',
       'class_title': 'CLASS SELECTION',
       'class_warrior_name': 'WARRIOR',
-      'class_warrior_desc': 'Master of daily deposits. Bonuses for streak and consistency.',
+      'class_warrior_desc':
+          'Master of daily deposits. Bonuses for streak and consistency.',
       'class_mage_name': 'MAGE',
-      'class_mage_desc': 'Master of numbers. Bonuses for analytics and forecasts.',
+      'class_mage_desc':
+          'Master of numbers. Bonuses for analytics and forecasts.',
       'class_rogue_name': 'ROGUE',
       'class_rogue_desc': 'Savings master. Bonuses for canceling purchases.',
       'class_choose_btn': 'CHOOSE THIS CLASS',
@@ -1323,11 +1520,14 @@ class AppLocalizations {
       'skill_req_level': 'Required: ',
       'skill_req_text': 'Level ',
       'skill_name_hacker': 'Hacker',
-      'skill_desc_hacker': 'Terminal master. Earn XP for CLI usage, data decryption and Incognito Mode. Increases critical deposit chance.',
+      'skill_desc_hacker':
+          'Terminal master. Earn XP for CLI usage, data decryption and Incognito Mode. Increases critical deposit chance.',
       'skill_name_magnate': 'Magnate',
-      'skill_desc_magnate': 'Financial genius. Earn XP for large deposits and consistency. Grants XP multipliers and Black Market discounts.',
+      'skill_desc_magnate':
+          'Financial genius. Earn XP for large deposits and consistency. Grants XP multipliers and Black Market discounts.',
       'skill_name_resilience': 'Resilience',
-      'skill_desc_resilience': 'Unbreakable cyber-samurai. Earn XP for streak recovery and penalty payments. Reduces penalty costs.',
+      'skill_desc_resilience':
+          'Unbreakable cyber-samurai. Earn XP for streak recovery and penalty payments. Reduces penalty costs.',
       'skill_locked_dep': 'Previous node locked.',
       'skill_ghost_desc': 'Unlocks secret terminal commands.',
       'skill_crit_title': 'Critical Bypass',
@@ -1337,7 +1537,8 @@ class AppLocalizations {
       'skill_trade_title': 'Trade Trickery',
       'skill_trade_desc': 'Discounts on all Black Market items.',
       'skill_shield_title': 'Streak Shield',
-      'skill_shield_desc': 'Auto-protection when skipping 1 day (no Freeze Token consumed).',
+      'skill_shield_desc':
+          'Auto-protection when skipping 1 day (no Freeze Token consumed).',
       'skill_iron_title': 'Iron Border',
       'skill_iron_desc': 'Penalty costs reduced by 15%.',
 
@@ -1352,17 +1553,20 @@ class AppLocalizations {
       'market_tab_boosters': 'BOOSTERS (SP)',
       'market_tab_cosmetics': 'COSMETICS (CR)',
       'market_streak_freeze': 'STREAK FREEZE',
-      'market_streak_freeze_desc': 'Protects your streak from expiring for 1 day',
+      'market_streak_freeze_desc':
+          'Protects your streak from expiring for 1 day',
       'market_common_lootbox': 'COMMON LOOTBOX',
       'market_common_lootbox_desc': 'Contains a random reward',
-      'market_integration_soon': 'In development: Real rewards will be integrated',
+      'market_integration_soon':
+          'In development: Real rewards will be integrated',
       'market_exclusive_optics': 'EXCLUSIVE OPTICS',
       'market_terminator': 'Terminator',
       'market_terminator_desc': 'Red cyber-eye',
       'market_premium_paints': 'PREMIUM PAINTS',
       'market_decals_scars': 'DECALS & SCARS',
       'market_purchased_badge': 'PURCHASED',
-      'market_purchased_success': 'Purchased: {name}! Now available in the builder.',
+      'market_purchased_success':
+          'Purchased: {name}! Now available in the builder.',
       'market_item_holo_desc': 'Holographic band',
       'market_item_quantum_desc': 'Absolute neon',
       'market_item_gold_desc': 'Elite glow',
@@ -1401,7 +1605,8 @@ class AppLocalizations {
       // GAMIFICATION: SHIELD
       // =============================================
       'shield_title': 'Streak Saved!',
-      'shield_desc': 'Your Shield (cryo-token) automatically protected your streak from expiring!',
+      'shield_desc':
+          'Your Shield (cryo-token) automatically protected your streak from expiring!',
       'shield_used': 'Shield used: ',
       'shield_unit': ' pcs.',
       'shield_btn': 'Awesome!',
@@ -1438,7 +1643,8 @@ class AppLocalizations {
       'remote_scroll_up': 'Scroll Up',
       'remote_text_btn': 'TEXT',
       'remote_text_dialog_title': 'TEXT INPUT ON PC',
-      'remote_text_dialog_desc': 'The text below will be sequentially sent to the remote PC',
+      'remote_text_dialog_desc':
+          'The text below will be sequentially sent to the remote PC',
       'remote_text_hint': 'Enter text...',
       'remote_send_btn': 'SEND',
 
@@ -1505,12 +1711,129 @@ class AppLocalizations {
       'onb_currency_label': 'Currency',
 
       // =============================================
-      // FEAT-15: CSV IMPORT
+      // CSV IMPORT
       // =============================================
       'csv_import': 'Import CSV',
       'csv_import_success': 'Imported: {count} transactions',
       'csv_import_error': 'Import error',
-      'csv_import_invalid': 'Invalid CSV format. Expected columns: date, amount',
+      'csv_import_invalid':
+          'Invalid CSV format. Expected columns: date, amount',
+
+      // =============================================
+      // IMPULSE FREEZER (EN)
+      // =============================================
+      'freezer_title': 'CRYO-FREEZER',
+      'freezer_desc': 'Freeze impulse spending desires and review them after the cooldown.',
+      'freezer_locked': 'IMPULSE FROZEN',
+      'freezer_unfreeze_save': 'CRYO-SAVE (+150 XP)',
+      'freezer_unfreeze_buy': 'BREAK FREEZE & BUY',
+      'freezer_duration': 'Duration',
+      'freezer_duration_24': '24 Hours',
+      'freezer_duration_48': '48 Hours',
+      'freezer_item_name': 'Impulse Buy Item',
+      'freezer_item_name_hint': 'e.g. Mechanical Keyboard',
+      'freezer_item_name_validator': 'Please enter the item name',
+      'freezer_amount': 'Amount (₴)',
+      'freezer_amount_hint': 'Enter amount to freeze',
+      'freezer_amount_validator': 'Please enter the amount',
+      'freezer_freeze_btn': 'ACTIVATE CRYO-FREEZE',
+      'freezer_hours': 'hours',
+      'freezer_active_badge': 'CRYO-SHIELD ACTIVE',
+      'freezer_saved_toast': 'Willpower victory! Impulse funds saved!',
+      'freezer_bought_toast': 'Freeze broken. Item purchased.',
+      'freezer_debug_fast_forward': '⚡ FAST FORWARD (DEBUG)',
+
+      // =============================================
+      // NO-SPEND STREAK (EN)
+      // =============================================
+      'no_spend_title': '🛡️ NO-SPEND CHALLENGE',
+      'no_spend_subtitle': 'Avoid unnecessary spending — earn rewards!',
+      'no_spend_claim_btn': 'I spent nothing extra today',
+      'no_spend_claimed': '✅ Already logged today',
+      'no_spend_streak_label': '🛡️ No-Spend Streak',
+      'no_spend_days': ' d.',
+      'no_spend_chest_progress': 'To next chest:',
+      'no_spend_success_title': '🛡️ NO-SPEND DAY!',
+      'no_spend_success_reward': '+15 Cyber-Credits',
+      'no_spend_success_streak': 'Streak:',
+      'no_spend_success_progress': 'Chest progress:',
+      'no_spend_lootbox_title': '🎁 7-DAY STREAK REWARD!',
+      'no_spend_lootbox_desc': 'You earned a LOOTBOX for a 7-day no-spend streak!',
+      'no_spend_debug_btn': '⚡ DEBUG: +1 day (test)',
+
+      // =============================================
+      // KARMA DEBT (EN)
+      // =============================================
+      'karma_title': '👾 KARMA-DEBT',
+      'karma_subtitle': 'Active Debuff: -20% XP',
+      'karma_debuff_hours': 'Debuff active for {hours}h',
+      'karma_debuff_desc': 'System compromised! Karma-debt accumulated due to impulse spending. Complete cleansing quests to restore your cyber pet.',
+      'karma_cleanse_btn': '🔮 Cleanse Karma (-25 debt)',
+      'karma_report_btn': '💥 I Relapsed / Log Spends',
+      'karma_report_dialog_title': '💥 Log Impulse Spend',
+      'karma_report_dialog_desc': 'Honesty is the path to recovery. Enter spent amount (optional) to log the lapse.',
+      'karma_report_amount_label': 'Spent amount (₴)',
+      'karma_report_confirm_btn': 'REPORT IMPULSE BUY',
+      'karma_compromised_toast': '👾 Karma-Borg attacked! Cyber-Pet got a -20% XP debuff for 48 hours!',
+      'karma_cleansed_toast': '🔮 Karma cleansed! Remaining debt: {amount}',
+      'karma_healed_toast': '✨ Cyber-Pet fully healed! XP debuff removed!',
+      'karma_quest_title': 'Heal Karma-Borg',
+
+      // =============================================
+      // PRICE HUNTER
+      // =============================================
+      'ph_title': '🎯 Price Hunter',
+      'ph_track_btn': 'TRACK PRICE',
+      'ph_update_btn': 'UPDATE PRICE',
+      'ph_url_label': 'Product URL',
+      'ph_initial_price_label': 'Initial Price',
+      'ph_current_price_label': 'Current Price',
+      'ph_new_price_label': 'New Price',
+      'ph_cooldown_msg': 'Price can only be updated once per hour.',
+      'ph_critical_hit': 'CRITICAL HIT!',
+      'ph_critical_desc': 'Price shield shattered! Boss is vulnerable. +50 XP',
+      'ph_boss_vulnerable': '⚡ BOSS VULNERABLE! Price dropped!',
+
+      // =============================================
+      // STREAK SHIELD
+      // =============================================
+      'streak_shield_activated': 'Shield activated! (-50 CRYSH)',
+      'streak_shield_error': 'Not enough CRYSH (50 needed)',
+      'flash_goal_title': 'Daily Flash Goal',
+      'flash_goal_desc': 'Save %s ₴ before midnight',
+      'flash_goal_completed': '✅ Completed! +30 XP',
+
+      // =============================================
+      // LENDING TRACKER (EN)
+      // =============================================
+      'lend_title': 'LENDING TRACKER (BETA)',
+      'lend_subtitle': 'Active contracts and debts',
+      'lend_add_btn': 'NEW CONTRACT',
+      'lend_debtor_name': 'Debtor Name',
+      'lend_amount': 'Debt Amount (₴)',
+      'lend_return_date': 'Return Date',
+      'lend_quick_7': '7 Days',
+      'lend_quick_30': '30 Days',
+      'lend_pick_date': 'Pick Date',
+      'lend_save_btn': 'SIGN CONTRACT',
+      'lend_empty': 'No active contracts. Time to lend some money?',
+      'lend_status_active': 'ACTIVE',
+      'lend_status_overdue': 'OVERDUE',
+      'lend_status_returned': 'RETURNED',
+      'lend_return_btn': 'MARK AS RETURNED',
+      'lend_returned_toast': 'Contract closed! +50 XP awarded.',
+      'lend_days_left': '{days}d left',
+      'lend_overdue_by': 'Overdue by {days}d',
+
+      // =============================================
+      // CYBER-ORACLE (EN)
+      // =============================================
+      'oracle_title': 'CYBER-ORACLE',
+      'oracle_subtitle': 'AI Financial Prophet',
+      'oracle_input_hint': 'Query the void...',
+      'oracle_error_unavailable': 'Signal lost. Oracle is offline.',
+      'oracle_system_prompt': 'You are the Cyber-Oracle, a financial assistant in the world of Save Quest. Respond concisely, using cyberpunk slang. Help with savings, budgeting, and motivation. Use terms like "credits", "host", "data-center", "protocol". Your goal is to maximize user capital.',
+      'oracle_clear_history': 'Clear memory',
     }
   };
 

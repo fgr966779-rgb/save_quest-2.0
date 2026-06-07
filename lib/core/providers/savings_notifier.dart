@@ -12,6 +12,8 @@ import '../../features/gamification/providers/quest_provider.dart';
 import '../services/gamification/xp_service.dart';
 import '../services/gamification/streak_service.dart';
 import '../services/gamification/achievement_service.dart';
+import '../../features/gamification/providers/merchant_provider.dart';
+import '../../features/gamification/providers/flash_goal_provider.dart';
 
 enum ActionContext {
   standard,
@@ -84,10 +86,9 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
       final deposit = Deposit(
         id: depositId,
         amount: totalCents,
-        goalAAmount: goalACents,
-        goalBAmount: goalBCents,
         note: note,
         createdAt: now,
+        updatedAt: now,
         isDeleted: false,
       );
 
@@ -107,6 +108,7 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
       late int hackerXpInc;
       late int magnateXpInc;
       late int resilienceXpInc;
+      bool merchantContractFulfilled = false;
       Lootbox? earnedLootbox;
 
       await _db.transaction(() async {
@@ -124,6 +126,10 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
           skillPoints: 0, playerClass: null, currentTheme: 'default', avatarConfig: null,
           penaltyBalance: 0, hackerXp: 0, magnateXp: 0, resilienceXp: 0,
           lastBonusClaimDate: null, bonusStreak: 0, crystalsBalance: 0,
+          noSpendStreakCount: 0, lastNoSpendDate: null,
+          karmaDebt: 0, pricePulseTrackingCount: 0, debuffActiveUntil: null,
+          karmaHealingStreakCount: 0, lastKarmaHealDate: null,
+          updatedAt: now,
         );
 
         // 3. Load unlocked skills for bonus application
@@ -153,6 +159,15 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
           multiplier *= activeEvent.xpMultiplier;
         }
 
+        // --- Time Merchant Contract ---
+        final merchantState = _ref.read(merchantProvider);
+        if (merchantState.isActive && totalCents >= merchantState.targetAmount) {
+          merchantContractFulfilled = true;
+          if (merchantState.reward == 'x2_xp') {
+            multiplier *= 2.0;
+          }
+        }
+
         xpGained = XpService.calculateXpGained(
           baseAmount: 100,
           multiplier: multiplier,
@@ -160,16 +175,31 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
           hasXpBoostSkill: unlockedSkillIds.contains('magnate_xp_boost'),
         );
 
-        // Critical Hit logic
-        double baseCritChance = profile.playerClass == 'mage' ? 0.25 : 0.10;
-        // hacker_crit_boost: +10% crit chance
-        if (unlockedSkillIds.contains('hacker_crit_boost')) {
-          baseCritChance += 0.10;
-        }
-        isCritical = math.Random().nextDouble() < baseCritChance;
-        bonusXp = isCritical ? xpGained : 0;
+         // Check if Karma Debuff is active
+         final isDebuffActive = profile.debuffActiveUntil != null && 
+             DateTime.now().isBefore(profile.debuffActiveUntil!);
+         if (isDebuffActive) {
+           xpGained = (xpGained * 0.8).round();
+         }
 
-        var newXP = profile.xp + xpGained + bonusXp;
+         // Critical Hit logic
+         double baseCritChance = profile.playerClass == 'mage' ? 0.25 : 0.10;
+         // hacker_crit_boost: +10% crit chance
+         if (unlockedSkillIds.contains('hacker_crit_boost')) {
+           baseCritChance += 0.10;
+         }
+         isCritical = math.Random().nextDouble() < baseCritChance;
+         bonusXp = isCritical ? xpGained : 0;
+
+         // --- Flash Goal Bonus ---
+         final flashGoalState = _ref.read(flashGoalProvider);
+         if (!flashGoalState.isCompleted && flashGoalState.targetAmount > 0) {
+           if ((flashGoalState.currentAmount + totalCents) >= flashGoalState.targetAmount) {
+              bonusXp += 30;
+           }
+         }
+
+         var newXP = profile.xp + xpGained + bonusXp;
         var currentLevel = profile.level;
         leveledUp = false;
 
@@ -257,6 +287,14 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
               earnedAt: now);
         }
 
+        if (merchantContractFulfilled && merchantState.reward == 'lootbox') {
+          earnedLootbox = Lootbox(
+              id: const Uuid().v4(),
+              rarity: 'rare',
+              isOpened: false,
+              earnedAt: now);
+        }
+
         if (earnedLootbox != null) {
           await _db.into(_db.lootboxes).insert(earnedLootbox!);
         }
@@ -308,6 +346,14 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
           lastBonusClaimDate: profile.lastBonusClaimDate,
           bonusStreak: profile.bonusStreak,
           crystalsBalance: profile.crystalsBalance,
+          noSpendStreakCount: profile.noSpendStreakCount,
+          lastNoSpendDate: profile.lastNoSpendDate,
+          karmaDebt: profile.karmaDebt,
+          pricePulseTrackingCount: profile.pricePulseTrackingCount,
+          debuffActiveUntil: profile.debuffActiveUntil,
+          karmaHealingStreakCount: profile.karmaHealingStreakCount,
+          lastKarmaHealDate: profile.lastKarmaHealDate,
+          updatedAt: now,
         );
         await _db.insertUserProfile(updatedProfile);
       }); // end transaction
@@ -317,6 +363,13 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
 
       // Complete Daily Quest: deposit_any
       _ref.read(questProvider.notifier).completeQuest('deposit_any');
+
+      if (merchantContractFulfilled) {
+        _ref.read(merchantProvider.notifier).fulfillContract();
+      }
+
+      // Update Flash Goal progress
+      _ref.read(flashGoalProvider.notifier).addProgress(totalCents);
 
       state = const AsyncValue.data(null);
       return DepositResult(
@@ -352,10 +405,8 @@ class SavingsNotifier extends StateNotifier<AsyncValue<void>> {
 
     state = const AsyncValue.loading();
     try {
-      await _db.softDeleteDepositAndUpdateGoals(
+      await _db.softDeleteDeposit(
         depositId: deposit.id,
-        goalAAmount: deposit.goalAAmount,
-        goalBAmount: deposit.goalBAmount,
       );
       state = const AsyncValue.data(null);
       return true;

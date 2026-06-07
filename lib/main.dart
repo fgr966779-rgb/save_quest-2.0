@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'core/navigation/app_router.dart';
 import 'core/providers/providers.dart';
 import 'core/providers/l10n.dart';
+import 'core/providers/theme_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/sound_service.dart';
@@ -15,35 +17,9 @@ import 'core/services/goal_dependency_service.dart';
 import 'data/database.dart';
 import 'data/settings_service.dart';
 
-/// Provides the current [ThemeMode] based on the persisted setting.
-final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
-  final settings = ref.watch(settingsServiceProvider);
-  return ThemeModeNotifier(settings);
-});
-
-class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  final SettingsService _settings;
-
-  ThemeModeNotifier(this._settings)
-      : super(_settings.themeMode == 'light'
-            ? ThemeMode.light
-            : _settings.themeMode == 'dark'
-                ? ThemeMode.dark
-                : ThemeMode.system);
-
-  void setThemeMode(ThemeMode mode) {
-    final value = switch (mode) {
-      ThemeMode.light => 'light',
-      ThemeMode.dark => 'dark',
-      ThemeMode.system => 'system',
-    };
-    _settings.themeMode = value;
-    state = mode;
-  }
-}
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
 
   // Initialize local Hive Key-Value store
   await Hive.initFlutter();

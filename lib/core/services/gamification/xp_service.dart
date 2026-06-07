@@ -7,10 +7,8 @@ class XpService {
   }
 
   static double calculateStreakMultiplier(int streak) {
-    if (streak >= 30) return 1.5;
-    if (streak >= 14) return 1.3;
-    if (streak >= 7) return 1.2;
-    if (streak >= 3) return 1.1;
+    if (streak >= 7) return 2.0;
+    if (streak >= 3) return 1.5;
     return 1.0;
   }
 

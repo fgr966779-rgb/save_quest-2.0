@@ -6,12 +6,12 @@ part of 'leaderboard_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$weeklyLeaderboardHash() => r'547945377b9f949abf45c373b0936a2f0940ce10';
+String _$weeklyLeaderboardHash() => r'f1cf4c04109b2538cea03bf5b7baa001b8a5ff25';
 
 /// See also [weeklyLeaderboard].
 @ProviderFor(weeklyLeaderboard)
 final weeklyLeaderboardProvider =
-    AutoDisposeFutureProvider<List<LeaderboardEntry>>.internal(
+    AutoDisposeStreamProvider<List<LeaderboardEntry>>.internal(
   weeklyLeaderboard,
   name: r'weeklyLeaderboardProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -24,14 +24,14 @@ final weeklyLeaderboardProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef WeeklyLeaderboardRef
-    = AutoDisposeFutureProviderRef<List<LeaderboardEntry>>;
+    = AutoDisposeStreamProviderRef<List<LeaderboardEntry>>;
 String _$monthlyLeaderboardHash() =>
-    r'5c18c8f7f8721a35fb7a5ddf426c479caba2eb16';
+    r'878d9a457a086b659dba7749596f3cff12567506';
 
 /// See also [monthlyLeaderboard].
 @ProviderFor(monthlyLeaderboard)
 final monthlyLeaderboardProvider =
-    AutoDisposeFutureProvider<List<LeaderboardEntry>>.internal(
+    AutoDisposeStreamProvider<List<LeaderboardEntry>>.internal(
   monthlyLeaderboard,
   name: r'monthlyLeaderboardProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -44,14 +44,14 @@ final monthlyLeaderboardProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef MonthlyLeaderboardRef
-    = AutoDisposeFutureProviderRef<List<LeaderboardEntry>>;
+    = AutoDisposeStreamProviderRef<List<LeaderboardEntry>>;
 String _$allianceLeaderboardHash() =>
-    r'01fe7c6b74cf05bd13ea5b150a9591f8c06760b7';
+    r'9e6263555e319534126e144ba3ac904d196aa34d';
 
 /// See also [allianceLeaderboard].
 @ProviderFor(allianceLeaderboard)
 final allianceLeaderboardProvider =
-    AutoDisposeFutureProvider<List<AllianceEntry>>.internal(
+    AutoDisposeStreamProvider<List<AllianceEntry>>.internal(
   allianceLeaderboard,
   name: r'allianceLeaderboardProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -64,6 +64,6 @@ final allianceLeaderboardProvider =
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef AllianceLeaderboardRef
-    = AutoDisposeFutureProviderRef<List<AllianceEntry>>;
+    = AutoDisposeStreamProviderRef<List<AllianceEntry>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

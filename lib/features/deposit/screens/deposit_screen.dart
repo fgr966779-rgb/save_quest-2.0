@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/providers/l10n.dart';
+import '../../gamification/providers/partner_provider.dart';
 import '../../../core/providers/providers.dart';
 import '../../../core/utils/money_utils.dart';
 import '../../../core/widgets/amount_input_pad.dart';
@@ -16,6 +17,7 @@ import '../../../core/widgets/progress_bar.dart';
 import '../../../core/widgets/split_slider.dart';
 import '../../../core/widgets/surface_card.dart';
 import '../../../data/database.dart';
+import '../../gamification/widgets/memory_vault_widgets.dart';
 import '../../../core/services/milestone_service.dart';
 import '../../../core/widgets/milestone_dialog.dart';
 import '../../../core/services/sound_service.dart';
@@ -215,6 +217,17 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
       SoundService().playDeposit();
       HapticFeedback.heavyImpact();
 
+      // Check for partner activity
+      final savedQuest = await ref.read(partnerProvider.notifier).simulatePartnerActivity();
+      if (savedQuest && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.get(ref.read(localeProvider), 'partner_saved_quest')),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+
       // Check for milestone achievements after deposit
       _checkMilestones(goalsBefore, db);
     } else if (mounted) {
@@ -238,6 +251,29 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
         goalAfter.currentAmount, goalAfter.targetAmount,
       );
 
+      // 1. Check Memory Vault Thresholds
+      for (int t = 10; t <= 100; t += 10) {
+        if (afterPct >= t && beforePct < t) {
+          final entries = await db.getMemoryVaultEntriesForGoal(goalAfter.id);
+           final hasEntry = entries.any((e) => e.unlockThresholdPercent == t);
+             if (!hasEntry) {
+              if (!mounted) return;
+              await Future.delayed(const Duration(milliseconds: 500));
+              if (!mounted) return;
+              // ignore: use_build_context_synchronously
+              await MemoryVaultDialog.show(context, goalId: goalAfter.id, threshold: t);
+              
+              if (t == 100) {
+                if (!mounted) return;
+                await Future.delayed(const Duration(milliseconds: 300));
+                // ignore: use_build_context_synchronously
+                await MemoryDecryptionSequence.show(context, goalId: goalAfter.id);
+             }
+           }
+         }
+      }
+
+      // 2. Check Standard Milestones
       final newMilestones = milestoneService.checkNewMilestones(
         goalId: goalAfter.id,
         previousPercent: beforePct,
@@ -246,6 +282,12 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
 
       for (final pct in newMilestones) {
         if (!mounted) return;
+        // Don't show standard milestone dialog if it's 100% since we already showed Memory Vault
+        if (pct == 100) {
+          await milestoneService.markCelebrated(goalAfter.id, pct);
+          continue;
+        }
+
         await Future.delayed(const Duration(milliseconds: 600));
         if (!mounted) return;
 

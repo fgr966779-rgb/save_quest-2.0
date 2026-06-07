@@ -1,18 +1,81 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'openrouter_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+
+enum DealClassification {
+  bestDeal, // 🔥 < -10%
+  marketPrice, // ✅ ±10%
+  overpriced, // ⚠ > 10%
+}
+
+DealClassification classifyDeal(int priceKopecks, int avgPriceKopecks) {
+  if (avgPriceKopecks == 0) return DealClassification.marketPrice;
+  final ratio = (priceKopecks - avgPriceKopecks) / avgPriceKopecks;
+  if (ratio <= -0.10) return DealClassification.bestDeal;
+  if (ratio >= 0.10) return DealClassification.overpriced;
+  return DealClassification.marketPrice;
+}
+
+class PriceTargetPreset {
+  final String id;
+  final String label;
+  final String query;
+  final String hint;
+
+  const PriceTargetPreset({
+    required this.id,
+    required this.label,
+    required this.query,
+    required this.hint,
+  });
+}
+
+const List<PriceTargetPreset> supportedPriceTargets = [
+  PriceTargetPreset(
+    id: 'ps5',
+    label: 'PS5',
+    query: 'PlayStation 5 console',
+    hint: 'Current console market prices',
+  ),
+  PriceTargetPreset(
+    id: 'monitor_27',
+    label: 'Monitor 27"',
+    query: '27 inch monitor',
+    hint: 'Popular 27-inch displays',
+  ),
+  PriceTargetPreset(
+    id: 'gaming_monitor',
+    label: 'Gaming monitor',
+    query: 'gaming monitor',
+    hint: 'High refresh-rate gaming screens',
+  ),
+];
 
 class PriceQuote {
   final String store;
   final int priceKopecks;
+  final String title;
   final String? url;
+  final String? thumbnail;
+  final String? rating;
+  final String? delivery;
 
   const PriceQuote({
     required this.store,
     required this.priceKopecks,
+    required this.title,
     this.url,
+    this.thumbnail,
+    this.rating,
+    this.delivery,
   });
+
+  DealClassification getClassification(int avgPriceKopecks) {
+    return classifyDeal(priceKopecks, avgPriceKopecks);
+  }
 }
 
 class PriceAnalysis {
@@ -40,62 +103,104 @@ class PriceAnalysis {
 }
 
 class PriceAnalysisService {
-  final OpenRouterService openRouter;
+  PriceAnalysisService();
 
-  PriceAnalysisService(this.openRouter);
+  String get _serpApiKey => dotenv.env['SERPAPI_KEY'] ?? '';
+  bool get _hasLiveApiKey =>
+      _serpApiKey.isNotEmpty && !_serpApiKey.startsWith('YOUR_');
 
-  static const Map<String, List<_FallbackPrice>> _fallbackCatalog = {
-    'ps5': [
-      _FallbackPrice('Rozetka', 2199900),
-      _FallbackPrice('Comfy', 2249900),
-      _FallbackPrice('Allo', 2189900),
-      _FallbackPrice('Foxtrot', 2299900),
-      _FallbackPrice('Hotline (avg)', 2150000),
-    ],
-    'playstation 5': [
-      _FallbackPrice('Rozetka', 2199900),
-      _FallbackPrice('Comfy', 2249900),
-      _FallbackPrice('Allo', 2189900),
-      _FallbackPrice('Foxtrot', 2299900),
-    ],
-    'playstation': [
-      _FallbackPrice('Rozetka', 2199900),
-      _FallbackPrice('Comfy', 2249900),
-      _FallbackPrice('Allo', 2189900),
-    ],
-    'xbox': [
-      _FallbackPrice('Rozetka', 1799900),
-      _FallbackPrice('Comfy', 1849900),
-      _FallbackPrice('Allo', 1779900),
-    ],
-    'монітор': [
-      _FallbackPrice('Rozetka', 899900),
-      _FallbackPrice('Comfy', 949900),
-      _FallbackPrice('Allo', 879900),
-      _FallbackPrice('Foxtrot', 929900),
-    ],
-    'monitor': [
-      _FallbackPrice('Rozetka', 899900),
-      _FallbackPrice('Comfy', 949900),
-      _FallbackPrice('Allo', 879900),
-      _FallbackPrice('Foxtrot', 929900),
-    ],
-    'ноутбук': [
-      _FallbackPrice('Rozetka', 2999900),
-      _FallbackPrice('Comfy', 3149900),
-      _FallbackPrice('Allo', 2899900),
-    ],
-    'iphone': [
-      _FallbackPrice('Rozetka', 4599900),
-      _FallbackPrice('Comfy', 4699900),
-      _FallbackPrice('Allo', 4549900),
-    ],
-    'macbook': [
-      _FallbackPrice('Rozetka', 5999900),
-      _FallbackPrice('Comfy', 6149900),
-      _FallbackPrice('Allo', 5899900),
-    ],
-  };
+  static const List<String> _uaStores = [
+    'Rozetka',
+    'Comfy',
+    'Allo',
+    'Foxtrot',
+    'MOYO',
+    'Citrus',
+    'Epicentr',
+    'KTC',
+    'Telemart',
+    'Brain',
+    'ITbox',
+    'F.ua',
+    'Hotline',
+    'E-Katalog',
+    'TTT',
+    'Y.ua',
+    'Stylus',
+    'Touch',
+    'MTA',
+  ];
+
+  static Map<String, List<_FallbackPrice>> _generateFallbackCatalog() {
+    return {
+      'ps5': _generateStoresForBase(2_150_000), // ~21 500 UAH
+      'playstation 5': _generateStoresForBase(2_150_000),
+      'playstation': _generateStoresForBase(2_150_000),
+      'монітор': _generateStoresForBase(850_000), // ~8 500 UAH
+      'monitor': _generateStoresForBase(850_000),
+      'gaming monitor': _generateStoresForBase(1_250_000),
+      '27 inch monitor': _generateStoresForBase(950_000),
+    };
+  }
+
+  static List<_FallbackPrice> _generateStoresForBase(
+    int baseKopecks, {
+    int seed = 0,
+  }) {
+    final rotation = seed.abs() % _uaStores.length;
+    final stores = [
+      ..._uaStores.skip(rotation),
+      ..._uaStores.take(rotation),
+    ];
+
+    return stores.asMap().entries.map((entry) {
+      final i = entry.key;
+      final store = entry.value;
+      // Deterministic spread with a small seed-based wobble so demo prices do
+      // not look frozen when live data is unavailable.
+      final variation = (((i * 7) + seed) % 31 - 14) / 100.0;
+      final price = (baseKopecks * (1 + variation)).round();
+      return _FallbackPrice(store, price);
+    }).toList();
+  }
+
+  late final Map<String, List<_FallbackPrice>> _fallbackCatalog =
+      _generateFallbackCatalog();
+
+  bool _isAllowedQuery(String query) {
+    // Phase 1: allow any product query for the Price Pulse feature.
+    return true;
+  }
+
+  String _normalizeQuery(String query) {
+    final lower = query.toLowerCase();
+
+    if (lower.contains('ps5') || lower.contains('playstation')) {
+      return 'PlayStation 5 console';
+    }
+
+    if (lower.contains('samsung odyssey')) {
+      return 'Samsung Odyssey monitor';
+    }
+    if (lower.contains('lg ultragear')) {
+      return 'LG UltraGear monitor';
+    }
+    if (lower.contains('asus tuf')) {
+      return 'ASUS TUF Gaming monitor';
+    }
+    if (lower.contains('gaming monitor')) {
+      return 'gaming monitor';
+    }
+    if (lower.contains('27') &&
+        (lower.contains('monitor') || lower.contains('монітор'))) {
+      return '27 inch monitor';
+    }
+    if (lower.contains('monitor') || lower.contains('монітор')) {
+      return '27 inch monitor';
+    }
+
+    return query;
+  }
 
   Future<PriceAnalysis> analyze(String query) async {
     final trimmed = query.trim();
@@ -103,68 +208,126 @@ class PriceAnalysisService {
       throw ArgumentError('Назва товару не може бути порожньою');
     }
 
-    if (openRouter.isAvailable) {
-      try {
-        final aiResult = await _analyzeWithAi(trimmed);
-        if (aiResult != null) return aiResult;
-      } catch (_) {
-        // fall through to offline catalog
-      }
+    if (!_isAllowedQuery(trimmed)) {
+      throw ArgumentError(
+        'Недостатньо ринкових даних',
+      );
+    }
+
+    final normalizedQuery = _normalizeQuery(trimmed);
+
+    try {
+      final proxyResult = await _fetchFromLocalProxy(normalizedQuery);
+      if (proxyResult != null) return proxyResult;
+
+      final apiResult = await _fetchFromSerpApi(normalizedQuery);
+      if (apiResult != null) return apiResult;
+    } catch (_) {
+      // API error, fall back to offline mode.
     }
 
     return _analyzeOffline(trimmed);
   }
 
-  Future<PriceAnalysis?> _analyzeWithAi(String query) async {
-    final prompt = '''
-Ти — аналітик цін українського ринку електроніки.
-Поверни JSON з оцінкою поточних цін на товар "$query" у магазинах України (Rozetka, Comfy, Allo, Foxtrot, Hotline).
-Формат відповіді — ТІЛЬКИ валідний JSON без додаткового тексту:
-{
-  "quotes": [
-    {"store": "Rozetka", "price_uah": 21999},
-    {"store": "Comfy", "price_uah": 22499}
-  ],
-  "recommendation": "коротка порада українською (1 речення)"
-}
-Усі ціни — цілі числа гривень без копійок. Мінімум 3 магазини.
-''';
+  Future<PriceAnalysis?> _fetchFromLocalProxy(String query) async {
+    try {
+      final url = Uri.http('127.0.0.1:8080', '/price-analysis', {
+        'query': query,
+        'engine': 'google_shopping',
+        'gl': 'ua',
+        'hl': 'uk',
+        'num': '10',
+      });
 
-    final raw = await openRouter.generateText(prompt: prompt);
-    final jsonText = _extractJson(raw);
-    if (jsonText == null) return null;
+      final response = await http.get(url).timeout(const Duration(seconds: 12));
+      if (response.statusCode != 200) {
+        return null;
+      }
 
-    final decoded = jsonDecode(jsonText);
-    if (decoded is! Map<String, dynamic>) return null;
+      return _parseSerpApiPayload(query, response.body);
+    } catch (_) {
+      return null;
+    }
+  }
 
-    final rawQuotes = decoded['quotes'];
-    if (rawQuotes is! List || rawQuotes.isEmpty) return null;
+  Future<PriceAnalysis?> _fetchFromSerpApi(String query) async {
+    if (!_hasLiveApiKey) {
+      return null;
+    }
+
+    final url = Uri.https('serpapi.com', '/search.json', {
+      'engine': 'google_shopping',
+      'q': query,
+      'gl': 'ua',
+      'hl': 'uk',
+      'num': '10',
+      'api_key': _serpApiKey,
+    });
+    final response = await http.get(url).timeout(const Duration(seconds: 15));
+
+    if (response.statusCode != 200) {
+      return null;
+    }
+
+    return _parseSerpApiPayload(query, response.body);
+  }
+
+  PriceAnalysis? _parseSerpApiPayload(String query, String body) {
+    final data = jsonDecode(body);
+    final shoppingResults = data['shopping_results'];
+    if (shoppingResults is! List || shoppingResults.isEmpty) {
+      return null;
+    }
 
     final quotes = <PriceQuote>[];
-    for (final entry in rawQuotes) {
-      if (entry is! Map) continue;
-      final store = entry['store']?.toString();
-      final priceUah = entry['price_uah'];
-      if (store == null || store.isEmpty) continue;
-      final priceKopecks = _toKopecks(priceUah);
-      if (priceKopecks == null) continue;
-      quotes.add(PriceQuote(store: store, priceKopecks: priceKopecks));
-    }
-    if (quotes.isEmpty) return null;
+    final seen = <String>{};
 
-    final recommendation = decoded['recommendation']?.toString().trim() ??
-        'Перевірте кілька магазинів перед покупкою.';
+    for (final item in shoppingResults) {
+      if (item is! Map) continue;
+
+      final title = item['title']?.toString().trim();
+      final storeRaw = item['source']?.toString().trim() ??
+          item['seller']?.toString().trim() ??
+          item['merchant']?.toString().trim() ??
+          item['store']?.toString().trim();
+      final priceRaw =
+          item['extracted_price'] ?? item['price'] ?? item['price_value'];
+      if (title == null || title.isEmpty || priceRaw == null) continue;
+
+      final priceKopecks = _toKopecks(priceRaw);
+      if (priceKopecks == null) continue;
+
+      final store = _normalizeStoreName(storeRaw ?? 'Marketplace');
+      final quoteKey = '$store|$title|$priceKopecks';
+      if (!seen.add(quoteKey)) continue;
+
+      quotes.add(
+        PriceQuote(
+          store: store,
+          priceKopecks: priceKopecks,
+          title: title,
+          url: item['link']?.toString(),
+          thumbnail: item['thumbnail']?.toString(),
+          rating: item['rating']?.toString(),
+          delivery: item['delivery']?.toString(),
+        ),
+      );
+    }
+
+    if (quotes.isEmpty) return null;
 
     return _buildAnalysis(
       query: query,
       quotes: quotes,
-      recommendation: recommendation,
+      recommendation: 'Live market prices loaded via SerpAPI Google Shopping.',
       isEstimate: false,
     );
   }
 
   PriceAnalysis _analyzeOffline(String query) {
     final lower = query.toLowerCase();
+    final timeSeed = DateTime.now().millisecondsSinceEpoch ~/
+        const Duration(minutes: 15).inMilliseconds;
     List<_FallbackPrice>? match;
     for (final entry in _fallbackCatalog.entries) {
       if (lower.contains(entry.key)) {
@@ -173,13 +336,28 @@ class PriceAnalysisService {
       }
     }
 
-    final quotes = (match ?? _genericFallback(query))
-        .map((f) => PriceQuote(store: f.store, priceKopecks: f.priceKopecks))
+    final fallbackQuotes =
+        (match ?? _genericFallback(query)).asMap().entries.map((entry) {
+      final item = entry.value;
+      final wobble = (((timeSeed + entry.key * 5) % 9) - 4) / 100.0;
+      return _FallbackPrice(
+        item.store,
+        (item.priceKopecks * (1 + wobble)).round(),
+      );
+    }).toList();
+    final quotes = fallbackQuotes
+        .map(
+          (f) => PriceQuote(
+            store: f.store,
+            priceKopecks: f.priceKopecks,
+            title: query,
+          ),
+        )
         .toList();
 
     final recommendation = match != null
-        ? 'Орієнтуйтесь на найнижчу ціну, але звіряйте наявність та умови гарантії.'
-        : 'Точна ціна для цього товару не знайдена офлайн — введіть API-ключ OpenRouter у налаштуваннях для ШІ-аналізу.';
+        ? 'Demo fallback only. Start remote_server and keep SERPAPI_KEY in .env for live market prices.'
+        : 'Exact market price was not found offline — this is only a demo estimate.';
 
     return _buildAnalysis(
       query: query,
@@ -191,13 +369,8 @@ class PriceAnalysisService {
 
   List<_FallbackPrice> _genericFallback(String query) {
     final seed = query.codeUnits.fold<int>(0, (a, b) => a + b);
-    final base = 500000 + (seed % 80) * 25000; // 5 000 — 25 000 грн
-    return [
-      _FallbackPrice('Rozetka', base),
-      _FallbackPrice('Comfy', (base * 1.04).round()),
-      _FallbackPrice('Allo', (base * 0.97).round()),
-      _FallbackPrice('Foxtrot', (base * 1.06).round()),
-    ];
+    final base = 500_000 + (seed % 80) * 25_000;
+    return _generateStoresForBase(base, seed: seed);
   }
 
   PriceAnalysis _buildAnalysis({
@@ -210,46 +383,52 @@ class PriceAnalysisService {
       ..sort((a, b) => a.priceKopecks.compareTo(b.priceKopecks));
     final min = sorted.first.priceKopecks;
     final max = sorted.last.priceKopecks;
-    final avg =
-        sorted.map((q) => q.priceKopecks).reduce((a, b) => a + b) ~/ sorted.length;
+    final avg = sorted.map((q) => q.priceKopecks).reduce((a, b) => a + b) ~/
+        sorted.length;
 
     return PriceAnalysis(
       query: query,
       minPriceKopecks: min,
       avgPriceKopecks: avg,
       maxPriceKopecks: max,
-      quotes: sorted,
+      quotes: sorted.take(12).toList(),
       recommendation: recommendation,
       isEstimate: isEstimate,
     );
-  }
-
-  String? _extractJson(String raw) {
-    final start = raw.indexOf('{');
-    final end = raw.lastIndexOf('}');
-    if (start < 0 || end <= start) return null;
-    return raw.substring(start, end + 1);
   }
 
   int? _toKopecks(dynamic value) {
     if (value is num) return (value * 100).round();
     if (value is String) {
       final cleaned = value.replaceAll(RegExp(r'[^0-9.]'), '');
+      if (cleaned.isEmpty) return null;
       final parsed = double.tryParse(cleaned);
       if (parsed == null) return null;
       return (parsed * 100).round();
     }
     return null;
   }
+
+  String _normalizeStoreName(String storeRaw) {
+    final lower = storeRaw.toLowerCase();
+    for (final store in _uaStores) {
+      if (lower.contains(store.toLowerCase())) {
+        return store;
+      }
+    }
+
+    final trimmed = storeRaw.trim();
+    return trimmed.isEmpty ? 'Marketplace' : trimmed;
+  }
 }
 
 class _FallbackPrice {
   final String store;
   final int priceKopecks;
+
   const _FallbackPrice(this.store, this.priceKopecks);
 }
 
 final priceAnalysisServiceProvider = Provider<PriceAnalysisService>((ref) {
-  final openRouter = ref.watch(openRouterProvider);
-  return PriceAnalysisService(openRouter);
+  return PriceAnalysisService();
 });

@@ -1,5 +1,6 @@
 // FILE: lib/core/services/notification_service.dart
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show Color;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -154,6 +155,66 @@ class NotificationService {
     );
     const iosDetails = DarwinNotificationDetails();
     const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _plugin.show(id, title, body, details);
+  }
+
+  /// Show a Parasite Alert for upcoming subscription billing.
+  /// Fired 3 days (or custom) before the next billing date.
+  Future<void> showParasiteAlert({
+    required int id,
+    required String name,
+    required String amountStr,
+    required int daysLeft,
+  }) async {
+    if (!_initialized) await init();
+
+    final androidDetails = AndroidNotificationDetails(
+      'piggyvault_parasite_alerts',
+      'Parasite Alerts',
+      channelDescription: 'Alerts for upcoming subscription billing',
+      importance: Importance.max,
+      priority: Priority.high,
+      color: const Color(0xFF00FF9D), // Neon green
+      enableVibration: true,
+    );
+    const iosDetails = DarwinNotificationDetails();
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    final dayWord = daysLeft == 1 ? 'завтра' : 'через $daysLeft дні';
+    await _plugin.show(
+      id,
+      '⚠️ Parasite Alert: $name',
+      '$name спише $amountStr $dayWord. Скасувати?',
+      details,
+    );
+  }
+
+  /// Show a specialized Price Pulse alert (e.g. for Critical Hits).
+  Future<void> showPriceAlert({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    if (!_initialized) await init();
+
+    final androidDetails = AndroidNotificationDetails(
+      'piggyvault_price_alerts',
+      'Price Pulse Alerts',
+      channelDescription: 'Alerts when goal prices drop significantly',
+      importance: Importance.max,
+      priority: Priority.high,
+      color: const Color(0xFF00FF00), // Hacker green
+      enableVibration: true,
+    );
+    const iosDetails = DarwinNotificationDetails();
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );

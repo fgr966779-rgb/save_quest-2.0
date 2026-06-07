@@ -25,7 +25,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final depositsAsync = ref.watch(depositsProvider);
+    final depositsAsync = ref.watch(depositsBreakdownProvider);
     final goalsAsync = ref.watch(goalsProvider);
     final locale = ref.watch(localeProvider);
 
@@ -67,13 +67,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     ),
                   ),
                   data: (deposits) {
-                    final activeDeposits =
-                        deposits.where((d) => !d.isDeleted).toList();
+                    final activeDeposits = deposits;
 
                     // Filter deposits by search query and target goal
                     final filtered = activeDeposits.where((dep) {
                       final matchesSearch =
-                          dep.amount.toString().contains(_searchQuery) ||
+                          dep.deposit.amount.toString().contains(_searchQuery) ||
                               _searchQuery.isEmpty;
 
                       if (!matchesSearch) return false;
@@ -203,11 +202,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Widget _buildDepositItem(Deposit dep, List<Goal> goals, String locale) {
+  Widget _buildDepositItem(DepositBreakdown dep, List<Goal> goals, String locale) {
     final brightness = Theme.of(context).brightness;
     final currency = goals.isNotEmpty ? goals.first.currency : '₴';
     final now = DateTime.now();
-    final bool canDelete = now.difference(dep.createdAt).inHours < 24;
+    final bool canDelete = now.difference(dep.deposit.createdAt).inHours < 24;
 
     // Determine stripe color
     final Color stripeColor;
@@ -223,13 +222,13 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Dismissible(
-        key: Key(dep.id.toString()),
+        key: Key(dep.deposit.id.toString()),
         direction: canDelete ? DismissDirection.endToStart : DismissDirection.none,
         confirmDismiss: (direction) async {
           return await _showDeleteConfirmation(dep, currency);
         },
         onDismissed: (direction) async {
-          await ref.read(savingsNotifierProvider.notifier).deleteDeposit(dep);
+          await ref.read(savingsNotifierProvider.notifier).deleteDeposit(dep.deposit);
         },
         background: Container(
           alignment: Alignment.centerRight,
@@ -316,15 +315,14 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '${AppLocalizations.get(locale, 'hist_entry_label')}${dep.id.length > 8 ? dep.id.substring(0, 8) : dep.id}',
+                                        '${AppLocalizations.get(locale, 'hist_entry_label')}${dep.deposit.id.length > 8 ? dep.deposit.id.substring(0, 8) : dep.deposit.id}',
                                         style: AppTypography.bodySmall(context),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       const SizedBox(height: 2.0),
                                       Text(
-                                        DateFormat('HH:mm')
-                                            .format(dep.createdAt),
+                                        DateFormat('HH:mm').format(dep.deposit.createdAt),
                                         style: AppTypography.caption(context),
                                       ),
                                     ],
@@ -337,7 +335,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '+${formatAmount(dep.amount)} $currency',
+                                '+${formatAmount(dep.deposit.amount)} $currency',
                                 style: AppTypography.amount(context),
                               ),
                               const SizedBox(height: 4.0),
@@ -380,7 +378,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  Future<bool> _showDeleteConfirmation(Deposit dep, String currency) async {
+  Future<bool> _showDeleteConfirmation(DepositBreakdown dep, String currency) async {
     HapticFeedback.heavyImpact();
     final locale = ref.read(localeProvider);
     final bool? result = await showDialog<bool>(
@@ -416,7 +414,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     return result ?? false;
   }
 
-  void _showDetailsModal(Deposit dep, List<Goal> goals) {
+  void _showDetailsModal(DepositBreakdown dep, List<Goal> goals) {
     HapticFeedback.heavyImpact();
     final locale = ref.read(localeProvider);
     final goalA = goals.firstWhere((g) => g.id == 'goal_a');
@@ -484,7 +482,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     style: AppTypography.body(context),
                   ),
                   Text(
-                    DateFormat('dd.MM.yyyy HH:mm').format(dep.createdAt),
+                    DateFormat('dd.MM.yyyy HH:mm').format(dep.deposit.createdAt),
                     style: AppTypography.bodySmall(context),
                   ),
                 ],
@@ -499,12 +497,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                     style: AppTypography.body(context),
                   ),
                   Text(
-                    DateTime.now().difference(dep.createdAt).inHours < 24
+                    DateTime.now().difference(dep.deposit.createdAt).inHours < 24
                         ? AppLocalizations.get(locale, 'hist_status_active')
                         : AppLocalizations.get(locale, 'hist_status_locked'),
                     style: AppTypography.bodySmall(
                       context,
-                      color: DateTime.now().difference(dep.createdAt).inHours < 24
+                    color: DateTime.now().difference(dep.deposit.createdAt).inHours < 24
                           ? AppColors.success
                           : null,
                     ),
@@ -541,11 +539,11 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
-  List<DateGroupedDeposits> _groupDepositsByDate(List<Deposit> items) {
-    final Map<String, List<Deposit>> groups = {};
+  List<DateGroupedDeposits> _groupDepositsByDate(List<DepositBreakdown> items) {
+    final Map<String, List<DepositBreakdown>> groups = {};
     for (var dep in items) {
       final String formattedDate =
-          DateFormat('dd MMMM yyyy', 'uk').format(dep.createdAt);
+          DateFormat('dd MMMM yyyy', 'uk').format(dep.deposit.createdAt);
       if (groups.containsKey(formattedDate)) {
         groups[formattedDate]!.add(dep);
       } else {
@@ -561,7 +559,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
 
 class DateGroupedDeposits {
   final String dateString;
-  final List<Deposit> items;
+  final List<DepositBreakdown> items;
 
   DateGroupedDeposits({required this.dateString, required this.items});
 }

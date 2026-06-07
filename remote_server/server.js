@@ -1,11 +1,41 @@
+import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import screenshot from 'screenshot-desktop';
 import sharp from 'sharp';
 import crypto from 'crypto';
 import { exec } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const PORT = 8080;
 const PASSWORD = 'cybervault'; // Default secure password, can be changed here
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootEnvPath = path.resolve(__dirname, '..', '.env');
+
+function loadEnvFile(envPath) {
+  try {
+    const content = fs.readFileSync(envPath, 'utf8');
+    const parsed = {};
+    for (const line of content.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const equalsIndex = trimmed.indexOf('=');
+      if (equalsIndex === -1) continue;
+      const key = trimmed.slice(0, equalsIndex).trim();
+      const value = trimmed.slice(equalsIndex + 1).trim();
+      if (key) parsed[key] = value;
+    }
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+const fileEnv = loadEnvFile(rootEnvPath);
+const serpApiKey = process.env.SERPAPI_KEY || fileEnv.SERPAPI_KEY || '';
 
 let robot;
 try {
@@ -35,7 +65,102 @@ exec("powershell -Command \"Add-Type -AssemblyName System.Windows.Forms; [System
   }
 });
 
-const wss = new WebSocketServer({ port: PORT });
+const server = createServer(async (req, res) => {
+  const url = new URL(req.url, `http://${req.headers.host || `127.0.0.1:${PORT}`}`);
+
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  if (url.pathname === '/price-analysis') {
+    const query = (url.searchParams.get('query') || url.searchParams.get('q') || '').trim();
+    if (!query) {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PiggyVault Price Proxy</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #111;
+        color: #f5f5f5;
+        margin: 0;
+        padding: 24px;
+      }
+      .card {
+        max-width: 640px;
+        background: #1b1b1f;
+        border: 1px solid #2f2f35;
+        border-radius: 16px;
+        padding: 20px;
+      }
+      code {
+        background: #0f0f12;
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+      a { color: #7b7bff; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>PiggyVault Price Proxy</h1>
+      <p>This endpoint is used by the Flutter app to fetch live shopping prices.</p>
+      <p>Try a direct example:</p>
+      <p><code>/price-analysis?query=PS5</code></p>
+      <p>Supported targets: PS5, 27 inch monitor, gaming monitor.</p>
+      <p><a href="/price-analysis?query=PS5">Open PS5 example</a></p>
+    </div>
+  </body>
+</html>`);
+      return;
+    }
+
+    if (!serpApiKey) {
+      res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: 'SERPAPI_KEY is not configured on the proxy server' }));
+      return;
+    }
+
+    try {
+      const serpUrl = new URL('https://serpapi.com/search.json');
+      serpUrl.searchParams.set('engine', 'google_shopping');
+      serpUrl.searchParams.set('q', query);
+      serpUrl.searchParams.set('gl', url.searchParams.get('gl') || 'ua');
+      serpUrl.searchParams.set('hl', url.searchParams.get('hl') || 'uk');
+      serpUrl.searchParams.set('num', url.searchParams.get('num') || '10');
+      serpUrl.searchParams.set('api_key', serpApiKey);
+
+      const response = await fetch(serpUrl);
+      const body = await response.text();
+      res.writeHead(response.status, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(body);
+    } catch (error) {
+      res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({
+        error: 'Failed to fetch live market prices',
+        details: error instanceof Error ? error.message : String(error),
+      }));
+    }
+
+    return;
+  }
+
+  res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify({ error: 'Not found' }));
+});
+
+const wss = new WebSocketServer({ server });
+server.listen(PORT);
 console.log(`\n=============================================================`);
 console.log(`⚡ PIGGYVAULT REMOTE PC SERVER RUNNING ON PORT ${PORT} ⚡`);
 console.log(`🔐 Authentication Password: "${PASSWORD}"`);
