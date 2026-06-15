@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/providers.dart';
 import '../../../data/database.dart';
 
 enum RiskLevel { low, medium, high, critical }
@@ -36,7 +37,7 @@ final retainCoreProvider = StateNotifierProvider<RetainCoreNotifier, RetainCoreS
   return RetainCoreNotifier(db);
 });
 
-final databaseProvider = Provider<AppDatabase>((ref) => AppDatabase());
+
 
 class RetainCoreNotifier extends StateNotifier<RetainCoreState> {
   final AppDatabase _db;

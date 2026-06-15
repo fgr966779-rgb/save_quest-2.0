@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/providers.dart';
 import '../../../data/database.dart';
 import 'package:drift/drift.dart' as drift;
 
@@ -7,9 +8,7 @@ final graveyardProvider = StateNotifierProvider<GraveyardNotifier, AsyncValue<Li
   return GraveyardNotifier(db);
 });
 
-final databaseProvider = Provider<AppDatabase>((ref) {
-  return AppDatabase(); // You might want to get it from a global provider
-});
+
 
 class GraveyardNotifier extends StateNotifier<AsyncValue<List<GraveyardEntry>>> {
   final AppDatabase _db;

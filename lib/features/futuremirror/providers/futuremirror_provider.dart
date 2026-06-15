@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/providers.dart';
 import '../../../data/database.dart';
 
 class FutureMirrorState {
@@ -34,7 +35,7 @@ final futureMirrorProvider = StateNotifierProvider<FutureMirrorNotifier, FutureM
   return FutureMirrorNotifier(db);
 });
 
-final databaseProvider = Provider<AppDatabase>((ref) => AppDatabase());
+
 
 class FutureMirrorNotifier extends StateNotifier<FutureMirrorState> {
   final AppDatabase _db;

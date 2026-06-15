@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/providers.dart';
 import 'package:drift/drift.dart' as drift;
 import '../../../data/database.dart';
 
@@ -47,7 +48,7 @@ final bankLinkProvider = StateNotifierProvider<BankLinkNotifier, BankLinkState>(
   return BankLinkNotifier(db);
 });
 
-final databaseProvider = Provider<AppDatabase>((ref) => AppDatabase());
+
 
 class BankLinkNotifier extends StateNotifier<BankLinkState> {
   final AppDatabase _db;

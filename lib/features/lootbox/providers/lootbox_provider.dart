@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/providers.dart';
 import '../../../data/database.dart';
 
 class LootBoxState {
@@ -35,7 +36,7 @@ final variableRewardProvider = StateNotifierProvider<VariableRewardNotifier, Loo
   return VariableRewardNotifier(db);
 });
 
-final databaseProvider = Provider<AppDatabase>((ref) => AppDatabase());
+
 
 class VariableRewardNotifier extends StateNotifier<LootBoxState> {
   final AppDatabase _db;
