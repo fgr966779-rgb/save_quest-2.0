@@ -50,7 +50,7 @@ class GiftFundNotifier extends StateNotifier<AsyncValue<GiftFundState>> {
     try {
       final now = DateTime.now();
       final companion = data.copyWith(
-        id: Value('gift_${now.millisecondsSinceEpoch}_${_random4()}'),
+        id: Value('gift_${parentGoal.id}_${_random4()}'),
         createdAt: Value(now),
         updatedAt: Value(now),
       );

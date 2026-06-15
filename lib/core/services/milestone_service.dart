@@ -22,7 +22,7 @@ class MilestoneService {
   /// Build a Hive key for a specific goal + milestone.
   /// Format: "goal_a_25", "goal_b_100", etc.
   static String _key(String goalId, int percent) =>
-      '${goalId}_$percent';
+      '$1_$percent';
 
   /// Check if a milestone has already been celebrated.
   bool isCelebrated(String goalId, int percent) {

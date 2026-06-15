@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/no_spend_provider.dart';
 import '../../../core/constants/app_colors.dart';
@@ -450,7 +450,7 @@ class _NoSpendSuccessDialogState
                   children: [
                     _infoChip(
                       label:
-                          '${t('no_spend_success_streak')} ${widget.state.streakCount}',
+                          '${t('no_spend_success_streak')} ₴',
                       color: neonGreen,
                     ),
                     const SizedBox(width: 8),

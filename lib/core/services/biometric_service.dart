@@ -62,7 +62,7 @@ class BiometricService {
       );
       return didAuthenticate;
     } on PlatformException catch (e) {
-      debugPrint('Biometric auth error: ${e.message}');
+      debugPrint('Biometric auth error: $1');
       return false;
     }
   }

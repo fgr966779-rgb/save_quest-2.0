@@ -121,7 +121,7 @@ class _DataCard extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Джерело: ${entry.store}',
+                'Джерело: ${entry.source}',
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
               Text(

@@ -116,7 +116,7 @@ abstract class SyncService extends ChangeNotifier {
         // If successful, remove from queue
         _pendingQueue.removeFirst();
       } catch (e) {
-        debugPrint('Sync failed for item ${item.id}: $e');
+        debugPrint('Sync failed for item $1: $e');
         hasErrors = true;
         // Increment retry count and move to back of queue
         final updatedItem = item.copyWith(retryCount: item.retryCount + 1);
@@ -145,7 +145,7 @@ abstract class SyncService extends ChangeNotifier {
     // Exponential backoff formula: base_delay * 2^retries
     final delayMs = min(_maxDelayMs, _baseDelayMs * pow(2, maxRetriesInQueue)).toInt();
     
-    debugPrint('Scheduling sync retry in ${delayMs}ms');
+    debugPrint('Scheduling sync retry in $1ms');
     
     _retryTimer = Timer(Duration(milliseconds: delayMs), () {
       triggerSync();

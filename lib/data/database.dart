@@ -346,6 +346,635 @@ class Subscriptions extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+class GraveyardEntries extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get goalId => text()();
+  TextColumn get goalName => text()();
+  IntColumn get targetAmount => integer()();
+  IntColumn get savedAmount => integer()();
+  TextColumn get epitaph => text().nullable()();
+  DateTimeColumn get deathDate => dateTime()();
+  BoolColumn get isResurrected => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get resurrectionDate => dateTime().nullable()();
+  TextColumn get deathReason => text().nullable()();
+  BoolColumn get necromancerUsed => boolean().withDefault(const Constant(false))();
+}
+
+class FutureSelfProjections extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get goalId => text()();
+  DateTimeColumn get projectedDate => dateTime()();
+  IntColumn get projectedAmount => integer()();
+  RealColumn get confidence => real()();
+  TextColumn get aiMessage => text().nullable()();
+  DateTimeColumn get calculatedAt => dateTime()();
+}
+
+class LootBoxResults extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get tier => text()();
+  IntColumn get xpReward => integer()();
+  TextColumn get rewardType => text()();
+  TextColumn get rewardData => text().nullable()();
+  DateTimeColumn get openedAt => dateTime()();
+}
+
+class BankSyncConfigs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get provider => text()();
+  TextColumn get status => text()();
+  TextColumn get maskedAccount => text().nullable()();
+  DateTimeColumn get lastSyncAt => dateTime().nullable()();
+  BoolColumn get roundUpEnabled => boolean().withDefault(const Constant(false))();
+  TextColumn get roundUpGoalId => text().nullable()();
+}
+
+class AutoDeposits extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get goalId => text()();
+  TextColumn get ruleType => text()();
+  IntColumn get amount => integer()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get nextTriggerAt => dateTime().nullable()();
+}
+
+// ── Phase 2 tables ──────────────────────────────────────────────
+
+class ReputationProfiles extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  IntColumn get score => integer().withDefault(const Constant(0))();
+  TextColumn get tier => text().withDefault(const Constant('Novice'))();
+  RealColumn get fulfillmentRate => real().withDefault(const Constant(0.0))();
+  IntColumn get karmaContributions => integer().withDefault(const Constant(0))();
+}
+
+class PublicCommitments extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get title => text()();
+  DateTimeColumn get deadline => dateTime()();
+  IntColumn get xpStake => integer()();
+  IntColumn get karmaStake => integer()();
+  BoolColumn get isFulfilled => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
+class FlashMobEvents extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get title => text()();
+  TextColumn get description => text()();
+  RealColumn get multiplier => real()();
+  IntColumn get participantCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get startAt => dateTime()();
+  DateTimeColumn get endAt => dateTime()();
+  BoolColumn get isJoined => boolean().withDefault(const Constant(false))();
+  IntColumn get xpBonus => integer()();
+}
+
+class SavingsContracts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get contractType => text()();
+  IntColumn get targetAmount => integer()();
+  IntColumn get xpStake => integer()();
+  IntColumn get karmaStake => integer()();
+  IntColumn get currentProgress => integer()();
+  DateTimeColumn get endDate => dateTime()();
+  BoolColumn get isFulfilled => boolean().withDefault(const Constant(false))();
+  BoolColumn get isBroken => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
+class NudgeExperiments extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get nudgeType => text()();
+  TextColumn get variant => text()();
+  IntColumn get impressions => integer().withDefault(const Constant(0))();
+  IntColumn get conversions => integer().withDefault(const Constant(0))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get startedAt => dateTime()();
+}
+
+class PersuasionProfiles extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get dominantNudge => text()();
+  RealColumn get lossAversionScore => real()();
+  RealColumn get socialProofScore => real()();
+  RealColumn get anchoringScore => real()();
+  RealColumn get scarcityScore => real()();
+  RealColumn get gamificationScore => real()();
+}
+
+class TrophyEntries extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get name => text()();
+  TextColumn get tier => text()();
+  IntColumn get milestoneAmount => integer()();
+  BoolColumn get isUnlocked => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get unlockedAt => dateTime().nullable()();
+  TextColumn get sketchfabModelId => text().nullable()();
+  TextColumn get aiDescription => text().nullable()();
+}
+
+class NewsInsights extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get title => text()();
+  TextColumn get summary => text()();
+  TextColumn get category => text()();
+  IntColumn get relevanceScore => integer()();
+  BoolColumn get isActionable => boolean().withDefault(const Constant(false))();
+  TextColumn get aiSuggestion => text().nullable()();
+  IntColumn get relatedGoalId => integer().nullable()();
+  BoolColumn get isRead => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get publishedAt => dateTime()();
+}
+
+class PriceWatchItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get name => text()();
+  TextColumn get searchQuery => text()();
+  IntColumn get currentPrice => integer()();
+  IntColumn get previousPrice => integer()();
+  IntColumn get targetPrice => integer()();
+  TextColumn get storeName => text().nullable()();
+  TextColumn get alertType => text()();
+  TextColumn get aiPrediction => text().nullable()();
+  DateTimeColumn get lastCheckedAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
+class ScannedReceipts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get merchant => text()();
+  IntColumn get amount => integer()();
+  TextColumn get category => text()();
+  IntColumn get savingsPotential => integer()();
+  TextColumn get aiMotivation => text().nullable()();
+  BoolColumn get isImpulseBuy => boolean().withDefault(const Constant(false))();
+  TextColumn get imagePath => text().nullable()();
+  DateTimeColumn get scannedAt => dateTime()();
+}
+
+class CyberPets extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get petType => text()();
+  TextColumn get name => text()();
+  IntColumn get health => integer().withDefault(const Constant(100))();
+  IntColumn get happiness => integer().withDefault(const Constant(100))();
+  TextColumn get evolutionStage => text().withDefault(const Constant('Egg'))();
+  IntColumn get totalFeedings => integer().withDefault(const Constant(0))();
+  IntColumn get daysTogether => integer().withDefault(const Constant(0))();
+  TextColumn get accessories => text().withDefault(const Constant('[]'))();
+  DateTimeColumn get adoptedAt => dateTime()();
+}
+
+class BudgetEntries extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get category => text()();
+  IntColumn get monthlyLimit => integer()();
+  IntColumn get spentAmount => integer()();
+  TextColumn get month => text()();
+  BoolColumn get isBreach => boolean().withDefault(const Constant(false))();
+}
+
+class BudgetReports extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get month => text()();
+  IntColumn get totalSpent => integer()();
+  IntColumn get totalLimit => integer()();
+  RealColumn get savingsRate => real()();
+  TextColumn get aiAnalysis => text().nullable()();
+  IntColumn get usdUahRate => integer()();
+  IntColumn get eurUahRate => integer()();
+  RealColumn get inflationRate => real()();
+}
+
+// ==========================================
+// PHASE 3 (PRICE INTELLIGENCE) TABLES
+// ==========================================
+
+class VoiceCommands extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get transcription => text()();
+  TextColumn get parsedAction => text()(); // deposit/check_balance/add_goal
+  IntColumn get parsedAmount => integer().nullable()(); // копійки
+  IntColumn get targetGoalId => integer().nullable()();
+  BoolColumn get wasExecuted => boolean().withDefault(const Constant(false))();
+  TextColumn get responseText => text().nullable()();
+  DateTimeColumn get recordedAt => dateTime()();
+}
+
+class CrowdFundWishlists extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get itemName => text()();
+  IntColumn get targetAmount => integer()(); // копійки
+  IntColumn get collectedAmount => integer().withDefault(const Constant(0))();
+  TextColumn get shareCode => text()(); // унікальний код для ділення
+  BoolColumn get isPublic => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
+class CrowdFundContributions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get wishlistId => integer()();
+  TextColumn get contributorName => text()();
+  IntColumn get amount => integer()(); // копійки
+  TextColumn get message => text().nullable()();
+  DateTimeColumn get contributedAt => dateTime()();
+}
+
+class ARScanEntries extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  IntColumn get scannedPrice => integer()(); // копійки
+  IntColumn get onlinePrice => integer().nullable()(); // копійки
+  TextColumn get storeName => text().nullable()();
+  BoolColumn get isFairPrice => boolean().withDefault(const Constant(true))();
+  IntColumn get savingsPotential => integer()(); // копійки
+  DateTimeColumn get scannedAt => dateTime()();
+}
+
+class SoundUnlocks extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get soundName => text()();
+  TextColumn get soundFile => text()(); // asset path
+  BoolColumn get isUnlocked => boolean().withDefault(const Constant(false))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(false))();
+  IntColumn get unlockCost => integer()(); // XP
+  DateTimeColumn get unlockedAt => dateTime().nullable()();
+}
+
+class PriceSharkItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get productName => text()();
+  TextColumn get searchQuery => text()();
+  IntColumn get lowestPrice => integer()(); // копійки
+  IntColumn get highestPrice => integer()(); // копійки
+  IntColumn get currentPrice => integer()(); // копійки
+  IntColumn get dropPercentage => integer()(); // % падіння від максимуму
+  DateTimeColumn get lastUpdatedAt => dateTime()();
+}
+
+class RouletteItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  IntColumn get currentPrice => integer()(); // копійки
+  IntColumn get predictedDropPrice => integer()(); // копійки
+  IntColumn get betAmount => integer()(); // XP ставка
+  TextColumn get outcome => text().nullable()(); // win/lose/pending
+  DateTimeColumn get betPlacedAt => dateTime()();
+  DateTimeColumn get resolvesAt => dateTime()();
+}
+
+class PriceMatchRequests extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  IntColumn get targetStorePrice => integer()(); // копійки
+  IntColumn get competitorPrice => integer()(); // копійки
+  TextColumn get targetStore => text()();
+  TextColumn get competitorStore => text()();
+  TextColumn get status => text()(); // pending/approved/rejected
+  TextColumn get evidenceUrl => text().nullable()();
+  DateTimeColumn get submittedAt => dateTime()();
+}
+
+class PreOrderGuards extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  IntColumn get preOrderPrice => integer()(); // копійки
+  IntColumn get currentPrice => integer().nullable()(); // копійки
+  IntColumn get lowestPriceSeen => integer().nullable()(); // копійки
+  DateTimeColumn get releaseDate => dateTime().nullable()();
+  BoolColumn get priceDropAlert => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
+class LoyaltyCards extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get storeName => text()();
+  TextColumn get cardNumber => text().nullable()(); // зашифрований
+  IntColumn get pointsBalance => integer().withDefault(const Constant(0))();
+  IntColumn get pointsToMoney => integer()(); // скільки копійок = 1 поінт
+  IntColumn get minRedeemPoints => integer()();
+  DateTimeColumn get expiresAt => dateTime().nullable()();
+}
+
+class FreezeChallenges extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get productName => text()();
+  IntColumn get frozenPrice => integer()(); // копійки — ціна що "заморожена"
+  IntColumn get currentPrice => integer().nullable()(); // копійки
+  IntColumn get targetSavingsDays => integer()(); // скільки днів зберігати
+  IntColumn get currentSavingsDays => integer().withDefault(const Constant(0))();
+  BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  IntColumn get xpReward => integer()();
+  DateTimeColumn get startedAt => dateTime()();
+}
+
+class RadarWishItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get productName => text()();
+  TextColumn get searchQuery => text()();
+  IntColumn get targetPrice => integer()(); // копійки (trigger threshold)
+  IntColumn get currentBestPrice => integer().nullable()(); // копійки
+  TextColumn get bestStore => text().nullable()();
+  BoolColumn get alertEnabled => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get lastCheckedAt => dateTime().nullable()();
+}
+
+class SmartAlertEntries extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  TextColumn get alertType => text()(); // price_drop/target_reached/flash_sale
+  IntColumn get triggerPrice => integer()(); // копійки
+  IntColumn get currentPrice => integer()(); // копійки
+  BoolColumn get isTriggered => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get triggeredAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
+class AlertSubscriptions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get wishItemId => integer()();
+  TextColumn get notificationType => text()(); // push/in_app/both
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+}
+
+class ArenaTournaments extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  DateTimeColumn get startAt => dateTime()();
+  DateTimeColumn get endAt => dateTime()();
+  TextColumn get status => text()(); // active/completed
+  IntColumn get prizeXp => integer()();
+}
+
+class ArenaSubmissions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get tournamentId => integer()();
+  IntColumn get userId => integer()();
+  TextColumn get storeName => text()();
+  IntColumn get price => integer()(); // копійки
+  BoolColumn get isVerified => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get submittedAt => dateTime()();
+}
+
+class PriceForecasts extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  IntColumn get currentPrice => integer()(); // копійки
+  IntColumn get forecastPrice7d => integer()(); // копійки
+  IntColumn get forecastPrice30d => integer()(); // копійки
+  IntColumn get forecastPrice90d => integer()(); // копійки
+  RealColumn get confidence => real()(); // 0.0 - 1.0
+  TextColumn get reasoning => text().nullable()(); // AI пояснення
+  TextColumn get recommendation => text()(); // buy_now/wait/urgent
+  DateTimeColumn get generatedAt => dateTime()();
+}
+
+// ==========================================
+// PHASE 4 (ADVANCED ANALYTICS & BEHAVIORAL) TABLES
+// ==========================================
+
+class SecondHandItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  IntColumn get newPrice => integer()(); // копійки
+  IntColumn get usedPriceMin => integer()(); // копійки
+  IntColumn get usedPriceMax => integer()(); // копійки
+  IntColumn get recommendedUsedPrice => integer()(); // копійки
+  RealColumn get depreciationRate => real()(); // % за рік
+  TextColumn get condition => text()(); // excellent/good/fair/poor
+  TextColumn get platform => text()(); // OLX/Rozetka/eBay
+  DateTimeColumn get analyzedAt => dateTime()();
+}
+
+class CalendarSubscriptions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productCategory => text()();
+  BoolColumn get isSubscribed => boolean().withDefault(const Constant(true))();
+}
+
+class PriceEvents extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get eventName => text()();
+  TextColumn get productCategory => text()();
+  IntColumn get expectedDropPercent => integer()(); // очікуваний % знижки
+  DateTimeColumn get eventDate => dateTime()();
+  BoolColumn get isRecurring => boolean().withDefault(const Constant(true))();
+  TextColumn get recurrencePattern => text().nullable()(); // yearly/monthly
+}
+
+class MomentumItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  IntColumn get price7dAgo => integer()(); // копійки
+  IntColumn get price30dAgo => integer()(); // копійки
+  IntColumn get currentPrice => integer()(); // копійки
+  RealColumn get momentum7d => real()(); // % зміна за 7 днів
+  RealColumn get momentum30d => real()(); // % зміна за 30 днів
+  TextColumn get trend => text()(); // rising/falling/stable
+  DateTimeColumn get updatedAt => dateTime()();
+}
+
+class PriceWarEntries extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  TextColumn get store1Name => text()();
+  IntColumn get store1Price => integer()(); // копійки
+  TextColumn get store2Name => text()();
+  IntColumn get store2Price => integer()(); // копійки
+  IntColumn get priceDifference => integer()(); // копійки
+  TextColumn get winner => text()(); // store1/store2/tied
+  DateTimeColumn get detectedAt => dateTime()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+}
+
+class HagglingSessions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  IntColumn get listedPrice => integer()(); // копійки
+  IntColumn get targetPrice => integer()(); // копійки
+  TextColumn get platform => text()(); // OLX/in_store/online
+  TextColumn get script => text().nullable()(); // AI скрипт
+  TextColumn get outcome => text().nullable()(); // won/lost/pending
+  IntColumn get finalPrice => integer().nullable()(); // копійки
+  DateTimeColumn get sessionAt => dateTime()();
+}
+
+class ElasticityItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  IntColumn get basePrice => integer()(); // копійки
+  RealColumn get elasticityScore => real()(); // -3.0 до 0
+  TextColumn get category => text()(); // elastic/inelastic/unit_elastic
+  TextColumn get insight => text().nullable()(); // AI пояснення
+  DateTimeColumn get calculatedAt => dateTime()();
+}
+
+class InventoryStalkerItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  TextColumn get storeName => text()();
+  TextColumn get stockStatus => text()(); // in_stock/out_of_stock/low_stock
+  IntColumn get currentPrice => integer().nullable()(); // копійки
+  IntColumn get lastInStockPrice => integer().nullable()(); // копійки
+  BoolColumn get notifyWhenBack => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get lastCheckedAt => dateTime().nullable()();
+  DateTimeColumn get addedAt => dateTime()();
+}
+
+class LendingRecords extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get counterpartyName => text()();
+  IntColumn get amount => integer()(); // копійки
+  TextColumn get direction => text()(); // lent/borrowed
+  TextColumn get reason => text().nullable()();
+  DateTimeColumn get dueDate => dateTime().nullable()();
+  BoolColumn get isSettled => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get settledAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
+class GoalProductLinks extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get goalId => integer()();
+  TextColumn get productName => text()();
+  TextColumn get searchQuery => text()();
+  IntColumn get linkedPrice => integer()(); // копійки
+  TextColumn get storeName => text().nullable()();
+  BoolColumn get autoUpdateTarget => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get linkedAt => dateTime()();
+}
+
+class HabitLoops extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get triggerEvent => text()(); // morning/payday/coffee/custom
+  TextColumn get routine => text()(); // що робити (deposit amount)
+  IntColumn get routineAmount => integer()(); // копійки
+  IntColumn get rewardXp => integer()();
+  IntColumn get completionsCount => integer().withDefault(const Constant(0))();
+  IntColumn get currentStreak => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lastCompletedAt => dateTime().nullable()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+}
+
+class InflationShields extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  IntColumn get goalId => integer()();
+  RealColumn get inflationRate => real()(); // поточна %
+  IntColumn get originalTargetAmount => integer()(); // копійки на початку
+  IntColumn get adjustedTargetAmount => integer()(); // копійки з урахуванням інфляції
+  IntColumn get additionalNeeded => integer()(); // копійки різниці
+  DateTimeColumn get calculatedAt => dateTime()();
+}
+
+class PriceDetectiveItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  TextColumn get searchQuery => text()();
+  IntColumn get currentPrice => integer()(); // копійки
+  IntColumn get priceAllTimeMin => integer()(); // копійки
+  IntColumn get priceAllTimeMax => integer()(); // копійки
+  IntColumn get priceAverage => integer()(); // копійки
+  TextColumn get pricePattern => text().nullable()(); // seasonal/volatile/stable
+  TextColumn get aiDetectiveReport => text().nullable()();
+  DateTimeColumn get investigatedAt => dateTime()();
+}
+
+class WishlistUrls extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get url => text()();
+  TextColumn get productName => text().nullable()();
+  IntColumn get extractedPrice => integer().nullable()(); // копійки
+  TextColumn get storeName => text().nullable()();
+  TextColumn get status => text()(); // pending/extracted/failed
+  DateTimeColumn get addedAt => dateTime()();
+  DateTimeColumn get lastCheckedAt => dateTime().nullable()();
+}
+
+class PriceShieldScans extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get productName => text()();
+  IntColumn get inStorePrice => integer()(); // копійки
+  IntColumn get onlinePrice => integer().nullable()(); // копійки
+  TextColumn get inStoreName => text()();
+  TextColumn get onlineStoreName => text().nullable()();
+  IntColumn get savingsPotential => integer()(); // копійки
+  BoolColumn get isFairPrice => boolean()();
+  DateTimeColumn get scannedAt => dateTime()();
+}
+
+class TimeMachineProjections extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get goalId => integer()();
+  TextColumn get scenarioName => text()();
+  RealColumn get depositIncreasePercent => real()();
+  IntColumn get lumpSumAmount => integer()(); // копійки
+  TextColumn get depositFrequency => text()(); // daily/weekly/monthly
+  DateTimeColumn get projectedCompletionDate => dateTime()();
+  IntColumn get projectedFinalAmount => integer()(); // копійки
+  DateTimeColumn get calculatedAt => dateTime()();
+}
+
+class QuestChains extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get questType => text()();
+  TextColumn get questTitle => text()();
+  IntColumn get targetValue => integer()(); // копійки або дні
+  IntColumn get currentValue => integer().withDefault(const Constant(0))();
+  IntColumn get xpReward => integer()();
+  TextColumn get badgeReward => text().nullable()();
+  BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
+  IntColumn get chainOrder => integer()(); // позиція в ланцюжку (1, 2, 3...)
+  IntColumn get parentQuestId => integer().nullable()(); // попередній квест
+  DateTimeColumn get startedAt => dateTime()();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+}
+
+class CoachPredictions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  TextColumn get predictionType => text()();
+  RealColumn get confidence => real()(); // 0.0 - 1.0
+  TextColumn get predictionText => text()();
+  TextColumn get actionSuggestion => text()();
+  BoolColumn get wasCorrect => boolean().nullable()();
+  DateTimeColumn get predictedFor => dateTime()();
+  DateTimeColumn get generatedAt => dateTime()();
+}
+
+class InflationWaves extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get userId => integer()();
+  IntColumn get waveNumber => integer()();
+  RealColumn get inflationRate => real()(); // % атаки
+  IntColumn get savingsDefended => integer()(); // копійки
+  IntColumn get savingsLost => integer()(); // копійки
+  IntColumn get score => integer()();
+  BoolColumn get isWaveWon => boolean()();
+  DateTimeColumn get playedAt => dateTime()();
+}
+
 @DriftDatabase(tables: [
   Goals,
   Deposits,
@@ -371,6 +1000,60 @@ class Subscriptions extends Table {
   PriceHistoryEntries,
   Subscriptions,
   GiftGoals,
+  GraveyardEntries,
+  FutureSelfProjections,
+  LootBoxResults,
+  BankSyncConfigs,
+  AutoDeposits,
+  ReputationProfiles,
+  PublicCommitments,
+  FlashMobEvents,
+  SavingsContracts,
+  NudgeExperiments,
+  PersuasionProfiles,
+  TrophyEntries,
+  NewsInsights,
+  PriceWatchItems,
+  ScannedReceipts,
+  CyberPets,
+  BudgetEntries,
+  BudgetReports,
+  VoiceCommands,
+  CrowdFundWishlists,
+  CrowdFundContributions,
+  ARScanEntries,
+  SoundUnlocks,
+  PriceSharkItems,
+  RouletteItems,
+  PriceMatchRequests,
+  PreOrderGuards,
+  LoyaltyCards,
+  FreezeChallenges,
+  RadarWishItems,
+  SmartAlertEntries,
+  AlertSubscriptions,
+  ArenaTournaments,
+  ArenaSubmissions,
+  PriceForecasts,
+  SecondHandItems,
+  CalendarSubscriptions,
+  PriceEvents,
+  MomentumItems,
+  PriceWarEntries,
+  HagglingSessions,
+  ElasticityItems,
+  InventoryStalkerItems,
+  LendingRecords,
+  GoalProductLinks,
+  HabitLoops,
+  InflationShields,
+  PriceDetectiveItems,
+  WishlistUrls,
+  PriceShieldScans,
+  TimeMachineProjections,
+  QuestChains,
+  CoachPredictions,
+  InflationWaves,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
@@ -378,7 +1061,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.connect(super.connection);
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -583,6 +1266,68 @@ class AppDatabase extends _$AppDatabase {
           if (from < 20) {
             await m.createTable(giftGoals);
           }
+          if (from < 21) {
+            await m.createTable(graveyardEntries);
+            await m.createTable(futureSelfProjections);
+            await m.createTable(lootBoxResults);
+            await m.createTable(bankSyncConfigs);
+            await m.createTable(autoDeposits);
+          }
+          if (from < 22) {
+            await m.createTable(reputationProfiles);
+            await m.createTable(publicCommitments);
+            await m.createTable(flashMobEvents);
+            await m.createTable(savingsContracts);
+            await m.createTable(nudgeExperiments);
+            await m.createTable(persuasionProfiles);
+            await m.createTable(trophyEntries);
+            await m.createTable(newsInsights);
+            await m.createTable(priceWatchItems);
+            await m.createTable(scannedReceipts);
+            await m.createTable(cyberPets);
+            await m.createTable(budgetEntries);
+            await m.createTable(budgetReports);
+          }
+          if (from < 23) {
+            await m.createTable(voiceCommands);
+            await m.createTable(crowdFundWishlists);
+            await m.createTable(crowdFundContributions);
+            await m.createTable(aRScanEntries);
+            await m.createTable(soundUnlocks);
+            await m.createTable(priceSharkItems);
+            await m.createTable(rouletteItems);
+            await m.createTable(priceMatchRequests);
+            await m.createTable(preOrderGuards);
+            await m.createTable(loyaltyCards);
+            await m.createTable(freezeChallenges);
+            await m.createTable(radarWishItems);
+            await m.createTable(smartAlertEntries);
+            await m.createTable(alertSubscriptions);
+            await m.createTable(arenaTournaments);
+            await m.createTable(arenaSubmissions);
+            await m.createTable(priceForecasts);
+          }
+          if (from < 24) {
+            await m.createTable(secondHandItems);
+            await m.createTable(calendarSubscriptions);
+            await m.createTable(priceEvents);
+            await m.createTable(momentumItems);
+            await m.createTable(priceWarEntries);
+            await m.createTable(hagglingSessions);
+            await m.createTable(elasticityItems);
+            await m.createTable(inventoryStalkerItems);
+            await m.createTable(lendingRecords);
+            await m.createTable(goalProductLinks);
+            await m.createTable(habitLoops);
+            await m.createTable(inflationShields);
+            await m.createTable(priceDetectiveItems);
+            await m.createTable(wishlistUrls);
+            await m.createTable(priceShieldScans);
+            await m.createTable(timeMachineProjections);
+            await m.createTable(questChains);
+            await m.createTable(coachPredictions);
+            await m.createTable(inflationWaves);
+          }
         },
       );
 
@@ -672,7 +1417,7 @@ class AppDatabase extends _$AppDatabase {
       for (final entry in allocations.entries) {
         if (entry.value <= 0) continue;
         await into(depositAllocations).insert(DepositAllocationsCompanion(
-          id: Value('${deposit.id}_${entry.key}'),
+          id: Value('$1_$1'),
           depositId: Value(deposit.id),
           goalId: Value(entry.key),
           amount: Value(entry.value),

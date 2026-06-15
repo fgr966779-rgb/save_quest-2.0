@@ -121,7 +121,7 @@ class _MarketScreenState extends ConsumerState<MarketScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('${avatarConfig.credits}', style: AppTypography.metric(context, color: AppColors.accent)),
+                                Text('${profile?.crystalsBalance ?? 0}', style: AppTypography.metric(context, color: AppColors.accent)),
                                 const Icon(Icons.token, color: AppColors.accent, size: 24),
                               ],
                             ),

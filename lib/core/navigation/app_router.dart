@@ -45,6 +45,54 @@ import '../../features/subscriptions/screens/subscriptions_screen.dart';
 import '../../features/gamification/screens/oracle_screen.dart';
 import '../../features/dashboard/screens/annual_report_screen.dart';
 import '../../features/dashboard/screens/investment_market_screen.dart';
+import '../../features/necrospend/screens/savings_graveyard_screen.dart';
+import '../../features/retaincore/screens/anti_churn_screen.dart';
+import '../../features/futuremirror/screens/future_self_screen.dart';
+import '../../features/lootbox/screens/variable_reward_screen.dart';
+import '../../features/banklink/screens/bank_sync_screen.dart';
+import '../../features/phase2/screens/reputation_forge_screen.dart';
+import '../../features/phase2/screens/flash_mob_screen.dart';
+import '../../features/phase2/screens/choice_paradox_screen.dart';
+import '../../features/phase2/screens/nudge_lab_screen.dart';
+import '../../features/phase2/screens/trophy_gallery_screen.dart';
+import '../../features/phase2/screens/news_radar_screen.dart';
+import '../../features/phase2/screens/price_oracle_screen.dart';
+import '../../features/phase2/screens/receipt_scanner_screen.dart';
+import '../../features/phase2/screens/cyber_pet_screen.dart';
+import '../../features/phase2/screens/budget_dna_screen.dart';
+import '../../features/phase3/screens/voice_vault_screen.dart';
+import '../../features/phase3/screens/biometric_vault_screen.dart';
+import '../../features/phase3/screens/crowd_fund_screen.dart';
+import '../../features/phase3/screens/ar_price_tag_screen.dart';
+import '../../features/phase3/screens/soundscapes_screen.dart';
+import '../../features/phase3/screens/price_shark_screen.dart';
+import '../../features/phase3/screens/price_roulette_screen.dart';
+import '../../features/phase3/screens/price_match_screen.dart';
+import '../../features/phase3/screens/preorder_guard_screen.dart';
+import '../../features/phase3/screens/loyalty_cruncher_screen.dart';
+import '../../features/phase3/screens/price_freeze_screen.dart';
+import '../../features/phase3/screens/wishlist_radar_screen.dart';
+import '../../features/phase3/screens/smart_alerts_screen.dart';
+import '../../features/phase3/screens/price_arena_screen.dart';
+import '../../features/phase3/screens/price_prophet_screen.dart';
+import '../../features/phase4/screens/secondhand_analyzer_screen.dart';
+import '../../features/phase4/screens/seasonal_calendar_screen.dart';
+import '../../features/phase4/screens/price_momentum_screen.dart';
+import '../../features/phase4/screens/price_war_screen.dart';
+import '../../features/phase4/screens/haggling_coach_screen.dart';
+import '../../features/phase4/screens/price_elasticity_screen.dart';
+import '../../features/phase4/screens/inventory_stalker_screen.dart';
+import '../../features/phase4/screens/lending_tracker_screen.dart';
+import '../../features/phase4/screens/goal_price_integrator_screen.dart';
+import '../../features/phase4/screens/habit_loop_forge_screen.dart';
+import '../../features/phase4/screens/inflation_shield_screen.dart';
+import '../../features/phase4/screens/price_detective_screen.dart';
+import '../../features/phase4/screens/wishlist_link_ripper_screen.dart';
+import '../../features/phase4/screens/showroom_shield_screen.dart';
+import '../../features/phase4/screens/time_machine_screen.dart';
+import '../../features/phase4/screens/quest_chain_screen.dart';
+import '../../features/phase4/screens/sage_coach_screen.dart';
+import '../../features/phase4/screens/infla_wall_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final settings = ref.watch(settingsServiceProvider);
@@ -297,6 +345,69 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      GoRoute(
+        path: '/graveyard',
+        builder: (context, state) => const SavingsGraveyardScreen(),
+      ),
+      GoRoute(
+        path: '/anti-churn',
+        builder: (context, state) => const AntiChurnScreen(),
+      ),
+      GoRoute(
+        path: '/future-self',
+        builder: (context, state) => const FutureSelfScreen(),
+      ),
+      GoRoute(
+        path: '/variable-reward',
+        builder: (context, state) => const VariableRewardScreen(),
+      ),
+      GoRoute(
+        path: '/bank-sync',
+        builder: (context, state) => const BankSyncScreen(),
+      ),
+      GoRoute(path: '/reputation-forge', builder: (context, state) => const ReputationForgeScreen()),
+      GoRoute(path: '/flash-mob', builder: (context, state) => const FlashMobScreen()),
+      GoRoute(path: '/choice-paradox', builder: (context, state) => const ChoiceParadoxScreen()),
+      GoRoute(path: '/nudge-lab', builder: (context, state) => const NudgeLabScreen()),
+      GoRoute(path: '/trophy-gallery', builder: (context, state) => const TrophyGalleryScreen()),
+      GoRoute(path: '/news-radar', builder: (context, state) => const NewsRadarScreen()),
+      GoRoute(path: '/price-oracle', builder: (context, state) => const PriceOracleScreen()),
+      GoRoute(path: '/receipt-scanner', builder: (context, state) => const ReceiptScannerScreen()),
+      GoRoute(path: '/cyber-pet', builder: (context, state) => const CyberPetScreen()),
+      GoRoute(path: '/budget-dna', builder: (context, state) => const BudgetDNAScreen()),
+      GoRoute(path: '/voice-vault', builder: (context, state) => const VoiceVaultScreen()),
+      GoRoute(path: '/biometric-vault', builder: (context, state) => const BiometricVaultScreen()),
+      GoRoute(path: '/crowd-fund', builder: (context, state) => const CrowdFundScreen()),
+      GoRoute(path: '/ar-price-tag', builder: (context, state) => const ARPriceTagScreen()),
+      GoRoute(path: '/soundscapes', builder: (context, state) => const SoundscapesScreen()),
+      GoRoute(path: '/price-shark', builder: (context, state) => const PriceSharkScreen()),
+      GoRoute(path: '/price-roulette', builder: (context, state) => const PriceRouletteScreen()),
+      GoRoute(path: '/price-match', builder: (context, state) => const PriceMatchScreen()),
+      GoRoute(path: '/preorder-guard', builder: (context, state) => const PreOrderGuardScreen()),
+      GoRoute(path: '/loyalty-cruncher', builder: (context, state) => const LoyaltyCruncherScreen()),
+      GoRoute(path: '/price-freeze', builder: (context, state) => const PriceFreezeScreen()),
+      GoRoute(path: '/wishlist-radar', builder: (context, state) => const WishlistRadarScreen()),
+      GoRoute(path: '/smart-alerts', builder: (context, state) => const SmartAlertsScreen()),
+      GoRoute(path: '/price-arena', builder: (context, state) => const PriceArenaScreen()),
+      GoRoute(path: '/price-prophet', builder: (context, state) => const PriceProphetScreen()),
+      GoRoute(path: '/secondhand-analyzer', builder: (context, state) => const SecondhandAnalyzerScreen()),
+      GoRoute(path: '/seasonal-calendar', builder: (context, state) => const SeasonalCalendarScreen()),
+      GoRoute(path: '/price-momentum', builder: (context, state) => const PriceMomentumScreen()),
+      GoRoute(path: '/price-war', builder: (context, state) => const PriceWarScreen()),
+      GoRoute(path: '/haggling-coach', builder: (context, state) => const HagglingCoachScreen()),
+      GoRoute(path: '/price-elasticity', builder: (context, state) => const PriceElasticityScreen()),
+      GoRoute(path: '/inventory-stalker', builder: (context, state) => const InventoryStalkerScreen()),
+      GoRoute(path: '/lending-tracker', builder: (context, state) => const LendingTrackerScreen()),
+      GoRoute(path: '/goal-price-integrator', builder: (context, state) => const GoalPriceIntegratorScreen()),
+      GoRoute(path: '/habit-loop-forge', builder: (context, state) => const HabitLoopForgeScreen()),
+      GoRoute(path: '/inflation-shield', builder: (context, state) => const InflationShieldScreen()),
+      GoRoute(path: '/price-detective', builder: (context, state) => const PriceDetectiveScreen()),
+      GoRoute(path: '/wishlist-link-ripper', builder: (context, state) => const WishlistLinkRipperScreen()),
+      GoRoute(path: '/showroom-shield', builder: (context, state) => const ShowroomShieldScreen()),
+      GoRoute(path: '/time-machine', builder: (context, state) => const TimeMachineScreen()),
+      GoRoute(path: '/quest-chain', builder: (context, state) => const QuestChainScreen()),
+      GoRoute(path: '/sage-coach', builder: (context, state) => const SageCoachScreen()),
+      GoRoute(path: '/infla-wall', builder: (context, state) => const InflaWallScreen()),
     ],
   );
 });

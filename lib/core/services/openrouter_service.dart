@@ -128,7 +128,7 @@ class OpenRouterService {
         return content?.trim();
       } else {
         // ignore: avoid_print
-        print('[OpenRouter] Error ${response.statusCode}: ${response.body}');
+        print('[OpenRouter] Error $1: $1');
         return null;
       }
     } catch (e) {
@@ -166,7 +166,7 @@ class OpenRouterService {
       final content = data['choices']?[0]?['message']?['content'] as String?;
       return content?.trim() ?? '';
     } else {
-      throw Exception('OpenRouter Error ${response.statusCode}: ${response.body}');
+      throw Exception('OpenRouter Error $1: $1');
     }
   }
 
@@ -206,7 +206,7 @@ class OpenRouterService {
       return data['choices'][0]['message']['content'] as String;
     } else {
       throw Exception(
-          'OpenRouter Error ${response.statusCode}: ${response.body}');
+          'OpenRouter Error $1: $1');
     }
   }
 }

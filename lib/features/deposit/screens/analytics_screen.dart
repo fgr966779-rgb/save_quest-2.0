@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
@@ -153,13 +153,13 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       children: [
                         _buildLegendItem(
                           goals.firstWhere((g) => g.id == 'goal_a').name,
-                          '${formatAmount(totalA)} ${goals.first.currency}',
+                          '${formatAmount(totalA)} ₴',
                           AppColors.goalA,
                         ),
                         const SizedBox(height: 12.0),
                         _buildLegendItem(
                           goals.firstWhere((g) => g.id == 'goal_b').name,
-                          '${formatAmount(totalB)} ${goals.first.currency}',
+                          '${formatAmount(totalB)} ₴',
                           AppColors.goalB,
                         ),
                       ],
@@ -356,7 +356,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   const SizedBox(height: 16.0),
                   _buildProjectionSummaryRow(
                     goalA.name,
-                    '${totalAWeekly.toStringAsFixed(2)} ${goalA.currency}',
+                    '${totalAWeekly.toStringAsFixed(2)} ₴',
                     daysRemainingA,
                     AppColors.goalA,
                     locale,
@@ -367,7 +367,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                   ),
                   _buildProjectionSummaryRow(
                     goalB.name,
-                    '${totalBWeekly.toStringAsFixed(2)} ${goalB.currency}',
+                    '${totalBWeekly.toStringAsFixed(2)} ₴',
                     daysRemainingB,
                     AppColors.goalB,
                     locale,

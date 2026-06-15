@@ -272,12 +272,12 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildMetricColumn(context, AppLocalizations.get(locale, 'goal_accumulated'), '${formatAmount(goal.currentAmount)} ${goal.currency}'),
-              _buildMetricColumn(context, AppLocalizations.get(locale, 'goal_remaining'), '${formatAmount(remaining)} ${goal.currency}'),
+              _buildMetricColumn(context, AppLocalizations.get(locale, 'goal_accumulated'), '${formatAmount(goal.currentAmount)} ₴'),
+              _buildMetricColumn(context, AppLocalizations.get(locale, 'goal_remaining'), '${formatAmount(remaining)} ₴'),
             ],
           ),
           const SizedBox(height: 16.0),
-          _buildMetricColumn(context, AppLocalizations.get(locale, 'goal_target'), '${formatAmount(goal.targetAmount)} ${goal.currency}'),
+          _buildMetricColumn(context, AppLocalizations.get(locale, 'goal_target'), '${formatAmount(goal.targetAmount)} ₴'),
           const SizedBox(height: 20.0),
           BossHpBar(
             goalName: goal.name,
@@ -497,7 +497,7 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
                   ),
                   const SizedBox(height: 3.0),
                   Text(
-                    '${AppLocalizations.get(locale, 'goal_price_check')}: «${goal.name}»',
+                    '${AppLocalizations.get(locale, 'goal_price_check')}: «$1»',
                     style: AppTypography.bodySmall(context),
                   ),
                 ],
@@ -511,7 +511,7 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year} | ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.$1 | ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   Future<void> _confirmDelete(
@@ -550,6 +550,19 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
               child: Text(AppLocalizations.get(locale, 'common_delete'), style: AppTypography.body(context, color: AppColors.error).copyWith(fontWeight: FontWeight.bold)),
               onPressed: () async {
                 Navigator.pop(context);
+                
+                // --- BIOMETRIC VAULT LOCK INTEGRATION ---
+                final bool? isAuthorized = await context.push<bool>('/biometric-vault');
+                if (isAuthorized != true && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Access Denied: Biometric Vault Locked'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                  return;
+                }
+                
                 final db = ref.read(databaseProvider);
                 final isA = targetGoalId == 'goal_a';
                 await db.softDeleteDepositAndUpdateGoals(

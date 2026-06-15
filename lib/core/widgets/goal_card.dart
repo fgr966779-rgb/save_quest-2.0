@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
@@ -186,7 +186,7 @@ class _GoalCardState extends State<GoalCard>
                             const SizedBox(height: 2),
                             CipherText(
                               text:
-                                  '${widget.currentAmount.toStringAsFixed(0)} ${widget.currency}',
+                                  '${widget.currentAmount.toStringAsFixed(0)} ₴',
                               isCiphered: widget.isCiphered,
                               style: AppTypography.amount(context),
                             ),
@@ -203,7 +203,7 @@ class _GoalCardState extends State<GoalCard>
                             const SizedBox(height: 2),
                             CipherText(
                               text:
-                                  '${widget.targetAmount.toStringAsFixed(0)} ${widget.currency}',
+                                  '${widget.targetAmount.toStringAsFixed(0)} ₴',
                               isCiphered: widget.isCiphered,
                               style: AppTypography.amount(context),
                             ),

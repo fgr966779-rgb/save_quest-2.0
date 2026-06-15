@@ -23,6 +23,7 @@ import '../../../core/widgets/surface_card.dart';
 import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/goal_card.dart';
 import '../../../core/services/price_tracker_service.dart';
+import '../../../core/widgets/feature_card.dart';
 
 // Existing feature widgets
 import '../widgets/banking_insights_card.dart';
@@ -125,7 +126,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(AppLocalizations.get(locale, 'target_updated')),
-            backgroundColor: AppColors.success,
+            backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
           ));
           // Refresh goals stream so progress numbers update immediately.
@@ -271,7 +272,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(t('karma_healed_toast')),
-                backgroundColor: AppColors.success,
+                backgroundColor: Colors.green,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -436,6 +437,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
                   // ── Quick Actions ──
                   _buildQuickActions(context),
+                  const SizedBox(height: AppTheme.spaceLg),
+
+                  // ── Feature Grid ──
+                  _buildFeatureGrid(context),
                   const SizedBox(height: AppTheme.spaceLg),
 
                   // ── Financial Health (Accordion) ──
@@ -888,7 +893,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         onTap: () async {
           final settings = ref.read(settingsServiceProvider);
           if (settings.isHapticEnabled) await HapticsHelper.heartbeat();
-          if (context.mounted) context.push('/goal-detail/${goal.id}');
+          if (context.mounted) context.push('/goal-detail/$1');
         },
         heroTag: heroTag,
         isCiphered: isPrivate,
@@ -945,15 +950,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: allDone
-                          ? AppColors.successMuted
+                          ? Colors.green
                           : AppColors.accentMutedBg(brightness),
                       borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                     ),
                     child: Text(
-                      '$completedCount/${quests.length}',
+                      '$completedCount/$1',
                       style: AppTypography.caption(context,
                           color:
-                              allDone ? AppColors.success : AppColors.accent),
+                              allDone ? Colors.green : AppColors.accent),
                     ),
                   ),
                 ],
@@ -1019,7 +1024,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           // Reward badge
           if (!done)
             Text(
-              '+${quest.rewardXp}XP',
+              '+$1XP',
               style: AppTypography.caption(context, color: AppColors.accent),
             ),
         ],
@@ -1102,6 +1107,79 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           label: '🥷 Паразити',
           color: const Color(0xFFFF3B30),
           onTap: () => context.push('/subscriptions'),
+        ),
+      ],
+    );
+  }
+
+  // ============================================
+  // FEATURE GRID
+  // ============================================
+  Widget _buildFeatureGrid(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'KIRO FEATURES',
+          style: AppTypography.h3(context).copyWith(color: AppColors.accent),
+        ),
+        const SizedBox(height: AppTheme.spaceMd),
+        GridView.count(
+          crossAxisCount: 2,
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 2.5,
+          children: const [
+            FeatureCard(name: 'NECROSPEND', route: '/graveyard', color: Colors.red),
+            FeatureCard(name: 'RETAINCORE', route: '/anti-churn', color: Colors.orange),
+            FeatureCard(name: 'FUTUREMIRROR', route: '/future-self', color: Colors.cyan),
+            FeatureCard(name: 'LOOTBOX', route: '/variable-reward', color: Colors.purple),
+            FeatureCard(name: 'BANKLINK', route: '/bank-sync', color: Colors.green),
+            FeatureCard(name: 'REPFORGE', route: '/reputation-forge', color: Colors.amber),
+            FeatureCard(name: 'SWARMDROP', route: '/flash-mob', color: Colors.cyan),
+            FeatureCard(name: 'PARADOX CTRL', route: '/choice-paradox', color: Colors.blueAccent),
+            FeatureCard(name: 'NUDGE LAB', route: '/nudge-lab', color: Colors.purpleAccent),
+            FeatureCard(name: 'HOLO TROPHIES', route: '/trophy-gallery', color: Colors.yellow),
+            FeatureCard(name: 'INFO SCAN', route: '/news-radar', color: Colors.indigo),
+            FeatureCard(name: 'PRICE ORACLE', route: '/price-oracle', color: Colors.teal),
+            FeatureCard(name: 'RECEIPT RIP', route: '/receipt-scanner', color: Colors.pinkAccent),
+            FeatureCard(name: 'CYBER PET', route: '/cyber-pet', color: Colors.lime),
+            FeatureCard(name: 'BUDGET HELIX', route: '/budget-dna', color: Colors.greenAccent),
+            FeatureCard(name: 'VOICE CRYPT', route: '/voice-vault', color: Colors.cyan),
+            FeatureCard(name: 'FUND SWARM', route: '/crowd-fund', color: const Color(0xFF6B00FF)),
+            FeatureCard(name: 'AR TAG', route: '/ar-price-tag', color: Colors.tealAccent),
+            FeatureCard(name: 'SYNTH WAVE', route: '/soundscapes', color: Colors.purpleAccent),
+            FeatureCard(name: 'PRICE SHARK', route: '/price-shark', color: Colors.blueAccent),
+            FeatureCard(name: 'DROP ROULETTE', route: '/price-roulette', color: Colors.purple),
+            FeatureCard(name: 'MATCH BLADE', route: '/price-match', color: Colors.redAccent),
+            FeatureCard(name: 'PRE-GUARD', route: '/preorder-guard', color: Colors.cyan),
+            FeatureCard(name: 'BONUS CRUNCH', route: '/loyalty-cruncher', color: Colors.orange),
+            FeatureCard(name: 'FREEZE RAY', route: '/price-freeze', color: Colors.lightBlueAccent),
+            FeatureCard(name: 'WISH RADAR', route: '/wishlist-radar', color: Colors.greenAccent),
+            FeatureCard(name: 'ALERT CORE', route: '/smart-alerts', color: Colors.orangeAccent),
+            FeatureCard(name: 'PRICE AREНА', route: '/price-arena', color: Colors.redAccent),
+            FeatureCard(name: 'PRICE PROPHET', route: '/price-prophet', color: Colors.purpleAccent),
+            FeatureCard(name: 'RE-GEAR', route: '/secondhand-analyzer', color: Colors.tealAccent),
+            FeatureCard(name: 'SEASON PULSE', route: '/seasonal-calendar', color: Colors.deepOrangeAccent),
+            FeatureCard(name: 'MOMENTUM', route: '/price-momentum', color: Colors.cyan),
+            FeatureCard(name: 'PRICE WAR', route: '/price-war', color: Colors.redAccent),
+            FeatureCard(name: 'HAGGLE AI', route: '/haggling-coach', color: Colors.purpleAccent),
+            FeatureCard(name: 'FLEX PRICE', route: '/price-elasticity', color: Colors.amberAccent),
+            FeatureCard(name: 'STOCK GHOST', route: '/inventory-stalker', color: Colors.white70),
+            FeatureCard(name: 'LOAN TRACKER', route: '/lending-tracker', color: Colors.lightGreenAccent),
+            FeatureCard(name: 'GOAL SYNC', route: '/goal-price-integrator', color: Colors.blueAccent),
+            FeatureCard(name: 'HABIT FORGE', route: '/habit-loop-forge', color: Colors.yellowAccent),
+            FeatureCard(name: 'INFLA SHIELD', route: '/inflation-shield', color: Colors.deepPurpleAccent),
+            FeatureCard(name: 'PRICE EYE', route: '/price-detective', color: Colors.brown),
+            FeatureCard(name: 'LINK RIP', route: '/wishlist-link-ripper', color: Colors.indigoAccent),
+            FeatureCard(name: 'SHOWROOM SHIELD', route: '/showroom-shield', color: Colors.teal),
+            FeatureCard(name: 'CHRONO SAVER', route: '/time-machine', color: Colors.cyanAccent),
+            FeatureCard(name: 'QUEST CHAIN', route: '/quest-chain', color: Colors.orangeAccent),
+            FeatureCard(name: 'SAGE AI', route: '/sage-coach', color: Color(0xFF7C4DFF)),
+            FeatureCard(name: 'INFLA WALL', route: '/infla-wall', color: Colors.greenAccent),
+          ],
         ),
       ],
     );
@@ -1500,7 +1578,7 @@ class _HealthDetailRow extends StatelessWidget {
           style: AppTypography.caption(
             context,
             color: pct >= 70
-                ? AppColors.success
+                ? Colors.green
                 : pct >= 40
                     ? AppColors.chartAmber
                     : AppColors.error,

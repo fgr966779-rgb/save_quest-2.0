@@ -272,7 +272,7 @@ class _RemoteControlScreenState extends ConsumerState<RemoteControlScreen> {
                 ],
               ),
               Text(
-                '${AppLocalizations.get(locale, 'remote_ping')}${state.latency}${AppLocalizations.get(locale, 'remote_ping_ms')}',
+                '${AppLocalizations.get(locale, 'remote_ping')}${state.latencyMs}${AppLocalizations.get(locale, 'remote_ping_ms')}',
                 style: AppTypography.overline(context, color: AppColors.textSecondary(brightness)),
               ),
               Row(

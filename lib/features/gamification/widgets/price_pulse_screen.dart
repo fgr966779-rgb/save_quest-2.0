@@ -128,7 +128,7 @@ class PricePulseScreen extends ConsumerWidget {
                       leading: const Icon(Icons.history, color: Colors.grey),
                       title: Text('${(entry.priceKopecks / 100).toStringAsFixed(0)} грн', style: const TextStyle(color: Colors.white)),
                       subtitle: Text(
-                        '${entry.cachedAt.day.toString().padLeft(2, '0')}.${entry.cachedAt.month.toString().padLeft(2, '0')} ${entry.cachedAt.hour.toString().padLeft(2, '0')}:${entry.cachedAt.minute.toString().padLeft(2, '0')} • ${entry.store}',
+                        '${entry.cachedAt.day.toString().padLeft(2, '0')}.${entry.cachedAt.month.toString().padLeft(2, '0')} ${entry.cachedAt.hour.toString().padLeft(2, '0')}:${entry.cachedAt.minute.toString().padLeft(2, '0')} • ${entry.source}',
                         style: const TextStyle(color: Colors.white54, fontSize: 12),
                       ),
                       trailing: deltaPercent != null

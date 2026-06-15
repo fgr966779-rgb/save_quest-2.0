@@ -51,7 +51,7 @@ class GiftGoalCard extends ConsumerWidget {
         final isUrgent = daysLeft >= 0 && daysLeft <= 14;
 
         return GestureDetector(
-          onTap: () => context.push('/gift-preview/${giftGoal.goalId}'),
+          onTap: () => context.push('/gift-preview/${giftGoal.id}'),
           child: Container(
             margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
             padding: const EdgeInsets.all(AppTheme.spaceMd),

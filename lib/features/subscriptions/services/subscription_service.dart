@@ -1,4 +1,4 @@
-// FILE: lib/features/subscriptions/services/subscription_service.dart
+﻿// FILE: lib/features/subscriptions/services/subscription_service.dart
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/database.dart';
@@ -124,7 +124,7 @@ class SubscriptionService {
       if (daysLeft < 0) continue;
 
       final amountStr =
-          '${(sub.amountKopecks / 100).toStringAsFixed(0)} ${sub.currency}';
+          '${(sub.amountKopecks / 100).toStringAsFixed(0)} ₴';
 
       await _notifications.showParasiteAlert(
         id: 3000 + sub.id,
@@ -133,7 +133,7 @@ class SubscriptionService {
         daysLeft: daysLeft,
       );
     }
-    debugPrint('[SubscriptionNinja] Checked ${dueSoon.length} upcoming bills.');
+    debugPrint('[SubscriptionNinja] Checked ${subs.length} upcoming bills.');
   }
 
   // ── "Possibly Inactive" Logic ───────────────────────────────────────────

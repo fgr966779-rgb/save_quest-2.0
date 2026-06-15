@@ -233,7 +233,7 @@ class BackupService {
         .replaceAll(':', '-')
         .split('.')
         .first;
-    final fileName = '${_backupFileName}_$timestamp.json';
+    final fileName = '$1_$timestamp.json';
     final filePath = p.join(dir.path, fileName);
 
     final file = File(filePath);
@@ -414,7 +414,7 @@ class BackupService {
       if (goalAAmount > 0) {
         await _db.into(_db.depositAllocations).insert(
               DepositAllocation(
-                id: '${depositId}_goal_a',
+                id: '$1_goal_a',
                 depositId: depositId,
                 goalId: 'goal_a',
                 amount: goalAAmount,
@@ -427,7 +427,7 @@ class BackupService {
       if (goalBAmount > 0) {
         await _db.into(_db.depositAllocations).insert(
               DepositAllocation(
-                id: '${depositId}_goal_b',
+                id: '$1_goal_b',
                 depositId: depositId,
                 goalId: 'goal_b',
                 amount: goalBAmount,
@@ -1056,7 +1056,7 @@ class BackupService {
         if (goalA.round() > 0) {
           await _db.into(_db.depositAllocations).insert(
                 DepositAllocation(
-                  id: '${depositId}_goal_a',
+                  id: '$1_goal_a',
                   depositId: depositId,
                   goalId: 'goal_a',
                   amount: goalA.round(),
@@ -1068,7 +1068,7 @@ class BackupService {
         if (goalB.round() > 0) {
           await _db.into(_db.depositAllocations).insert(
                 DepositAllocation(
-                  id: '${depositId}_goal_b',
+                  id: '$1_goal_b',
                   depositId: depositId,
                   goalId: 'goal_b',
                   amount: goalB.round(),

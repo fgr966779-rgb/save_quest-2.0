@@ -1,4 +1,4 @@
-// FILE: lib/features/subscriptions/screens/subscriptions_screen.dart
+﻿// FILE: lib/features/subscriptions/screens/subscriptions_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -282,7 +282,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
     }
 
     final amountStr =
-        '${(amountKopecks / 100).toStringAsFixed(0)} ${sub.currency}';
+        '${(amountKopecks / 100).toStringAsFixed(0)} ₴';
     _showKillReward(sub.name, amountStr, amountKopecks, count >= 3);
   }
 

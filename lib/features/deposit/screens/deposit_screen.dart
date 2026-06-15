@@ -21,6 +21,7 @@ import '../../gamification/widgets/memory_vault_widgets.dart';
 import '../../../core/services/milestone_service.dart';
 import '../../../core/widgets/milestone_dialog.dart';
 import '../../../core/services/sound_service.dart';
+import '../../../core/utils/haptic_pulse_protocol.dart';
 
 // ---------------------------------------------------------------------------
 // State machine
@@ -98,7 +99,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
 
   // ── Input logic (unchanged) ────────────────────────────────────────────
   void _onKeyPress(String val) {
-    HapticFeedback.lightImpact();
+    HapticPulseProtocol.uiTap();
     setState(() {
       if (val == 'C') {
         _amountText = '';
@@ -215,7 +216,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
 
       // Play deposit sound
       SoundService().playDeposit();
-      HapticFeedback.heavyImpact();
+      HapticPulseProtocol.cyberDepositPulse();
 
       // Check for partner activity
       final savedQuest = await ref.read(partnerProvider.notifier).simulatePartnerActivity();
@@ -296,6 +297,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
           goalName: goalAfter.name,
           percent: pct,
         );
+        HapticPulseProtocol.milestonePulse();
 
         await milestoneService.markCelebrated(goalAfter.id, pct);
       }
@@ -546,7 +548,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
           const SizedBox(height: 8),
           Text(
             '${AppLocalizations.get(locale, 'dep_split_instruction')}'
-            '${formatAmount(totalCents)} ${goalA.currency}',
+            '${formatAmount(totalCents)} ₴',
             textAlign: TextAlign.center,
             style: AppTypography.bodySmall(context),
           ),
@@ -587,7 +589,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '+${formatAmount(amountACents)} ${goalA.currency}',
+                  '+${formatAmount(amountACents)} ₴',
                   style: AppTypography.amount(
                     context,
                     color: AppColors.goalA,
@@ -643,7 +645,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '+${formatAmount(amountBCents)} ${goalB.currency}',
+                  '+${formatAmount(amountBCents)} ₴',
                   style: AppTypography.amount(
                     context,
                     color: AppColors.goalB,
@@ -733,7 +735,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      '+${formatAmount(amountACents)} ${goalA.currency}',
+                      '+${formatAmount(amountACents)} ₴',
                       style: AppTypography.amount(
                         context,
                         color: AppColors.goalA,
@@ -779,7 +781,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      '+${formatAmount(amountBCents)} ${goalB.currency}',
+                      '+${formatAmount(amountBCents)} ₴',
                       style: AppTypography.amount(
                         context,
                         color: AppColors.goalB,
@@ -958,7 +960,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
 
               // ── Amount ──
               Text(
-                '${formatAmount(totalCents)} ${goalA.currency} '
+                '${formatAmount(totalCents)} $1 '
                 '${AppLocalizations.get(locale, 'dep_success_desc')}',
                 textAlign: TextAlign.center,
                 style: AppTypography.body(context),
@@ -1008,7 +1010,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
                       _rewardRow(
                         context,
                         label: AppLocalizations.get(locale, 'dep_reward_streak'),
-                        value: '${result.streakCount}${AppLocalizations.get(locale, 'daily_bonus_days')}',
+                        value: '$1${AppLocalizations.get(locale, 'daily_bonus_days')}',
                       ),
                     ],
                     if (result?.isCritical == true) ...[

@@ -133,7 +133,7 @@ class _WeeklyTab extends ConsumerWidget {
                     style: AppTypography.h1(context, color: AppColors.accent),
                   ),
                   Text(
-                    '\${userEntry.score} XP',
+                    '\$1 XP',
                     style: AppTypography.body(context),
                   ),
                 ],
@@ -146,7 +146,7 @@ class _WeeklyTab extends ConsumerWidget {
                 Share.share(
                   t('lb_share_text')
                       .replaceAll('{position}', '$position')
-                      .replaceAll('{score}', '\${userEntry.score}'),
+                      .replaceAll('{score}', '\$1'),
                 );
               },
               variant: ButtonVariant.secondary,

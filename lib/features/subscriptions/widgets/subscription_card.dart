@@ -1,4 +1,4 @@
-// FILE: lib/features/subscriptions/widgets/subscription_card.dart
+﻿// FILE: lib/features/subscriptions/widgets/subscription_card.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -44,7 +44,7 @@ class SubscriptionCard extends StatelessWidget {
             : const Color(0xFF00FF9D);
 
     final amountStr =
-        '${(s.amountKopecks / 100).toStringAsFixed(0)} ${s.currency}';
+        '${(s.amountKopecks / 100).toStringAsFixed(0)} ₴';
     final cycleLabel = s.billingCycle == 'yearly' ? '/рік' : '/міс';
 
     return Container(

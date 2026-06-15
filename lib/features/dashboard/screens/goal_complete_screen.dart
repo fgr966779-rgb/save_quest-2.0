@@ -1,4 +1,4 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -142,7 +142,7 @@ class _GoalCompleteScreenState extends ConsumerState<GoalCompleteScreen> with Si
                   ),
                   const SizedBox(height: 8.0),
                   Text(
-                    '${AppLocalizations.get(locale, 'goal_complete_desc')}\n${formatAmount(widget.targetAmount)} ${widget.currency}',
+                    '${AppLocalizations.get(locale, 'goal_complete_desc')}\n${formatAmount(widget.targetAmount)} ₴',
                     textAlign: TextAlign.center,
                     style: AppTypography.body(
                       context,

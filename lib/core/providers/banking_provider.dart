@@ -182,7 +182,7 @@ Future<List<AIInsight>> _generateInsights(
           : '🤖 VAULT-17:';
 
       insights.add(AIInsight(
-        id: 'llm_${latestTx.id}',
+        id: 'llm_$1',
         title: coachName,
         description: llmText,
         type: 'cyber_coach',

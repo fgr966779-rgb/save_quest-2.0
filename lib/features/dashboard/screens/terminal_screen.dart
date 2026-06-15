@@ -211,7 +211,7 @@ class _TerminalScreenState extends ConsumerState<TerminalScreen> {
           _log('NO ACTIVE GOALS DETECTED.');
         } else {
           for (var g in goals) {
-            _log('- ${g.id}: ${(g.currentAmount / 100).toStringAsFixed(2)} / ${(g.targetAmount / 100).toStringAsFixed(2)} UAH');
+            _log('- ${g.name}: ${(g.currentAmount / 100).toStringAsFixed(2)} / ${(g.targetAmount / 100).toStringAsFixed(2)} UAH');
           }
         }
         break;

@@ -1847,7 +1847,7 @@ class AppLocalizations {
   static String format(String locale, String key, Map<String, String> params) {
     String base = get(locale, key);
     for (final entry in params.entries) {
-      base = base.replaceAll('{${entry.key}}', entry.value);
+      base = base.replaceAll('{$1}', entry.value);
     }
     return base;
   }

@@ -294,7 +294,7 @@ class _SavingsCalculatorScreenState
                           _TermUnit.days => t('calc_days'),
                           _TermUnit.weeks => t('calc_weeks'),
                           _TermUnit.months => t('calc_months'),
-                        }} = ${result.totalDays} ${t('calc_days')}',
+                        }} = $1 ${t('calc_days')}',
                         style: AppTypography.bodySmall(context),
                       ),
                     ),

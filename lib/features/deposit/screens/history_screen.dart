@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -456,7 +456,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                 children: [
                   _buildModalGoalDetail(
                     goalA.name,
-                    '${formatAmount(dep.goalAAmount)} ${goalA.currency}',
+                    '${formatAmount(dep.goalAAmount)} ₴',
                     AppColors.goalA,
                   ),
                   Container(
@@ -466,7 +466,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                   ),
                   _buildModalGoalDetail(
                     goalB.name,
-                    '${formatAmount(dep.goalBAmount)} ${goalB.currency}',
+                    '${formatAmount(dep.goalBAmount)} ₴',
                     AppColors.goalB,
                   ),
                 ],

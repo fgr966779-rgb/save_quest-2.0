@@ -128,7 +128,7 @@ class CyberPetDashboardWidget extends ConsumerWidget {
                         );
                       },
                       child: Stack(
-                        key: ValueKey('${evolution.type}_$isZenMode'),
+                        key: ValueKey('${evolution.type.name}_$isZenMode'),
                         children: [
                           ColorFiltered(
                             colorFilter: evolutionFilterColor != null
