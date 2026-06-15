@@ -104,7 +104,7 @@ class _PriceRouletteScreenState extends ConsumerState<PriceRouletteScreen> with 
                           Text('Прогноз: <${(b.predictedDropPrice / 100).toStringAsFixed(0)} ₴', style: GoogleFonts.shareTechMono(color: Colors.white)),
                         ]),
                         const SizedBox(height: 8),
-                        Text('Ставка: $1 XP', style: GoogleFonts.shareTechMono(color: Colors.purpleAccent, fontWeight: FontWeight.bold)),
+                        Text('Ставка: \$1 XP', style: GoogleFonts.shareTechMono(color: Colors.purpleAccent, fontWeight: FontWeight.bold)),
                       ]),
                     );
                   },

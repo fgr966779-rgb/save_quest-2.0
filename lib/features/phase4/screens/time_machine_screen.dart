@@ -54,7 +54,7 @@ class TimeMachineScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                     _C('КІНЦЕВА СУМА', p.projectedFinalAmount, Colors.cyanAccent),
-                    _C('ДАТА ДОСЯГНЕННЯ', null, Colors.white, '$1.$1.$1'),
+                    _C('ДАТА ДОСЯГНЕННЯ', null, Colors.white, '\$1.\$1.\$1'),
                   ]),
                   const SizedBox(height: 16),
                   ClipRRect(
@@ -68,7 +68,7 @@ class TimeMachineScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text('+$1% до внесків', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
+                    Text('+\$1% до внесків', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
                     Text('$daysLeft днів', style: GoogleFonts.shareTechMono(color: Colors.cyanAccent, fontSize: 12, fontWeight: FontWeight.bold)),
                   ]),
                 ]),

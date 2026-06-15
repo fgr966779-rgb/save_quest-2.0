@@ -82,7 +82,7 @@ class _NewsRadarScreenState extends ConsumerState<NewsRadarScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text('$1%', style: GoogleFonts.orbitron(color: color, fontSize: 11)),
+                  Text('\$1%', style: GoogleFonts.orbitron(color: color, fontSize: 11)),
                 ]),
                 if (n.isActionable && n.aiSuggestion != null) ...[
                   const SizedBox(height: 12),

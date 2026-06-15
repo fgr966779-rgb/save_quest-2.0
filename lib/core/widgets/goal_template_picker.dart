@@ -160,7 +160,7 @@ class _TemplateCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          '$1 $currency',
+                          '\$1 $currency',
                           style: AppTypography.bodySmall(
                             context,
                             color: AppColors.accent,
@@ -185,7 +185,7 @@ class _TemplateCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '$1 ${AppLocalizations.get(locale, 'template_months_short')}',
+                  '\$1 ${AppLocalizations.get(locale, 'template_months_short')}',
                   style: AppTypography.overline(context),
                 ),
               ),

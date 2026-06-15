@@ -83,7 +83,7 @@ class _VoiceVaultScreenState extends ConsumerState<VoiceVaultScreen> with Single
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(color: const Color(0xFF1A1F2E), borderRadius: BorderRadius.circular(12), border: Border.all(color: c.wasExecuted ? Colors.green.withValues(alpha: 0.3) : Colors.white12)),
                       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('"$1"', style: GoogleFonts.shareTechMono(color: Colors.white, fontSize: 14, fontStyle: FontStyle.italic)),
+                        Text('"\$1"', style: GoogleFonts.shareTechMono(color: Colors.white, fontSize: 14, fontStyle: FontStyle.italic)),
                         const SizedBox(height: 8),
                         Row(children: [
                           Icon(c.wasExecuted ? Icons.check_circle : Icons.pending, color: c.wasExecuted ? Colors.green : Colors.amber, size: 14),

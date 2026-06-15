@@ -47,7 +47,7 @@ class GoalPriceIntegratorScreen extends ConsumerWidget {
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text('Мета #$1', style: GoogleFonts.orbitron(color: Colors.white54, fontSize: 12)),
+                    Text('Мета #\$1', style: GoogleFonts.orbitron(color: Colors.white54, fontSize: 12)),
                     Icon(link.autoUpdateTarget ? Icons.sync : Icons.sync_disabled, color: link.autoUpdateTarget ? Colors.blueAccent : Colors.white38, size: 16),
                   ]),
                   const SizedBox(height: 8),

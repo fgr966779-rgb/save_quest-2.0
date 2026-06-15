@@ -55,7 +55,7 @@ class ChoiceParadoxScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                     Text('${(c.currentProgress / 100).toStringAsFixed(0)} / ${(c.targetAmount / 100).toStringAsFixed(0)} грн', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
-                    Text('XP ризик: $1', style: GoogleFonts.shareTechMono(color: Colors.red.withValues(alpha: 0.8), fontSize: 12)),
+                    Text('XP ризик: \$1', style: GoogleFonts.shareTechMono(color: Colors.red.withValues(alpha: 0.8), fontSize: 12)),
                   ]),
                 ]),
               );

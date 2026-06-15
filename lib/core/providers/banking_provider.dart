@@ -91,16 +91,16 @@ class MockBankingNotifier extends StateNotifier<List<BankTransaction>> {
     
     // Check for Blacklist Categories
     final settings = ref.read(settingsServiceProvider);
-    final isBlacklisted = settings.blacklistedCategories.contains(pick.$1) || 
+    final isBlacklisted = settings.blacklistedCategories.contains(pick.\$1) || 
                           settings.blacklistedCategories.contains(pick.$2);
     
     if (isBlacklisted) {
       // Penalty: 10% of transaction amount
       final penaltyCents = (amount * 100 * 0.10).toInt();
-      ref.read(penaltyProvider.notifier).issueFine('Blacklist: ${pick.$1}', penaltyCents);
+      ref.read(penaltyProvider.notifier).issueFine('Blacklist: ${pick.\$1}', penaltyCents);
     }
     
-    addTransaction(pick.$1, pick.$2, amount);
+    addTransaction(pick.\$1, pick.$2, amount);
   }
 
   void simulateSpecific(String title, String category, double amount) {
@@ -182,7 +182,7 @@ Future<List<AIInsight>> _generateInsights(
           : '🤖 VAULT-17:';
 
       insights.add(AIInsight(
-        id: 'llm_$1',
+        id: 'llm_\$1',
         title: coachName,
         description: llmText,
         type: 'cyber_coach',

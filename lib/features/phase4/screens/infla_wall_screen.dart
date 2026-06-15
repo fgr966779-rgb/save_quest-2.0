@@ -104,7 +104,7 @@ class _InflaWallScreenState extends ConsumerState<InflaWallScreen> with SingleTi
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Text('ХВИЛЯ ІНФЛЯЦІЇ', style: GoogleFonts.orbitron(color: Colors.redAccent, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 4)),
                     const SizedBox(height: 8),
-                    Text('$1% атаки', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 16)),
+                    Text('\$1% атаки', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 16)),
                     const SizedBox(height: 20),
                     Text('Можливі втрати: ${(_savingsBalance * _currentInflation / 100 / 100).toStringAsFixed(0)} ₴', style: GoogleFonts.shareTechMono(color: Colors.redAccent, fontSize: 14, fontWeight: FontWeight.bold)),
                   ]),
@@ -153,7 +153,7 @@ class _InflaWallScreenState extends ConsumerState<InflaWallScreen> with SingleTi
                     border: Border.all(color: (w.isWaveWon ? Colors.greenAccent : Colors.redAccent).withValues(alpha: 0.3)),
                   ),
                   child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text('Хвиля #$1 ($1%)', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
+                    Text('Хвиля #\$1 (\$1%)', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
                     Text('${w.isWaveWon ? "+" : "-"}${(w.savingsDefended / 100).toStringAsFixed(0)} ₴', style: GoogleFonts.shareTechMono(color: w.isWaveWon ? Colors.greenAccent : Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 12)),
                   ]),
                 )),

@@ -55,7 +55,7 @@ class LoyaltyCruncherScreen extends ConsumerWidget {
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
                     Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text('БАЛАНС БОНУСІВ', style: GoogleFonts.orbitron(color: Colors.white38, fontSize: 10)),
-                      Text('$1 pts', style: GoogleFonts.shareTechMono(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                      Text('\$1 pts', style: GoogleFonts.shareTechMono(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
                     ]),
                     Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                       Text('ГРОШОВИЙ ЕКВІВАЛЕНТ', style: GoogleFonts.orbitron(color: Colors.white38, fontSize: 10)),

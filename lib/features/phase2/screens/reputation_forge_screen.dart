@@ -138,7 +138,7 @@ class _CommitmentCard extends StatelessWidget {
               children: [
                 Text(commitment.title, style: GoogleFonts.orbitron(color: Colors.white, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                Text('XP: $1  |  Карма: $1', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
+                Text('XP: \$1  |  Карма: \$1', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
               ],
             ),
           ),

@@ -54,7 +54,7 @@ class FlashMobScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
-                      child: Text('$1x XP', style: GoogleFonts.orbitron(color: color, fontWeight: FontWeight.bold)),
+                      child: Text('\$1x XP', style: GoogleFonts.orbitron(color: color, fontWeight: FontWeight.bold)),
                     ),
                   ]),
                   const SizedBox(height: 8),
@@ -63,11 +63,11 @@ class FlashMobScreen extends ConsumerWidget {
                   Row(children: [
                     Icon(Icons.people, color: Colors.white38, size: 16),
                     const SizedBox(width: 4),
-                    Text('$1 учасників', style: GoogleFonts.shareTechMono(color: Colors.white38, fontSize: 12)),
+                    Text('\$1 учасників', style: GoogleFonts.shareTechMono(color: Colors.white38, fontSize: 12)),
                     const Spacer(),
                     Icon(Icons.timer, color: color, size: 14),
                     const SizedBox(width: 4),
-                    Text('$1г ${timeLeft.inMinutes % 60}хв', style: GoogleFonts.orbitron(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text('\$1г ${timeLeft.inMinutes % 60}хв', style: GoogleFonts.orbitron(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
                   ]),
                   const SizedBox(height: 16),
                   SizedBox(

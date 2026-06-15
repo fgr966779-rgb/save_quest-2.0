@@ -146,7 +146,7 @@ class _MilestoneDialogState extends State<MilestoneDialog>
                       ),
                       const SizedBox(height: 8.0),
                       Text(
-                        '$1%',
+                        '\$1%',
                         style: AppTypography.display(context, color: accentColor),
                         textAlign: TextAlign.center,
                       ),
@@ -162,7 +162,7 @@ class _MilestoneDialogState extends State<MilestoneDialog>
                       Text(
                         isFull
                             ? 'Ціль досягнута! Вітаємо!'
-                            : '$1% цілі виконано!',
+                            : '\$1% цілі виконано!',
                         style: AppTypography.body(
                           context,
                           color: AppColors.textSecondary(brightness),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -128,7 +128,7 @@ class _AntiChurnScreenState extends ConsumerState<AntiChurnScreen> with SingleTi
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Днів без депозиту: ${state.daysSinceLastDeposit}',
+                        'Днів без депозиту: ${state.daysSinceDeposit}',
                         style: GoogleFonts.shareTechMono(
                           fontSize: 16,
                           color: const Color(0xB3FFFFFF),

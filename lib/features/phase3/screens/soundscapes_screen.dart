@@ -52,7 +52,7 @@ class SoundscapesScreen extends ConsumerWidget {
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                       Text(s.soundName, style: GoogleFonts.orbitron(color: s.isUnlocked ? Colors.white : Colors.white54, fontWeight: FontWeight.bold, fontSize: 16)),
                       if (!s.isUnlocked)
-                        Text('$1 XP', style: GoogleFonts.shareTechMono(color: Colors.amber, fontSize: 12)),
+                        Text('\$1 XP', style: GoogleFonts.shareTechMono(color: Colors.amber, fontSize: 12)),
                     ]),
                   ),
                   if (s.isUnlocked)

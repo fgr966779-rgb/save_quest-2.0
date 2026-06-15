@@ -47,7 +47,7 @@ class HabitLoopForgeScreen extends ConsumerWidget {
                 ),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text('Стрік: $1 🔥', style: GoogleFonts.orbitron(color: Colors.orangeAccent, fontSize: 14, fontWeight: FontWeight.bold)),
+                    Text('Стрік: \$1 🔥', style: GoogleFonts.orbitron(color: Colors.orangeAccent, fontSize: 14, fontWeight: FontWeight.bold)),
                     Switch(
                       value: h.isActive,
                       onChanged: (v) {},
@@ -56,8 +56,8 @@ class HabitLoopForgeScreen extends ConsumerWidget {
                   ]),
                   const SizedBox(height: 12),
                   _Step('ТРИГЕР', h.triggerEvent, Icons.bolt, Colors.blueAccent),
-                  _Step('ДІЯ', '$1 (${(h.routineAmount / 100).toStringAsFixed(0)} ₴)', Icons.play_arrow, Colors.greenAccent),
-                  _Step('НАГОРОДА', '+$1 XP', Icons.star, Colors.yellowAccent),
+                  _Step('ДІЯ', '\$1 (${(h.routineAmount / 100).toStringAsFixed(0)} ₴)', Icons.play_arrow, Colors.greenAccent),
+                  _Step('НАГОРОДА', '+\$1 XP', Icons.star, Colors.yellowAccent),
                 ]),
               );
             },

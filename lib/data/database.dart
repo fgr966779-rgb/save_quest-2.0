@@ -1417,7 +1417,7 @@ class AppDatabase extends _$AppDatabase {
       for (final entry in allocations.entries) {
         if (entry.value <= 0) continue;
         await into(depositAllocations).insert(DepositAllocationsCompanion(
-          id: Value('$1_$1'),
+          id: Value('\$1_\$1'),
           depositId: Value(deposit.id),
           goalId: Value(entry.key),
           amount: Value(entry.value),

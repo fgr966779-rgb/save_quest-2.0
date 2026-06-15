@@ -77,7 +77,7 @@ class LendingTrackerScreen extends ConsumerWidget {
                   ]),
                   if (r.reason != null && r.reason!.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    Text('Призначення: $1', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
+                    Text('Призначення: \$1', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
                   ],
                 ]),
               );

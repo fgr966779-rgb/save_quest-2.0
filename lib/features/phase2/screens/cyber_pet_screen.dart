@@ -94,7 +94,7 @@ class _CyberPetScreenState extends ConsumerState<CyberPetScreen> with SingleTick
               ),
               const SizedBox(height: 32),
               Text(pet.name, style: GoogleFonts.orbitron(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 2)),
-              Text('Стадія: $1', style: GoogleFonts.shareTechMono(color: const Color(0xFF00FFCC), fontSize: 14)),
+              Text('Стадія: \$1', style: GoogleFonts.shareTechMono(color: const Color(0xFF00FFCC), fontSize: 14)),
               const SizedBox(height: 40),
               
               // Stats

@@ -53,7 +53,7 @@ class CrowdFundScreen extends ConsumerWidget {
                     Text('ЦІЛЬ: ${(w.targetAmount / 100).toStringAsFixed(0)} ₴', style: GoogleFonts.shareTechMono(color: Colors.white38, fontSize: 12)),
                   ]),
                   const SizedBox(height: 16),
-                  Text('КОД: $1', style: GoogleFonts.orbitron(color: Colors.cyan, fontSize: 12, letterSpacing: 2)),
+                  Text('КОД: \$1', style: GoogleFonts.orbitron(color: Colors.cyan, fontSize: 12, letterSpacing: 2)),
                 ]),
               );
             },

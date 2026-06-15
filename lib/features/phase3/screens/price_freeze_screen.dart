@@ -68,8 +68,8 @@ class PriceFreezeScreen extends ConsumerWidget {
                   LinearProgressIndicator(value: progress, backgroundColor: Colors.white12, valueColor: AlwaysStoppedAnimation<Color>(isBroken ? Colors.red : Colors.lightBlueAccent), minHeight: 8, borderRadius: BorderRadius.circular(4)),
                   const SizedBox(height: 8),
                   Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    Text('Збережено днів: $1 / $1', style: GoogleFonts.shareTechMono(color: Colors.white70, fontSize: 12)),
-                    Text('+$1 XP', style: GoogleFonts.orbitron(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text('Збережено днів: \$1 / \$1', style: GoogleFonts.shareTechMono(color: Colors.white70, fontSize: 12)),
+                    Text('+\$1 XP', style: GoogleFonts.orbitron(color: Colors.amber, fontSize: 12, fontWeight: FontWeight.bold)),
                   ]),
                 ]),
               );

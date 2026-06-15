@@ -57,7 +57,7 @@ class PriceArenaScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                      child: Text('$1 XP', style: GoogleFonts.orbitron(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold)),
+                      child: Text('\$1 XP', style: GoogleFonts.orbitron(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold)),
                     ),
                   ]),
                   const SizedBox(height: 12),

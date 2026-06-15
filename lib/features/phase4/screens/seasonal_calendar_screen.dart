@@ -51,17 +51,17 @@ class SeasonalCalendarScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(color: Colors.deepOrangeAccent.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
-                      child: Text('-$1% ОЧІКУЄТЬСЯ', style: GoogleFonts.orbitron(color: Colors.deepOrangeAccent, fontSize: 10, fontWeight: FontWeight.bold)),
+                      child: Text('-\$1% ОЧІКУЄТЬСЯ', style: GoogleFonts.orbitron(color: Colors.deepOrangeAccent, fontSize: 10, fontWeight: FontWeight.bold)),
                     ),
                   ]),
                   const SizedBox(height: 12),
                   Row(children: [
                     const Icon(Icons.calendar_today, color: Colors.white38, size: 16),
                     const SizedBox(width: 8),
-                    Text('$1.$1.$1', style: GoogleFonts.shareTechMono(color: Colors.white70, fontSize: 14)),
+                    Text('\$1.\$1.\$1', style: GoogleFonts.shareTechMono(color: Colors.white70, fontSize: 14)),
                   ]),
                   const SizedBox(height: 8),
-                  Text('Категорія: $1', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
+                  Text('Категорія: \$1', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
                   const SizedBox(height: 12),
                   if (daysLeft >= 0)
                     Text('До розпродажу: $daysLeft днів', style: GoogleFonts.shareTechMono(color: daysLeft <= 7 ? Colors.deepOrangeAccent : Colors.cyan, fontSize: 14, fontWeight: FontWeight.bold))

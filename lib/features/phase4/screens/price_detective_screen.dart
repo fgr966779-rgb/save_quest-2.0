@@ -59,7 +59,7 @@ class PriceDetectiveScreen extends ConsumerWidget {
                   Text('Поточна ціна: ${(item.currentPrice / 100).toStringAsFixed(0)} ₴', style: GoogleFonts.shareTechMono(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                   if (item.pricePattern != null) ...[
                     const SizedBox(height: 8),
-                    Text('Паттерн: $1', style: GoogleFonts.shareTechMono(color: Colors.orangeAccent, fontSize: 12)),
+                    Text('Паттерн: \$1', style: GoogleFonts.shareTechMono(color: Colors.orangeAccent, fontSize: 12)),
                   ],
                   if (item.aiDetectiveReport != null) ...[
                     const SizedBox(height: 12),

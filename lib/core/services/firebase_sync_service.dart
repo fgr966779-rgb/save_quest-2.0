@@ -38,7 +38,7 @@ class FirebaseSyncService extends SyncService {
         break;
     }
     
-    debugPrint('Successfully synced $1 to $1/$1');
+    debugPrint('Successfully synced \$1 to \$1/\$1');
   }
 
   /// Implements Additive Counter CRDT logic for concurrent updates on shared assets.

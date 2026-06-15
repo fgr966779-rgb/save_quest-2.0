@@ -960,7 +960,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
 
               // ── Amount ──
               Text(
-                '${formatAmount(totalCents)} $1 '
+                '${formatAmount(totalCents)} \$1 '
                 '${AppLocalizations.get(locale, 'dep_success_desc')}',
                 textAlign: TextAlign.center,
                 style: AppTypography.body(context),
@@ -1010,7 +1010,7 @@ class _DepositScreenState extends ConsumerState<DepositScreen>
                       _rewardRow(
                         context,
                         label: AppLocalizations.get(locale, 'dep_reward_streak'),
-                        value: '$1${AppLocalizations.get(locale, 'daily_bonus_days')}',
+                        value: '\$1${AppLocalizations.get(locale, 'daily_bonus_days')}',
                       ),
                     ],
                     if (result?.isCritical == true) ...[

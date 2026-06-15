@@ -893,7 +893,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         onTap: () async {
           final settings = ref.read(settingsServiceProvider);
           if (settings.isHapticEnabled) await HapticsHelper.heartbeat();
-          if (context.mounted) context.push('/goal-detail/$1');
+          if (context.mounted) context.push('/goal-detail/\$1');
         },
         heroTag: heroTag,
         isCiphered: isPrivate,
@@ -955,7 +955,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                     ),
                     child: Text(
-                      '$completedCount/$1',
+                      '$completedCount/\$1',
                       style: AppTypography.caption(context,
                           color:
                               allDone ? Colors.green : AppColors.accent),
@@ -1024,7 +1024,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           // Reward badge
           if (!done)
             Text(
-              '+$1XP',
+              '+\$1XP',
               style: AppTypography.caption(context, color: AppColors.accent),
             ),
         ],

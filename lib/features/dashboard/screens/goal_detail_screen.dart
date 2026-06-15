@@ -497,7 +497,7 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
                   ),
                   const SizedBox(height: 3.0),
                   Text(
-                    '${AppLocalizations.get(locale, 'goal_price_check')}: «$1»',
+                    '${AppLocalizations.get(locale, 'goal_price_check')}: «\$1»',
                     style: AppTypography.bodySmall(context),
                   ),
                 ],
@@ -511,7 +511,7 @@ class _GoalDetailScreenState extends ConsumerState<GoalDetailScreen> {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.$1 | ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.\$1 | ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   Future<void> _confirmDelete(

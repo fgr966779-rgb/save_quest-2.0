@@ -224,7 +224,7 @@ class NotificationService {
 
   /// Handle notification tap — placeholder for navigation.
   void _onNotificationTapped(NotificationResponse response) {
-    debugPrint('Notification tapped: $1');
+    debugPrint('Notification tapped: \$1');
     // Future: navigate based on payload
   }
 

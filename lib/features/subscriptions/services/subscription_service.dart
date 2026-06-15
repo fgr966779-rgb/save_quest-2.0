@@ -1,4 +1,4 @@
-﻿// FILE: lib/features/subscriptions/services/subscription_service.dart
+// FILE: lib/features/subscriptions/services/subscription_service.dart
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../data/database.dart';
@@ -133,7 +133,7 @@ class SubscriptionService {
         daysLeft: daysLeft,
       );
     }
-    debugPrint('[SubscriptionNinja] Checked ${subs.length} upcoming bills.');
+    debugPrint('[SubscriptionNinja] Checked ${dueSoon.length} upcoming bills.');
   }
 
   // ── "Possibly Inactive" Logic ───────────────────────────────────────────

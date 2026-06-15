@@ -92,7 +92,7 @@ class _WishlistRadarScreenState extends ConsumerState<WishlistRadarScreen> with 
                           ]),
                           if (w.currentBestPrice != null)
                             Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                              Text('ЗНАЙДЕНО ($1)', style: GoogleFonts.orbitron(color: Colors.white38, fontSize: 10)),
+                              Text('ЗНАЙДЕНО (\$1)', style: GoogleFonts.orbitron(color: Colors.white38, fontSize: 10)),
                               Text('${(w.currentBestPrice! / 100).toStringAsFixed(0)} ₴', style: GoogleFonts.shareTechMono(color: targetHit ? Colors.greenAccent : Colors.amber, fontSize: 16, fontWeight: FontWeight.bold)),
                             ]),
                         ]),

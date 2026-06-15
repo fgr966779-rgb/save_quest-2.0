@@ -62,7 +62,7 @@ class PriceSharkScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                   Row(children: [
                     Icon(Icons.arrow_downward, color: Colors.green, size: 16),
-                    Text('Впала на $1% від максимуму', style: GoogleFonts.shareTechMono(color: Colors.green, fontSize: 12)),
+                    Text('Впала на \$1% від максимуму', style: GoogleFonts.shareTechMono(color: Colors.green, fontSize: 12)),
                   ]),
                 ]),
               );

@@ -59,9 +59,9 @@ class SecondhandAnalyzerScreen extends ConsumerWidget {
                     ]),
                   ]),
                   const SizedBox(height: 12),
-                  Text('Платформа: $1 | Діапазон: ${(item.usedPriceMin / 100).toStringAsFixed(0)} - ${(item.usedPriceMax / 100).toStringAsFixed(0)} ₴', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
+                  Text('Платформа: \$1 | Діапазон: ${(item.usedPriceMin / 100).toStringAsFixed(0)} - ${(item.usedPriceMax / 100).toStringAsFixed(0)} ₴', style: GoogleFonts.shareTechMono(color: Colors.white54, fontSize: 12)),
                   const SizedBox(height: 4),
-                  Text('Амортизація: $1%/рік', style: GoogleFonts.shareTechMono(color: Colors.orangeAccent, fontSize: 12)),
+                  Text('Амортизація: \$1%/рік', style: GoogleFonts.shareTechMono(color: Colors.orangeAccent, fontSize: 12)),
                 ]),
               );
             },
